@@ -295,6 +295,7 @@
     <!-- Grafik (biuro: edycja, instruktor: podgląd swoich jazd) -->
     <div id="tab-grafik">
       <div id="g-zmiany" class="zmiany hidden"></div>
+      <div id="kopia-baner" class="zmiany hidden"></div>
       <div class="card">
         <div id="g-instr-pasek">
           <div class="inst-zakl" id="g-instr-zakl"></div>
@@ -429,6 +430,26 @@
             <button id="pin-wylacz" type="button" class="hidden">Wyłącz PIN</button>
           </div>
           <div id="m-pin" class="msg"></div>
+        </div>
+        <div class="card">
+          <h2>💾 Kopia zapasowa</h2>
+          <p class="hint">Cała baza szkoły (instruktorzy, kursanci, jazdy, wolne, dokupione godziny) w jednym pliku.</p>
+          <h3 style="font-size:15px;margin:14px 0 4px">Na tym komputerze</h3>
+          <p class="hint" id="kp-status"></p>
+          <label class="check"><input id="kp-auto" type="checkbox"> Automatycznie raz dziennie (plik w Pobranych)</label>
+          <div class="akcje" style="margin-top:10px">
+            <button id="kp-teraz" type="button">💾 Zapisz kopię teraz</button>
+            <button id="kp-przywroc" type="button">♻️ Przywróć z pliku</button>
+          </div>
+          <h3 style="font-size:15px;margin:18px 0 4px">Na Dysku Google</h3>
+          <p class="hint" id="kd-status"></p>
+          <label for="kd-client">Identyfikator klienta Google (Client ID)</label>
+          <div class="pasek"><input id="kd-client" placeholder="…apps.googleusercontent.com" autocomplete="off"><button id="kd-zapisz-id" type="button">Zapisz</button></div>
+          <label class="check"><input id="kd-auto" type="checkbox"> Codziennie przypominaj o kopii na Dysk (jedno kliknięcie)</label>
+          <div class="akcje" style="margin-top:10px">
+            <button id="kd-teraz" type="button" style="grid-column:1/-1">☁️ Wyślij kopię na Dysk Google teraz</button>
+          </div>
+          <div id="m-kopia" class="msg"></div>
         </div>
         <div class="card">
           <h2>🗑 Kosz (30 dni)</h2>
@@ -628,7 +649,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.7';
+  const WERSJA = '1.8';
   // ======================
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -764,7 +785,7 @@
 
     ja = session.user;
     const { data, error } = await sb.from('profile')
-      .select('id, rola, imie_nazwisko, zatwierdzony, szkola_id, szkoly(nazwa, kod_zaproszenia, grafik_od, grafik_do, dlugosc_jazdy, godziny_kategorii)')
+      .select('id, rola, imie_nazwisko, zatwierdzony, szkola_id, szkoly(nazwa, kod_zaproszenia, grafik_od, grafik_do, dlugosc_jazdy, godziny_kategorii, google_client_id, kopia_dysk)')
       .eq('id', ja.id).maybeSingle();
 
     if (error) {
@@ -823,7 +844,7 @@
   }
   $('t-grafik').onclick = () => { ustawZakladke('grafik'); ladujDzien(); };
   $('t-kursanci').onclick = () => { ustawZakladke('kursanci'); ladujKursantow(); };
-  $('t-osoby').onclick = () => { ustawZakladke('osoby'); ladujOsoby(); ladujInstruktorowLista(); ladujPin(); ladujKosz(); };
+  $('t-osoby').onclick = () => { ustawZakladke('osoby'); ladujOsoby(); ladujInstruktorowLista(); ladujPin(); ladujKosz(); pokazKopie(); };
   $('t-miesiac').onclick = () => { ustawZakladke('miesiac'); ladujMiesiac(); };
 
   // ----- Rejestr kursantów -----
@@ -1165,6 +1186,7 @@
       if (profil && profil.rola !== 'biuro') sprawdzZmiany();
     }, 30000);
     if (profil.rola !== 'biuro') sprawdzZmiany();
+    else setTimeout(autoKopie, 2500);
   }
   function widacGrafik() {
     return profil && !$('s-panel').classList.contains('hidden') && !$('tab-grafik').classList.contains('hidden') &&
@@ -2550,6 +2572,176 @@ function cellTime(v) {
       await ladujKosz(); ladujKursantow(); ladujDzien(true);
       msg('m-kosz', 'Przywrócono.', 'ok');
     }));
+  }
+
+  // ===== KOPIA ZAPASOWA =====
+  const KOPIA_TAB = ['instruktorzy', 'kursanci', 'jazdy', 'wolne', 'dokupione'];
+  const kluczK = n => n + '_' + (profil && profil.szkola_id);
+  const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (_) { return d; } };
+  const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (_) {} };
+  const slugSzkoly = () => slugNazwy((profil.szkoly && profil.szkoly.nazwa) || 'szkola').slice(0, 40);
+
+  async function zbierzKopie() {
+    const dane = {};
+    for (const t of KOPIA_TAB) {
+      const wiersze = [];
+      for (let od = 0; ; od += 1000) {
+        const { data, error } = await sb.from(t).select('*').eq('szkola_id', profil.szkola_id).range(od, od + 999);
+        if (error) { if (t === 'dokupione' && /dokupione/.test(error.message)) break; throw error; }
+        wiersze.push(...data); if (data.length < 1000) break;
+      }
+      dane[t] = wiersze;
+    }
+    return { app: 'program-szkoly-jazdy', wersja_kopii: 1, wersja_programu: WERSJA, utworzono: new Date().toISOString(),
+      szkola: { id: profil.szkola_id, nazwa: profil.szkoly && profil.szkoly.nazwa }, dane };
+  }
+  const opisKopii = k => KOPIA_TAB.map(t => `${t}: ${(k.dane[t] || []).length}`).join(', ');
+
+  async function kopiaDoPliku(cicho) {
+    const k = await zbierzKopie();
+    pobierzPlik(`kopia-${slugSzkoly()}-${dzisStr()}.json`, JSON.stringify(k), 'application/json');
+    lsSet(kluczK('kopia_plik'), new Date().toISOString());
+    if (!cicho) msg('m-kopia', 'Zapisano kopię w Pobranych (' + opisKopii(k) + ').', 'ok');
+    pokazKopie();
+  }
+  function pokazKopie() {
+    if (!profil || profil.rola !== 'biuro') return;
+    const ost = lsGet(kluczK('kopia_plik'), '');
+    $('kp-status').textContent = ost ? `Ostatnia kopia na tym komputerze: ${fmtData(ost)} ${godzina(ost)}.` : 'Na tym komputerze nie było jeszcze kopii.';
+    $('kp-auto').checked = lsGet(kluczK('kopia_auto_plik'), '1') === '1';
+    const cid = (profil.szkoly && profil.szkoly.google_client_id) || '';
+    $('kd-client').value = cid;
+    $('kd-auto').checked = lsGet(kluczK('kopia_auto_dysk'), '1') === '1';
+    const kd = profil.szkoly && profil.szkoly.kopia_dysk;
+    $('kd-status').textContent = !cid ? 'Nie ustawiono połączenia z Google – wpisz poniżej identyfikator klienta Google i kliknij Zapisz.'
+      : (kd ? `Ostatnia kopia na Dysku: ${fmtData(kd)}.` : 'Na Dysku nie ma jeszcze kopii.');
+  }
+  $('kp-auto').onchange = () => lsSet(kluczK('kopia_auto_plik'), $('kp-auto').checked ? '1' : '0');
+  $('kd-auto').onchange = () => lsSet(kluczK('kopia_auto_dysk'), $('kd-auto').checked ? '1' : '0');
+  $('kp-teraz').onclick = () => zajety($('kp-teraz'), async () => { try { await kopiaDoPliku(); } catch (err) { msg('m-kopia', tlumacz(err)); } });
+
+  $('kp-przywroc').onclick = () => {
+    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json,application/json';
+    inp.onchange = () => zajety($('kp-przywroc'), async () => {
+      const f = inp.files[0]; if (!f) return;
+      let k; try { k = JSON.parse(await f.text()); } catch (_) { msg('m-kopia', 'To nie jest plik kopii.'); return; }
+      if (!k || k.app !== 'program-szkoly-jazdy' || !k.dane) { msg('m-kopia', 'To nie jest plik kopii tego programu.'); return; }
+      if (k.szkola && k.szkola.id !== profil.szkola_id &&
+          !confirm(`Ta kopia pochodzi z innej szkoły („${k.szkola.nazwa || '?'}”). Wczytać ją do „${profil.szkoly.nazwa}”?`)) return;
+      if (!confirm(`Przywrócić kopię z ${fmtData(k.utworzono)} ${godzina(k.utworzono)}?\n\n${opisKopii(k)}\n\n` +
+          'Wpisy z kopii wrócą do programu (usunięte zostaną odtworzone, zmienione – cofnięte do stanu z kopii).\n' +
+          'Wpisy dodane PO zrobieniu kopii zostaną bez zmian.')) return;
+      if (!(await wymagajPin('Przywracanie kopii zapasowej'))) return;
+      try {
+        msg('m-kopia', 'Przed przywróceniem zapisuję bieżący stan jako kopię…', 'ok');
+        await kopiaDoPliku(true);
+        const kursIds = new Set((k.dane.kursanci || []).map(x => x.id));
+        const ist = await sb.from('kursanci').select('id').eq('szkola_id', profil.szkola_id);
+        (ist.data || []).forEach(x => kursIds.add(x.id));
+        let n = 0;
+        for (const t of KOPIA_TAB) {
+          let w = (k.dane[t] || []).map(x => ({ ...x, szkola_id: profil.szkola_id }));
+          if (t === 'jazdy') w = w.map(x => (x.kursant_id && !kursIds.has(x.kursant_id) ? { ...x, kursant_id: null } : x));
+          if (t === 'dokupione') w = w.filter(x => kursIds.has(x.kursant_id));
+          for (let i = 0; i < w.length; i += 500) {
+            const cz = w.slice(i, i + 500);
+            const { error } = t === 'dokupione'
+              ? await sb.from(t).upsert(cz, { onConflict: 'id', ignoreDuplicates: true })
+              : await sb.from(t).upsert(cz, { onConflict: 'id' });
+            if (error) throw new Error(`${t}: ${tlumacz(error)}`);
+            n += cz.length;
+          }
+        }
+        await ladujInstruktorow(); wypelnijInstr(); ladujKursantow(); ladujDzien(true);
+        msg('m-kopia', `Przywrócono ${n} wpisów z kopii. Stan sprzed przywrócenia zapisałem w Pobranych.`, 'ok');
+      } catch (err) { msg('m-kopia', 'Przywracanie przerwane: ' + (err.message || err)); }
+    });
+    inp.click();
+  };
+
+  // ----- Dysk Google -----
+  let gToken = null, gTokenDo = 0, gKlient = null;
+  $('kd-zapisz-id').onclick = () => zajety($('kd-zapisz-id'), async () => {
+    const id = $('kd-client').value.trim();
+    if (id && !/\.apps\.googleusercontent\.com$/.test(id)) { msg('m-kopia', 'Identyfikator kończy się na „.apps.googleusercontent.com”.'); return; }
+    const { error } = await sb.from('szkoly').update({ google_client_id: id || null }).eq('id', profil.szkola_id);
+    if (error) { msg('m-kopia', /google_client_id/.test(error.message) ? 'Najpierw uruchom w Supabase plik krok9_kopia.sql.' : tlumacz(error)); return; }
+    profil.szkoly.google_client_id = id || null; gKlient = null; gToken = null;
+    msg('m-kopia', 'Zapisano.', 'ok'); pokazKopie();
+  });
+  async function tokenGoogle() {
+    if (gToken && Date.now() < gTokenDo - 60000) return gToken;
+    const cid = profil.szkoly && profil.szkoly.google_client_id;
+    if (!cid) throw new Error('Najpierw wpisz identyfikator klienta Google w zakładce Osoby → Kopia zapasowa.');
+    if (!window.google || !google.accounts || !google.accounts.oauth2) await loadScript('https://accounts.google.com/gsi/client');
+    return new Promise((res, rej) => {
+      gKlient = google.accounts.oauth2.initTokenClient({
+        client_id: cid, scope: 'https://www.googleapis.com/auth/drive.file',
+        callback: r => { if (r.error) { rej(new Error('Google: ' + r.error)); return; }
+          gToken = r.access_token; gTokenDo = Date.now() + (Number(r.expires_in) || 3600) * 1000; res(gToken); },
+        error_callback: e => rej(new Error(e && e.type === 'popup_closed' ? 'Zamknięto okno logowania Google.' : 'Nie udało się połączyć z Google (' + ((e && e.type) || '?') + ').'))
+      });
+      gKlient.requestAccessToken({ prompt: '' });
+    });
+  }
+  async function gApi(url, opt = {}) {
+    const t = await tokenGoogle();
+    const r = await fetch(url, { ...opt, headers: { ...(opt.headers || {}), Authorization: 'Bearer ' + t } });
+    if (!r.ok) throw new Error('Dysk Google: ' + r.status + ' ' + (await r.text()).slice(0, 120));
+    return r.status === 204 ? null : r.json();
+  }
+  async function kopiaNaDysk() {
+    const nazwaFolderu = 'Kopie – ' + ((profil.szkoly && profil.szkoly.nazwa) || 'szkoła jazdy');
+    const q = encodeURIComponent(`name='${nazwaFolderu.replace(/'/g, "\\'")}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
+    let f = await gApi(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)`);
+    let folder = f.files[0] && f.files[0].id;
+    if (!folder) folder = (await gApi('https://www.googleapis.com/drive/v3/files', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: nazwaFolderu, mimeType: 'application/vnd.google-apps.folder' }) })).id;
+    const k = await zbierzKopie();
+    const nazwa = `kopia-${slugSzkoly()}-${dzisStr()}.json`;
+    const ist = await gApi(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(`'${folder}' in parents and name='${nazwa}' and trashed=false`)}&fields=files(id)`);
+    const b = 'kopia' + Date.now();
+    const meta = ist.files[0] ? {} : { name: nazwa, parents: [folder], mimeType: 'application/json' };
+    const cialo = `--${b}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(meta)}\r\n--${b}\r\nContent-Type: application/json\r\n\r\n${JSON.stringify(k)}\r\n--${b}--`;
+    await gApi(ist.files[0]
+      ? `https://www.googleapis.com/upload/drive/v3/files/${ist.files[0].id}?uploadType=multipart`
+      : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',
+      { method: ist.files[0] ? 'PATCH' : 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + b }, body: cialo });
+    // zostawiamy 30 najnowszych kopii
+    const lista = await gApi(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(`'${folder}' in parents and trashed=false`)}&orderBy=createdTime desc&pageSize=200&fields=files(id,name)`);
+    for (const st of lista.files.slice(30)) await gApi(`https://www.googleapis.com/drive/v3/files/${st.id}`, { method: 'DELETE' });
+    await sb.from('szkoly').update({ kopia_dysk: dzisStr() }).eq('id', profil.szkola_id);
+    profil.szkoly.kopia_dysk = dzisStr();
+    pokazKopie(); pokazBanerKopii();
+    return opisKopii(k);
+  }
+  $('kd-teraz').onclick = () => zajety($('kd-teraz'), async () => {
+    try { const o = await kopiaNaDysk(); msg('m-kopia', `Kopia zapisana na Dysku Google, w folderze „Kopie – ${profil.szkoly.nazwa}” (${o}).`, 'ok'); }
+    catch (err) { msg('m-kopia', err.message || String(err)); }
+  });
+
+  function pokazBanerKopii() {
+    const el = $('kopia-baner');
+    const potrzeba = profil && profil.rola === 'biuro' && profil.szkoly && profil.szkoly.google_client_id &&
+      lsGet(kluczK('kopia_auto_dysk'), '1') === '1' && profil.szkoly.kopia_dysk !== dzisStr();
+    if (!potrzeba) { el.classList.add('hidden'); return; }
+    el.classList.remove('hidden');
+    el.innerHTML = `<div class="zm"><span>☁️ <b>Dzisiejsza kopia na Dysk Google</b> jeszcze nie została zrobiona.</span>
+      <button type="button" id="kb-wyslij">Wyślij teraz</button><button type="button" id="kb-pozniej">Później</button></div>`;
+    $('kb-wyslij').onclick = () => zajety($('kb-wyslij'), async () => {
+      try { await kopiaNaDysk(); el.innerHTML = '<div class="zm"><span>✅ Kopia zapisana na Dysku Google.</span></div>'; setTimeout(() => el.classList.add('hidden'), 4000); }
+      catch (err) { el.innerHTML = `<div class="zm"><span>❌ ${esc(err.message || String(err))}</span><button type="button" id="kb-pozniej">Zamknij</button></div>`;
+        $('kb-pozniej').onclick = () => el.classList.add('hidden'); }
+    });
+    $('kb-pozniej').onclick = () => el.classList.add('hidden');
+  }
+  async function autoKopie() {
+    if (!profil || profil.rola !== 'biuro') return;
+    try {
+      const ost = lsGet(kluczK('kopia_plik'), '');
+      if (lsGet(kluczK('kopia_auto_plik'), '1') === '1' && (!ost || dzisStr(new Date(ost)) !== dzisStr())) await kopiaDoPliku(true);
+    } catch (_) {}
+    pokazBanerKopii();
   }
 
   // ===== Skan PKK ze zdjęcia (przeniesione z rejestru PKK 1.5) =====
