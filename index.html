@@ -87,6 +87,34 @@
   .ust summary{font-weight:600;color:var(--t);font-size:15px;margin:0}
   .ust .btn{margin-top:14px}
   .ostrz{color:#a15c00}
+  .akcje{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+  .wolny-inst{display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid #f0c9c4;border-left:5px solid var(--r);border-radius:10px;margin-bottom:8px;background:#fdf1ef;color:#8a2c22;font-size:14px}
+  .wolny-inst .godz{font-weight:700;min-width:92px}
+  .wolny-inst.edyt{cursor:pointer}
+  .przerwa{font-size:12px;color:var(--m);text-align:center;margin:-2px 0 6px}
+  .tabs.panel button{padding:10px 6px;font-size:15px}
+  table.mc{width:100%;border-collapse:collapse;font-size:14px}
+  table.mc th,table.mc td{padding:8px 6px;border-bottom:1px solid var(--b);text-align:left}
+  table.mc .num{text-align:right;font-variant-numeric:tabular-nums}
+  table.mc tr.inst{cursor:pointer}
+  table.mc tr.inst:hover td{background:var(--g2)}
+  table.mc tr.det td{font-size:13px;color:var(--m);background:#fafbfc}
+  table.mc tr.det a{color:var(--g)}
+  table.mc tr.razem td{font-weight:700;border-top:2px solid var(--t)}
+  #druk{display:none}
+  @media print{
+    body>*:not(#druk){display:none!important}
+    #druk{display:block;font-family:Arial,sans-serif;color:#000;font-size:12pt}
+    #druk h1{font-size:16pt;margin:0 0 2pt}
+    #druk h2{font-size:13pt;margin:0 0 10pt;font-weight:400}
+    #druk table{width:100%;border-collapse:collapse;margin-bottom:12pt}
+    #druk th,#druk td{border:1px solid #444;padding:4pt 6pt;text-align:left;vertical-align:top}
+    #druk th{background:#eee}
+    #druk .num{text-align:right}
+    #druk .stopka{font-size:9pt;color:#555;margin-top:8pt}
+    #druk .strona{page-break-after:always}
+    #druk .strona:last-child{page-break-after:auto}
+  }
   .skan{background:var(--bg);border:1px dashed var(--b);border-radius:10px;padding:12px;margin-bottom:6px}
   .skan .pasek{margin-bottom:8px}
   .skan button{flex:1}
@@ -201,6 +229,7 @@
     <div id="p-biuro-tabs" class="tabs panel hidden">
       <button id="t-grafik" class="on" type="button">Grafik</button>
       <button id="t-kursanci" type="button">Kursanci</button>
+      <button id="t-miesiac" type="button">Miesiąc</button>
       <button id="t-osoby" type="button">Osoby</button>
     </div>
 
@@ -219,7 +248,12 @@
           <span class="licznik" id="g-suma"></span>
         </div>
         <div id="g-lista"><p class="hint">Ładowanie…</p></div>
-        <button id="g-dodaj" class="btn2 hidden" type="button">+ Dodaj jazdę</button>
+        <div class="akcje">
+          <button id="g-dodaj" class="dodaj" type="button">+ Jazda</button>
+          <button id="g-wolne" type="button">⛔ Wolne</button>
+          <button id="g-wa" type="button">📲 WhatsApp</button>
+          <button id="g-druk" type="button">🖨 Drukuj</button>
+        </div>
         <div id="m-grafik" class="msg"></div>
       </div>
       <details id="g-ustawienia" class="card ust hidden">
@@ -256,6 +290,21 @@
         </div>
       </div>
 
+      <!-- Zakładka: miesiąc -->
+      <div id="tab-miesiac" class="hidden">
+        <div class="card">
+          <div class="dzien">
+            <button id="mc-prev" type="button" aria-label="Poprzedni miesiąc">‹</button>
+            <div class="dz-opis"><b id="mc-nazwa"></b><span>godziny instruktorów</span></div>
+            <button id="mc-next" type="button" aria-label="Następny miesiąc">›</button>
+          </div>
+          <div id="mc-tabela" style="margin-top:12px"><p class="hint">Ładowanie…</p></div>
+          <p class="hint" style="margin-top:10px">Liczone są jazdy i egzaminy (bez „Inne”). Kliknij instruktora, żeby zobaczyć dni; kliknij dzień, żeby otworzyć grafik.</p>
+          <button id="mc-druk" class="btn2" type="button">🖨 Drukuj / PDF zestawienie</button>
+          <div id="m-miesiac" class="msg"></div>
+        </div>
+      </div>
+
       <!-- Zakładka: osoby -->
       <div id="tab-osoby" class="hidden">
         <div class="card">
@@ -282,6 +331,46 @@
 
   <footer>wersja <span id="wersja"></span></footer>
 </div>
+
+<!-- Okno: wolne instruktora -->
+<div id="modal-wolne" class="modal hidden">
+  <div class="sheet">
+    <h2 id="mw-tytul">Wolne instruktora</h2>
+    <form id="f-wolne">
+      <label for="w-instr">Instruktor</label><select id="w-instr" required></select>
+      <label for="w-data">Data</label><input type="date" id="w-data" required>
+      <label class="check"><input id="w-caly" type="checkbox"> Cały dzień</label>
+      <div class="siatka" id="w-godziny">
+        <div><label for="w-od">Od</label><input type="time" id="w-od" step="300"></div>
+        <div><label for="w-do">Do</label><input type="time" id="w-do" step="300"></div>
+      </div>
+      <label for="w-uwagi">Powód / uwagi</label><input id="w-uwagi" placeholder="np. urlop, lekarz" autocomplete="off">
+      <button id="w-zapisz" class="btn" type="submit">Zapisz</button>
+      <button id="w-anuluj" class="btn2" type="button">Anuluj</button>
+      <button id="w-usun" class="usun hidden" type="button">Usuń wolne</button>
+      <div id="m-wolne" class="msg"></div>
+    </form>
+  </div>
+</div>
+
+<!-- Okno: WhatsApp -->
+<div id="modal-wa" class="modal hidden">
+  <div class="sheet">
+    <h2>Wyślij grafik na WhatsApp</h2>
+    <div class="tabs" style="margin-bottom:10px">
+      <button id="wa-t1" class="on" type="button">Do instruktora</button>
+      <button id="wa-t2" type="button">Wszyscy (grupa)</button>
+    </div>
+    <p class="hint" id="wa-opis"></p>
+    <textarea id="wa-tekst" style="min-height:220px;margin-top:8px;font-size:14px"></textarea>
+    <button id="wa-wyslij" class="btn" type="button">📲 Otwórz WhatsApp</button>
+    <button id="wa-kopiuj" class="btn2" type="button">📋 Kopiuj tekst</button>
+    <button id="wa-anuluj" class="btn2" type="button">Zamknij</button>
+    <div id="m-wa" class="msg"></div>
+  </div>
+</div>
+
+<div id="druk"></div>
 
 <!-- Okno: jazda -->
 <div id="modal-jazda" class="modal hidden">
@@ -382,7 +471,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '0.4';
+  const WERSJA = '0.5';
   // ======================
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -549,6 +638,8 @@
     $('p-biuro').classList.toggle('hidden', !biuro);
     $('g-instr-pasek').classList.toggle('hidden', !biuro);
     $('g-dodaj').classList.toggle('hidden', !biuro);
+    $('g-wolne').classList.toggle('hidden', !biuro);
+    $('g-wa').classList.toggle('hidden', !biuro);
     $('g-ustawienia').classList.toggle('hidden', !biuro);
     pokaz('s-panel');
     if (biuro) {
@@ -566,7 +657,7 @@
   let zakladka = 'grafik';
   function ustawZakladke(z) {
     zakladka = z;
-    ['grafik', 'kursanci', 'osoby'].forEach(n => {
+    ['grafik', 'kursanci', 'miesiac', 'osoby'].forEach(n => {
       $('t-' + n).classList.toggle('on', z === n);
       $('tab-' + n).classList.toggle('hidden', z !== n);
     });
@@ -574,6 +665,7 @@
   $('t-grafik').onclick = () => { ustawZakladke('grafik'); ladujDzien(); };
   $('t-kursanci').onclick = () => { ustawZakladke('kursanci'); ladujKursantow(); };
   $('t-osoby').onclick = () => { ustawZakladke('osoby'); ladujOsoby(); ladujInstruktorowLista(); };
+  $('t-miesiac').onclick = () => { ustawZakladke('miesiac'); ladujMiesiac(); };
 
   // ----- Rejestr kursantów -----
   let kursanci = [];
@@ -799,6 +891,7 @@
   const godzina = v => { const d = new Date(v); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
   const naMin = t => { const [h, m] = String(t).split(':').map(Number); return h * 60 + m; };
   const zMin = m => pad(Math.floor(m / 60)) + ':' + pad(m % 60);
+  const hm = t => String(t || '').slice(0, 5);
   const isoZ = (dzien, t) => new Date(dzien + 'T' + t + ':00').toISOString();
   const minutyJazdy = j => Math.max(0, (new Date(j.koniec) - new Date(j.poczatek)) / 60000);
   const fmtH = min => (min / 60).toLocaleString('pl-PL', { maximumFractionDigits: 2 });
@@ -814,6 +907,7 @@
   let gInstr = null;
   let instruktorzy = [];
   let gJazdy = [];
+  let gWolne = [];
   let gKursanci = new Map();
   let gPostep = new Map();
   let gEtyk = new Map();
@@ -838,7 +932,7 @@
   }
   function widacGrafik() {
     return profil && !$('s-panel').classList.contains('hidden') && !$('tab-grafik').classList.contains('hidden') &&
-      $('modal-jazda').classList.contains('hidden') && $('modal-kursant').classList.contains('hidden');
+      ['modal-jazda', 'modal-kursant', 'modal-wolne', 'modal-wa'].every(id => $(id).classList.contains('hidden'));
   }
   document.addEventListener('visibilitychange', () => { if (!document.hidden && widacGrafik()) ladujDzien(true); });
 
@@ -894,6 +988,8 @@
     if (error) { msg('m-grafik', tlumacz(error)); return; }
     if (!cicho) msg('m-grafik', '');
     gJazdy = data;
+    const w = await sb.from('wolne').select('*').eq('instruktor_id', gInstr).eq('dzien', gDzien).order('godz_od');
+    gWolne = w.error ? [] : w.data;
     const ids = [...new Set(data.map(j => j.kursant_id).filter(Boolean))];
     if (ids.some(id => !gKursanci.has(id))) await ladujKursantowDoGrafiku();
     gPostep = new Map();
@@ -936,8 +1032,10 @@
     const edyt = profil.rola === 'biuro';
     const p0 = new Date(gDzien + 'T00:00:00');
     const odMin = v => Math.round((new Date(v) - p0) / 60000);
-    const busy = gJazdy.map(j => [odMin(j.poczatek), odMin(j.koniec)]);
-    const elementy = gJazdy.map(j => ({ t: odMin(j.poczatek), j }));
+    const busy = gJazdy.map(j => [odMin(j.poczatek), odMin(j.koniec)])
+      .concat(gWolne.map(w => w.godz_od ? [naMin(w.godz_od), naMin(w.godz_do)] : [0, 1440]));
+    const elementy = gJazdy.map(j => ({ t: odMin(j.poczatek), j }))
+      .concat(gWolne.map(w => ({ t: w.godz_od ? naMin(w.godz_od) : -1, wi: w })));
     if (edyt) wolneOkna(busy).forEach(w => elementy.push({ t: w.od, w }));
     elementy.sort((a, b) => a.t - b.t);
 
@@ -950,6 +1048,9 @@
       return;
     }
     $('g-lista').innerHTML = elementy.map(e => {
+      if (e.wi) return `<div class="wolny-inst${edyt ? ' edyt' : ''}" data-wid="${e.wi.id}">
+          <span class="godz">${e.wi.godz_od ? hm(e.wi.godz_od) + '–' + hm(e.wi.godz_do) : 'cały dzień'}</span>
+          ⛔ wolne${e.wi.uwagi ? ' – ' + esc(e.wi.uwagi) : ''}</div>`;
       if (e.w) return `<div class="wolne edyt" data-od="${zMin(e.w.od)}" data-do="${zMin(e.w.do)}">
           <span class="godz">${zMin(e.w.od)}–${zMin(e.w.do)}</span> wolne <span class="plus">+ dodaj</span></div>`;
       const j = e.j, k = j.kursant_id ? gKursanci.get(j.kursant_id) : null;
@@ -971,6 +1072,8 @@
     });
     $('g-lista').querySelectorAll('.wolne.edyt').forEach(el => el.onclick = () =>
       otworzJazde(null, { od: el.dataset.od, do: el.dataset.do }));
+    $('g-lista').querySelectorAll('.wolny-inst.edyt').forEach(el => el.onclick = () =>
+      otworzWolne(gWolne.find(w => w.id === el.dataset.wid)));
   }
   $('g-dodaj').onclick = () => {
     if (!gInstr) { msg('m-grafik', 'Najpierw dodaj instruktora w zakładce „Osoby”.'); return; }
@@ -1147,7 +1250,7 @@
     msg('m-instruktorzy', '');
     $('p-instruktorzy').innerHTML = instruktorzy.map(i => `<div class="row">
         <div class="who"><b>${esc(i.imie_nazwisko)} ${i.aktywny ? '' : '<span class="pill szary">ukryty</span>'}</b>
-          <span>${i.user_id ? 'ma konto w programie' : 'bez konta'}</span></div>
+          <span>${i.user_id ? 'ma konto w programie' : 'bez konta'}${i.telefon ? ' · 📞 ' + esc(i.telefon) : ''}</span></div>
         <div class="acts"><button data-a="nazwa" data-id="${i.id}">Zmień</button>
           <button data-a="ukryj" data-id="${i.id}">${i.aktywny ? 'Ukryj' : 'Przywróć'}</button></div></div>`).join('')
       || '<p class="hint">Brak instruktorów.</p>';
@@ -1157,7 +1260,8 @@
       if (b.dataset.a === 'nazwa') {
         const n = prompt('Imię i nazwisko instruktora:', i.imie_nazwisko);
         if (!n || !n.trim()) return;
-        zm = { imie_nazwisko: n.trim() };
+        const t = prompt('Telefon instruktora (do wysyłki grafiku na WhatsApp):', i.telefon || '');
+        zm = { imie_nazwisko: n.trim(), telefon: t === null ? i.telefon : (t.trim() || null) };
       } else {
         if (i.aktywny && !confirm(`Ukryć instruktora „${i.imie_nazwisko}” w grafiku? Jego jazdy zostaną zachowane.`)) return;
         zm = { aktywny: !i.aktywny };
@@ -1175,6 +1279,295 @@
     if (!gInstr) gInstr = data.id;
     await ladujInstruktorowLista(); wypelnijInstr(); ladujDzien();
   });
+
+  // ===== WOLNE INSTRUKTORÓW =====
+  let edytWolne = null;
+  function otworzWolne(w) {
+    edytWolne = w || null;
+    $('mw-tytul').textContent = w ? 'Edycja wolnego' : 'Wolne instruktora';
+    $('w-instr').innerHTML = instruktorzy.filter(i => i.aktywny || (w && i.id === w.instruktor_id))
+      .map(i => `<option value="${i.id}">${esc(i.imie_nazwisko)}</option>`).join('');
+    $('w-instr').value = w ? w.instruktor_id : gInstr;
+    $('w-data').value = w ? w.dzien : gDzien;
+    $('w-caly').checked = w ? !w.godz_od : false;
+    $('w-od').value = w && w.godz_od ? hm(w.godz_od) : ust().od;
+    $('w-do').value = w && w.godz_do ? hm(w.godz_do) : ust().do;
+    $('w-uwagi').value = w ? (w.uwagi || '') : '';
+    $('w-godziny').classList.toggle('hidden', $('w-caly').checked);
+    $('w-usun').classList.toggle('hidden', !w);
+    msg('m-wolne', '');
+    $('modal-wolne').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+  function zamknijWolne() { $('modal-wolne').classList.add('hidden'); document.body.style.overflow = ''; edytWolne = null; }
+  $('w-caly').onchange = () => $('w-godziny').classList.toggle('hidden', $('w-caly').checked);
+  $('g-wolne').onclick = () => {
+    if (!gInstr) { msg('m-grafik', 'Najpierw dodaj instruktora w zakładce „Osoby”.'); return; }
+    otworzWolne(null);
+  };
+  $('w-anuluj').onclick = zamknijWolne;
+  $('modal-wolne').onclick = e => { if (e.target.id === 'modal-wolne') zamknijWolne(); };
+  $('f-wolne').onsubmit = e => {
+    e.preventDefault();
+    zajety($('w-zapisz'), async () => {
+      const caly = $('w-caly').checked;
+      const d = {
+        instruktor_id: $('w-instr').value, dzien: $('w-data').value,
+        godz_od: caly ? null : $('w-od').value, godz_do: caly ? null : $('w-do').value,
+        uwagi: $('w-uwagi').value.trim() || null
+      };
+      if (!caly && (!d.godz_od || !d.godz_do || naMin(d.godz_do) <= naMin(d.godz_od))) {
+        msg('m-wolne', 'Godzina „do” musi być późniejsza niż „od”.'); return;
+      }
+      // jazdy w czasie wolnego – ostrzeżenie
+      const p0 = new Date(d.dzien + 'T00:00:00');
+      const od = caly ? p0 : new Date(d.dzien + 'T' + d.godz_od + ':00');
+      const doo = caly ? new Date(dodajDni(d.dzien, 1) + 'T00:00:00') : new Date(d.dzien + 'T' + d.godz_do + ':00');
+      const { data: kol } = await sb.from('jazdy').select('poczatek, koniec').eq('instruktor_id', d.instruktor_id)
+        .lt('poczatek', doo.toISOString()).gt('koniec', od.toISOString());
+      if (kol && kol.length && !confirm(`W tym czasie instruktor ma ${kol.length} ${slowoJazd(kol.length)}: ` +
+          kol.map(x => godzina(x.poczatek) + '–' + godzina(x.koniec)).join(', ') + '.\n\nZapisać wolne mimo to?')) return;
+      const w = edytWolne
+        ? await sb.from('wolne').update(d).eq('id', edytWolne.id)
+        : await sb.from('wolne').insert({ ...d, szkola_id: profil.szkola_id });
+      if (w.error) {
+        msg('m-wolne', /relation .*wolne|wolne.*does not exist|schema cache/i.test(w.error.message)
+          ? 'Najpierw uruchom w Supabase plik krok5_wolne.sql.' : tlumacz(w.error));
+        return;
+      }
+      zamknijWolne();
+      gInstr = d.instruktor_id; gDzien = d.dzien; wypelnijInstr();
+      await ladujDzien();
+    });
+  };
+  $('w-usun').onclick = () => zajety($('w-usun'), async () => {
+    if (!edytWolne || !confirm('Usunąć to wolne?')) return;
+    const { error } = await sb.from('wolne').delete().eq('id', edytWolne.id);
+    if (error) { msg('m-wolne', tlumacz(error)); return; }
+    zamknijWolne(); await ladujDzien();
+  });
+
+  // ===== TEKST GRAFIKU (WhatsApp / wydruk) =====
+  const fmtDur = min => { const h = Math.floor(min / 60), m = Math.round(min % 60); return (h ? h + ' h' : '') + (h && m ? ' ' : '') + (m ? m + ' min' : ''); };
+  function dataKrotka(dzien) { const d = parseD(dzien); return `${DNI[d.getDay()]} ${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`; }
+  async function daneDnia(dzien, idInstr) {
+    const od = new Date(dzien + 'T00:00:00'), doo = new Date(dodajDni(dzien, 1) + 'T00:00:00');
+    let q = sb.from('jazdy').select('*').gte('poczatek', od.toISOString()).lt('poczatek', doo.toISOString()).order('poczatek');
+    let qw = sb.from('wolne').select('*').eq('dzien', dzien).order('godz_od');
+    if (idInstr) { q = q.eq('instruktor_id', idInstr); qw = qw.eq('instruktor_id', idInstr); }
+    const [a, b] = await Promise.all([q, qw]);
+    if (a.error) throw a.error;
+    const ids = [...new Set(a.data.map(j => j.kursant_id).filter(Boolean))];
+    if (ids.some(id => !gKursanci.has(id))) await ladujKursantowDoGrafiku();
+    const post = new Map();
+    if (ids.length) {
+      const r = await sb.rpc('jazdy_kursantow', { p_ids: ids });
+      if (!r.error) r.data.forEach(x => { if (!post.has(x.kursant_id)) post.set(x.kursant_id, []); post.get(x.kursant_id).push(x); });
+    }
+    return { jazdy: a.data, wolne: b.error ? [] : b.data, post };
+  }
+  function linieInstr(jazdy, wolne) {
+    const L = [];
+    jazdy.forEach((j, i) => {
+      const k = gKursanci.get(j.kursant_id);
+      const kat = k && k.kategoria ? `[${k.kategoria}] ` : '';
+      const kto = k ? nazwaK(k) : (j.rodzaj === 'inne' ? 'Inne' : '(bez kursanta)');
+      const ex = j.rodzaj === 'egzamin' ? ' 🎓 EGZAMIN' : '';
+      L.push(`*${godzina(j.poczatek)}-${godzina(j.koniec)}* ${kat}${kto}${ex}${j.uwagi ? ` _(${j.uwagi})_` : ''}`);
+      const nast = jazdy[i + 1];
+      if (nast) { const p = (new Date(nast.poczatek) - new Date(j.koniec)) / 60000; if (p >= 15) L.push(`_– przerwa ${fmtDur(p)} –_`); }
+    });
+    if (wolne.length) L.push(`⛔ *Wolne:* ${wolne.map(w => (w.godz_od ? hm(w.godz_od) + '-' + hm(w.godz_do) : 'cały dzień') + (w.uwagi ? ' (' + w.uwagi + ')' : '')).join(', ')}`);
+    return L;
+  }
+  const sumaJazd = jazdy => { const r = jazdy.filter(j => j.rodzaj !== 'inne'); return { n: r.length, min: r.reduce((a, j) => a + minutyJazdy(j), 0) }; };
+  const nazwaSzkoly = () => ((profil.szkoly && profil.szkoly.nazwa) || 'Grafik').toUpperCase();
+
+  function tekstInstruktora(ins, dzien, d) {
+    const s = sumaJazd(d.jazdy);
+    const L = [`*${nazwaSzkoly()} – grafik pracy*`, `_${ins.imie_nazwisko}, ${dataKrotka(dzien)}_`, ''];
+    if (!d.jazdy.length) L.push('Brak zaplanowanych jazd.');
+    L.push(...linieInstr(d.jazdy, d.wolne));
+    L.push('', `*Razem: ${s.n} ${slowoJazd(s.n)}, ${fmtH(s.min)} h*`);
+    return L.join('\n');
+  }
+  function tekstGrupy(dzien, d) {
+    const L = [`*${nazwaSzkoly()} – grafik pracy instruktorów*`, `_${dataKrotka(dzien)}_`];
+    instruktorzy.filter(i => i.aktywny).forEach(ins => {
+      const jz = d.jazdy.filter(j => j.instruktor_id === ins.id), wl = d.wolne.filter(w => w.instruktor_id === ins.id);
+      const s = sumaJazd(jz);
+      L.push('', `👤 *${ins.imie_nazwisko}* – ${s.n} ${slowoJazd(s.n)}, ${fmtH(s.min)} h`);
+      if (!jz.length && !wl.length) L.push('_brak jazd_');
+      L.push(...linieInstr(jz, wl));
+    });
+    return L.join('\n');
+  }
+
+  // ===== WHATSAPP =====
+  let waTryb = 'instr', waDane = null;
+  function waNumer(p) {
+    let d = String(p || '').replace(/\D/g, '');
+    if (d.startsWith('00')) d = d.slice(2);
+    if (d.length === 9) d = '48' + d;
+    return d;
+  }
+  async function waPokaz() {
+    $('wa-t1').classList.toggle('on', waTryb === 'instr');
+    $('wa-t2').classList.toggle('on', waTryb === 'grupa');
+    msg('m-wa', '');
+    const ins = instruktorzy.find(i => i.id === gInstr);
+    if (waTryb === 'instr') {
+      $('wa-opis').textContent = ins.telefon
+        ? `Wiadomość do: ${ins.imie_nazwisko} (${ins.telefon}). Tekst możesz poprawić przed wysłaniem.`
+        : `${ins.imie_nazwisko} nie ma zapisanego telefonu – przy wysyłce program o niego zapyta.`;
+      $('wa-tekst').value = tekstInstruktora(ins, gDzien, waDane.jeden);
+    } else {
+      $('wa-opis').textContent = 'Grafik wszystkich instruktorów na ten dzień. Po otwarciu WhatsAppa wybierz grupę lub osobę.';
+      $('wa-tekst').value = tekstGrupy(gDzien, waDane.wszyscy);
+    }
+  }
+  $('g-wa').onclick = () => zajety($('g-wa'), async () => {
+    if (!gInstr) { msg('m-grafik', 'Najpierw dodaj instruktora w zakładce „Osoby”.'); return; }
+    try {
+      const [jeden, wszyscy] = await Promise.all([daneDnia(gDzien, gInstr), daneDnia(gDzien, null)]);
+      waDane = { jeden, wszyscy };
+    } catch (err) { msg('m-grafik', tlumacz(err)); return; }
+    waTryb = 'instr';
+    await waPokaz();
+    $('modal-wa').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  });
+  $('wa-t1').onclick = () => { waTryb = 'instr'; waPokaz(); };
+  $('wa-t2').onclick = () => { waTryb = 'grupa'; waPokaz(); };
+  function zamknijWa() { $('modal-wa').classList.add('hidden'); document.body.style.overflow = ''; }
+  $('wa-anuluj').onclick = zamknijWa;
+  $('modal-wa').onclick = e => { if (e.target.id === 'modal-wa') zamknijWa(); };
+  $('wa-kopiuj').onclick = async () => {
+    try { await navigator.clipboard.writeText($('wa-tekst').value); msg('m-wa', 'Skopiowano – wklej w WhatsAppie.', 'ok'); }
+    catch (_) { $('wa-tekst').select(); document.execCommand('copy'); msg('m-wa', 'Skopiowano.', 'ok'); }
+  };
+  $('wa-wyslij').onclick = () => zajety($('wa-wyslij'), async () => {
+    const txt = encodeURIComponent($('wa-tekst').value);
+    if (waTryb === 'grupa') { window.open('https://wa.me/?text=' + txt, '_blank'); return; }
+    const ins = instruktorzy.find(i => i.id === gInstr);
+    let tel = ins.telefon;
+    if (!tel) {
+      tel = prompt(`Numer telefonu (WhatsApp) instruktora ${ins.imie_nazwisko}:`);
+      if (!tel || !tel.trim()) return;
+      const { error } = await sb.from('instruktorzy').update({ telefon: tel.trim() }).eq('id', ins.id);
+      if (error) { msg('m-wa', tlumacz(error)); return; }
+      ins.telefon = tel.trim();
+    }
+    window.open(`https://wa.me/${waNumer(tel)}?text=${txt}`, '_blank');
+  });
+
+  // ===== WYDRUK =====
+  function drukuj(html) {
+    $('druk').innerHTML = html;
+    setTimeout(() => window.print(), 50);
+  }
+  const stopkaDruku = () => `<div class="stopka">Wydrukowano: ${new Date().toLocaleString('pl-PL')} · ${esc((profil.szkoly && profil.szkoly.nazwa) || '')}</div>`;
+  function htmlDnia(ins, dzien, d) {
+    const s = sumaJazd(d.jazdy);
+    const wiersze = d.jazdy.map(j => {
+      const k = gKursanci.get(j.kursant_id);
+      let post = '';
+      if (k && j.rodzaj !== 'inne') {
+        const przed = (d.post.get(k.id) || []).filter(x => x.rodzaj !== 'inne' && new Date(x.poczatek) < new Date(j.poczatek))
+          .reduce((a, x) => a + minutyJazdy(x), 0);
+        post = `${fmtH(przed)}–${fmtH(przed + minutyJazdy(j))}${wymaganeH(k) ? ' z ' + godz(wymaganeH(k)) : ''}`;
+      }
+      return `<tr><td>${godzina(j.poczatek)}–${godzina(j.koniec)}</td>
+        <td>${k ? esc(nazwaK(k)) : (j.rodzaj === 'inne' ? 'Inne' : '—')}${j.rodzaj === 'egzamin' ? ' <b>(EGZAMIN)</b>' : ''}</td>
+        <td>${k ? esc(k.kategoria || '') : ''}</td><td>${k ? esc(k.telefon || '') : ''}</td>
+        <td>${post}</td><td>${esc(j.uwagi || '')}</td></tr>`;
+    }).join('') || '<tr><td colspan="6">Brak zaplanowanych jazd.</td></tr>';
+    const wolne = d.wolne.length ? `<p><b>Wolne:</b> ${d.wolne.map(w => (w.godz_od ? hm(w.godz_od) + '–' + hm(w.godz_do) : 'cały dzień') + (w.uwagi ? ' (' + esc(w.uwagi) + ')' : '')).join(', ')}</p>` : '';
+    return `<div class="strona"><h1>${esc((profil.szkoly && profil.szkoly.nazwa) || '')} – grafik pracy</h1>
+      <h2>${esc(ins.imie_nazwisko)} · ${dataKrotka(dzien)}</h2>
+      <table><thead><tr><th>Godzina</th><th>Kursant</th><th>Kat.</th><th>Telefon</th><th>Godz. kursu</th><th>Uwagi</th></tr></thead>
+      <tbody>${wiersze}</tbody></table>${wolne}
+      <p><b>Razem: ${s.n} ${slowoJazd(s.n)}, ${fmtH(s.min)} h</b></p>${stopkaDruku()}</div>`;
+  }
+  $('g-druk').onclick = () => zajety($('g-druk'), async () => {
+    if (!gInstr) return;
+    try {
+      if (profil.rola === 'biuro' && confirm('Wydrukować grafik WSZYSTKICH instruktorów na ten dzień?\n\nOK – wszyscy (każdy na osobnej stronie)\nAnuluj – tylko wybrany instruktor')) {
+        const d = await daneDnia(gDzien, null);
+        drukuj(instruktorzy.filter(i => i.aktywny).map(ins => htmlDnia(ins, gDzien, {
+          jazdy: d.jazdy.filter(j => j.instruktor_id === ins.id), wolne: d.wolne.filter(w => w.instruktor_id === ins.id), post: d.post
+        })).join(''));
+      } else {
+        const ins = instruktorzy.find(i => i.id === gInstr);
+        drukuj(htmlDnia(ins, gDzien, await daneDnia(gDzien, gInstr)));
+      }
+    } catch (err) { msg('m-grafik', tlumacz(err)); }
+  });
+
+  // ===== ZESTAWIENIE MIESIĘCZNE =====
+  const MIES_M = ['styczeń', 'luty', 'marzec', 'kwiecień', 'maj', 'czerwiec', 'lipiec', 'sierpień', 'wrzesień', 'październik', 'listopad', 'grudzień'];
+  let mcMiesiac = dzisStr().slice(0, 7);
+  let mcDane = null;
+  function dodajMies(ym, n) { let [y, m] = ym.split('-').map(Number); m += n; while (m < 1) { m += 12; y--; } while (m > 12) { m -= 12; y++; } return y + '-' + pad(m); }
+  const nazwaMies = ym => { const [y, m] = ym.split('-').map(Number); return MIES_M[m - 1] + ' ' + y; };
+  $('mc-prev').onclick = () => { mcMiesiac = dodajMies(mcMiesiac, -1); ladujMiesiac(); };
+  $('mc-next').onclick = () => { mcMiesiac = dodajMies(mcMiesiac, 1); ladujMiesiac(); };
+
+  async function ladujMiesiac() {
+    $('mc-nazwa').textContent = nazwaMies(mcMiesiac);
+    $('mc-nazwa').style.textTransform = 'capitalize';
+    const od = new Date(mcMiesiac + '-01T00:00:00'), doo = new Date(dodajMies(mcMiesiac, 1) + '-01T00:00:00');
+    const { data, error } = await sb.from('jazdy').select('instruktor_id, poczatek, koniec, rodzaj')
+      .gte('poczatek', od.toISOString()).lt('poczatek', doo.toISOString()).order('poczatek');
+    if (error) { msg('m-miesiac', tlumacz(error)); return; }
+    msg('m-miesiac', '');
+    await ladujInstruktorow();
+    const st = new Map(instruktorzy.map(i => [i.id, { ins: i, n: 0, min: 0, egz: 0, dni: new Map() }]));
+    data.filter(j => j.rodzaj !== 'inne').forEach(j => {
+      const x = st.get(j.instruktor_id); if (!x) return;
+      const m = minutyJazdy(j), dz = dzisStr(new Date(j.poczatek));
+      x.n++; x.min += m; if (j.rodzaj === 'egzamin') x.egz++;
+      const d = x.dni.get(dz) || { n: 0, min: 0, od: godzina(j.poczatek), do: godzina(j.koniec) };
+      d.n++; d.min += m; d.do = godzina(j.koniec); x.dni.set(dz, d);
+    });
+    mcDane = [...st.values()].filter(x => x.ins.aktywny || x.n);
+    let tn = 0, tm = 0;
+    $('mc-tabela').innerHTML = `<table class="mc"><thead><tr><th>Instruktor</th><th class="num">Dni</th><th class="num">Jazd</th><th class="num">Godzin</th></tr></thead><tbody>
+      ${mcDane.map(x => { tn += x.n; tm += x.min;
+        return `<tr class="inst" data-id="${x.ins.id}"><td>▸ <b>${esc(x.ins.imie_nazwisko)}</b>${x.egz ? `<br><small>w tym egzaminów: ${x.egz}</small>` : ''}</td>
+          <td class="num">${x.dni.size}</td><td class="num">${x.n}</td><td class="num"><b>${fmtH(x.min)}</b></td></tr>` +
+          [...x.dni.entries()].map(([dz, d]) => `<tr class="det hidden" data-for="${x.ins.id}">
+            <td><a href="#" data-go="${x.ins.id}|${dz}">${dataKrotka(dz)}</a> · ${d.od}–${d.do}</td><td></td>
+            <td class="num">${d.n}</td><td class="num">${fmtH(d.min)}</td></tr>`).join('');
+      }).join('')}
+      <tr class="razem"><td>RAZEM</td><td></td><td class="num">${tn}</td><td class="num">${fmtH(tm)}</td></tr></tbody></table>`;
+    $('mc-tabela').querySelectorAll('tr.inst').forEach(r => r.onclick = () => {
+      const det = $('mc-tabela').querySelectorAll(`tr.det[data-for="${r.dataset.id}"]`);
+      const otworz = det.length && det[0].classList.contains('hidden');
+      det.forEach(d => d.classList.toggle('hidden', !otworz));
+      r.cells[0].innerHTML = r.cells[0].innerHTML.replace(otworz ? '▸' : '▾', otworz ? '▾' : '▸');
+    });
+    $('mc-tabela').querySelectorAll('a[data-go]').forEach(a => a.onclick = e => {
+      e.preventDefault();
+      const [id, dz] = a.dataset.go.split('|');
+      gInstr = id; gDzien = dz; wypelnijInstr(); ustawZakladke('grafik'); ladujDzien(); window.scrollTo(0, 0);
+    });
+  }
+  $('mc-druk').onclick = () => {
+    if (!mcDane) return;
+    let tn = 0, tm = 0;
+    const wiersze = mcDane.map(x => { tn += x.n; tm += x.min;
+      return `<tr><td><b>${esc(x.ins.imie_nazwisko)}</b></td><td class="num">${x.dni.size}</td><td class="num">${x.n}</td><td class="num">${x.egz}</td><td class="num"><b>${fmtH(x.min)}</b></td></tr>`; }).join('');
+    const szczegoly = mcDane.filter(x => x.n).map(x => `<h2 style="margin-top:12pt"><b>${esc(x.ins.imie_nazwisko)}</b></h2>
+      <table><thead><tr><th>Dzień</th><th>Godziny pracy</th><th class="num">Jazd</th><th class="num">Godzin</th></tr></thead><tbody>
+      ${[...x.dni.entries()].map(([dz, d]) => `<tr><td>${dataKrotka(dz)}</td><td>${d.od}–${d.do}</td><td class="num">${d.n}</td><td class="num">${fmtH(d.min)}</td></tr>`).join('')}
+      <tr><td colspan="2"><b>Razem</b></td><td class="num"><b>${x.n}</b></td><td class="num"><b>${fmtH(x.min)}</b></td></tr></tbody></table>`).join('');
+    drukuj(`<div><h1>${esc((profil.szkoly && profil.szkoly.nazwa) || '')} – zestawienie godzin</h1>
+      <h2 style="text-transform:capitalize">${nazwaMies(mcMiesiac)}</h2>
+      <table><thead><tr><th>Instruktor</th><th class="num">Dni</th><th class="num">Jazd</th><th class="num">Egzaminów</th><th class="num">Godzin</th></tr></thead>
+      <tbody>${wiersze}<tr><td><b>RAZEM</b></td><td></td><td class="num"><b>${tn}</b></td><td></td><td class="num"><b>${fmtH(tm)}</b></td></tr></tbody></table>
+      ${szczegoly}${stopkaDruku()}</div>`);
+  };
 
   // ===== Skan PKK ze zdjęcia (przeniesione z rejestru PKK 1.5) =====
   const fmtPkk = p => (p || '').replace(/\D/g, '').replace(/(\d{5})(?=\d)/g, '$1 ');
