@@ -58,6 +58,35 @@
   .sheet{background:#fff;border-radius:12px;padding:20px;width:100%;max-width:560px;margin:auto 0}
   .sheet h2{font-size:19px}
   .usun{width:100%;margin-top:10px;color:var(--r)}
+  .dzien{display:flex;align-items:center;gap:8px;margin-top:4px}
+  .dzien>button{font-size:22px;line-height:1;padding:8px 14px}
+  .dz-opis{flex:1;text-align:center;margin:0;cursor:pointer;position:relative}
+  .dz-opis b{display:block;font-size:18px}
+  .dz-opis span{font-size:13px;color:var(--m);font-weight:400}
+  .dz-opis input{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer}
+  .dz-akcje{display:flex;justify-content:space-between;align-items:center;margin:6px 0 10px}
+  .dz-akcje .link{margin:0}
+  .dz-akcje .licznik{margin:0}
+  .jazda{display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--b);border-left:5px solid var(--g);border-radius:10px;margin-bottom:8px;background:#fff}
+  .jazda.egzamin{border-left-color:#c77700;background:#fffaf0}
+  .jazda.inne{border-left-color:#8a96a3;background:#f7f8f9}
+  .jazda.edyt{cursor:pointer}
+  .jazda.edyt:hover{border-color:var(--g)}
+  .jazda .godz{font-weight:700;white-space:nowrap;min-width:92px;font-variant-numeric:tabular-nums;align-self:flex-start}
+  .jazda .kto{flex:1;min-width:0}
+  .jazda .kto span{font-size:13px;color:var(--m)}
+  .jazda{flex-wrap:wrap}
+  .jazda .tele{display:flex;gap:16px;width:100%;padding-left:102px}
+  .jazda .tele a{color:var(--g);font-weight:600;text-decoration:none;white-space:nowrap;font-size:14px}
+  .wolne{display:flex;gap:10px;align-items:center;padding:8px 12px;border:1px dashed #9fd3b4;border-radius:10px;margin-bottom:8px;background:#effaf3;color:#1d6b3f;font-size:14px}
+  .wolne .godz{font-weight:600;min-width:92px;font-variant-numeric:tabular-nums}
+  .wolne.edyt{cursor:pointer}
+  .wolne.edyt:hover{background:#e0f4e8}
+  .wolne .plus{margin-left:auto;font-weight:700}
+  .kat{display:inline-block;font-size:11px;font-weight:700;padding:1px 6px;border-radius:5px;background:#1d2329;color:#fff;vertical-align:1px;margin-left:4px}
+  .ust summary{font-weight:600;color:var(--t);font-size:15px;margin:0}
+  .ust .btn{margin-top:14px}
+  .ostrz{color:#a15c00}
   .skan{background:var(--bg);border:1px dashed var(--b);border-radius:10px;padding:12px;margin-bottom:6px}
   .skan .pasek{margin-bottom:8px}
   .skan button{flex:1}
@@ -169,14 +198,46 @@
       <button class="wyloguj" type="button">Wyloguj</button>
     </div>
 
-    <div id="p-biuro" class="hidden">
-      <div class="tabs panel">
-        <button id="t-kursanci" class="on" type="button">Kursanci</button>
-        <button id="t-osoby" type="button">Osoby</button>
+    <div id="p-biuro-tabs" class="tabs panel hidden">
+      <button id="t-grafik" class="on" type="button">Grafik</button>
+      <button id="t-kursanci" type="button">Kursanci</button>
+      <button id="t-osoby" type="button">Osoby</button>
+    </div>
+
+    <!-- Grafik (biuro: edycja, instruktor: podgląd swoich jazd) -->
+    <div id="tab-grafik">
+      <div class="card">
+        <div class="pasek" id="g-instr-pasek"><select id="g-instr"></select></div>
+        <div class="dzien">
+          <button id="g-prev" type="button" aria-label="Poprzedni dzień">‹</button>
+          <label class="dz-opis" for="g-date"><b id="g-rel"></b><span id="g-data"></span>
+            <input type="date" id="g-date"></label>
+          <button id="g-next" type="button" aria-label="Następny dzień">›</button>
+        </div>
+        <div class="dz-akcje">
+          <button id="g-dzis" class="link" type="button">Dziś</button>
+          <span class="licznik" id="g-suma"></span>
+        </div>
+        <div id="g-lista"><p class="hint">Ładowanie…</p></div>
+        <button id="g-dodaj" class="btn2 hidden" type="button">+ Dodaj jazdę</button>
+        <div id="m-grafik" class="msg"></div>
       </div>
+      <details id="g-ustawienia" class="card ust hidden">
+        <summary>⚙ Ustawienia grafiku</summary>
+        <div class="siatka">
+          <div><label for="u-od">Praca od</label><input type="time" id="u-od" step="900"></div>
+          <div><label for="u-do">Praca do</label><input type="time" id="u-do" step="900"></div>
+          <div class="cala"><label for="u-dl">Długość jazdy (minuty)</label><input type="number" id="u-dl" min="30" max="480" step="15"></div>
+        </div>
+        <button id="u-zapisz" class="btn" type="button">Zapisz ustawienia</button>
+        <div id="m-ust" class="msg"></div>
+      </details>
+    </div>
+
+    <div id="p-biuro" class="hidden">
 
       <!-- Zakładka: kursanci -->
-      <div id="tab-kursanci">
+      <div id="tab-kursanci" class="hidden">
         <div class="card">
           <div class="pasek">
             <input id="k-szukaj" type="search" placeholder="Szukaj: nazwisko, telefon, PKK…" autocomplete="off">
@@ -207,18 +268,49 @@
           <div id="p-osoby"><p class="hint">Ładowanie…</p></div>
           <div id="m-osoby" class="msg"></div>
         </div>
+        <div class="card">
+          <h2>Instruktorzy w grafiku</h2>
+          <p class="hint" style="margin-bottom:8px">Instruktor może być w grafiku także bez konta. Gdy później założy konto pod tym samym imieniem i nazwiskiem, po zatwierdzeniu połączy się z tym wpisem.</p>
+          <div id="p-instruktorzy"><p class="hint">Ładowanie…</p></div>
+          <button id="i-dodaj" class="btn2" type="button">+ Instruktor bez konta</button>
+          <div id="m-instruktorzy" class="msg"></div>
+        </div>
       </div>
     </div>
 
-    <div id="p-instr" class="hidden">
-      <div class="card">
-        <h2>Mój grafik</h2>
-        <p class="hint">Tu wkrótce pojawi się Twój grafik jazd.</p>
-      </div>
-    </div>
   </div>
 
   <footer>wersja <span id="wersja"></span></footer>
+</div>
+
+<!-- Okno: jazda -->
+<div id="modal-jazda" class="modal hidden">
+  <div class="sheet">
+    <h2 id="mj-tytul">Nowa jazda</h2>
+    <form id="f-jazda">
+      <label for="j-instr">Instruktor</label><select id="j-instr" required></select>
+      <label for="j-data">Data</label><input type="date" id="j-data" required>
+      <div class="siatka">
+        <div><label for="j-od">Od</label><input type="time" id="j-od" required step="300"></div>
+        <div><label for="j-do">Do</label><input type="time" id="j-do" required step="300"></div>
+      </div>
+      <label for="j-kursant">Kursant</label>
+      <input id="j-kursant" list="lista-kursantow" placeholder="Wpisz nazwisko…" autocomplete="off">
+      <datalist id="lista-kursantow"></datalist>
+      <p class="hint" id="j-kursant-info" style="margin-top:6px"></p>
+      <label for="j-rodzaj">Rodzaj</label>
+      <select id="j-rodzaj">
+        <option value="jazda">Jazda</option>
+        <option value="egzamin">Egzamin (instruktor czeka, liczy się do kursu)</option>
+        <option value="inne">Inne (np. plac, serwis auta)</option>
+      </select>
+      <label for="j-uwagi">Uwagi</label><input id="j-uwagi" autocomplete="off">
+      <button id="j-zapisz" class="btn" type="submit">Zapisz</button>
+      <button id="j-anuluj" class="btn2" type="button">Anuluj</button>
+      <button id="j-usun" class="usun hidden" type="button">Usuń jazdę</button>
+      <div id="m-jazda" class="msg"></div>
+    </form>
+  </div>
 </div>
 
 <!-- Okno: dodawanie / edycja kursanta -->
@@ -290,7 +382,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '0.3';
+  const WERSJA = '0.4';
   // ======================
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -426,7 +518,7 @@
 
     ja = session.user;
     const { data, error } = await sb.from('profile')
-      .select('id, rola, imie_nazwisko, zatwierdzony, szkola_id, szkoly(nazwa, kod_zaproszenia)')
+      .select('id, rola, imie_nazwisko, zatwierdzony, szkola_id, szkoly(nazwa, kod_zaproszenia, grafik_od, grafik_do, dlugosc_jazdy)')
       .eq('id', ja.id).maybeSingle();
 
     if (error) {
@@ -453,28 +545,39 @@
     $('p-szkola').textContent = (profil.szkoly && profil.szkoly.nazwa) || '';
     $('p-ja').textContent = profil.imie_nazwisko + ' · ' + (profil.rola === 'biuro' ? 'Biuro' : 'Instruktor');
     const biuro = profil.rola === 'biuro';
+    $('p-biuro-tabs').classList.toggle('hidden', !biuro);
     $('p-biuro').classList.toggle('hidden', !biuro);
-    $('p-instr').classList.toggle('hidden', biuro);
+    $('g-instr-pasek').classList.toggle('hidden', !biuro);
+    $('g-dodaj').classList.toggle('hidden', !biuro);
+    $('g-ustawienia').classList.toggle('hidden', !biuro);
     pokaz('s-panel');
     if (biuro) {
       $('p-kod').textContent = (profil.szkoly && profil.szkoly.kod_zaproszenia) || '';
+      ustawZakladke(zakladka);
       ladujOsoby();
       ladujKursantow();
+    } else {
+      $('tab-grafik').classList.remove('hidden');
     }
+    startGrafik();
   }
 
   // ----- Zakładki panelu biura -----
+  let zakladka = 'grafik';
   function ustawZakladke(z) {
-    $('t-kursanci').classList.toggle('on', z === 'kursanci');
-    $('t-osoby').classList.toggle('on', z === 'osoby');
-    $('tab-kursanci').classList.toggle('hidden', z !== 'kursanci');
-    $('tab-osoby').classList.toggle('hidden', z !== 'osoby');
+    zakladka = z;
+    ['grafik', 'kursanci', 'osoby'].forEach(n => {
+      $('t-' + n).classList.toggle('on', z === n);
+      $('tab-' + n).classList.toggle('hidden', z !== n);
+    });
   }
-  $('t-kursanci').onclick = () => ustawZakladke('kursanci');
-  $('t-osoby').onclick = () => { ustawZakladke('osoby'); ladujOsoby(); };
+  $('t-grafik').onclick = () => { ustawZakladke('grafik'); ladujDzien(); };
+  $('t-kursanci').onclick = () => { ustawZakladke('kursanci'); ladujKursantow(); };
+  $('t-osoby').onclick = () => { ustawZakladke('osoby'); ladujOsoby(); ladujInstruktorowLista(); };
 
   // ----- Rejestr kursantów -----
   let kursanci = [];
+  let postepAll = new Map();
   let edytowany = null;
 
   function bezOgonkow(s) {
@@ -496,6 +599,17 @@
       .order('nazwisko').order('imie');
     if (error) { msg('m-kursanci', tlumacz(error)); return; }
     kursanci = data;
+    kursanci.forEach(k => gKursanci.set(k.id, k));
+    postepAll = new Map();
+    if (kursanci.length) {
+      const r = await sb.rpc('jazdy_kursantow', { p_ids: kursanci.map(k => k.id) });
+      const teraz = new Date();
+      if (!r.error) r.data.filter(x => x.rodzaj !== 'inne').forEach(x => {
+        const p = postepAll.get(x.kursant_id) || { zrob: 0, plan: 0 };
+        if (new Date(x.koniec) <= teraz) p.zrob += minutyJazdy(x); else p.plan += minutyJazdy(x);
+        postepAll.set(x.kursant_id, p);
+      });
+    }
     pokazKursantow();
   }
 
@@ -523,8 +637,10 @@
     }
     $('k-lista').innerHTML = lista.map(k => {
       const opis = [k.kategoria, k.typ_kursu, k.pkk ? 'PKK ' + fmtPkk(k.pkk) : ''].filter(Boolean).join(' · ');
-      const godziny = godz(liczba(k.godziny_kurs, 0) + liczba(k.godziny_dokupione, 0)) + ' h' +
-        (liczba(k.godziny_dokupione, 0) > 0 ? ' (w tym ' + godz(k.godziny_dokupione) + ' dokupione)' : '');
+      const p = postepAll.get(k.id) || { zrob: 0, plan: 0 };
+      const godziny = `jazdy: ${fmtH(p.zrob)} z ${godz(wymaganeH(k))} h` +
+        (p.plan ? ` (+ ${fmtH(p.plan)} h zaplanowane)` : '') +
+        (liczba(k.godziny_dokupione, 0) > 0 ? ` · w tym ${godz(k.godziny_dokupione)} h dokupione` : '');
       const zak = k.aktywny ? '' : '<span class="pill szary">zakończony</span>';
       const tel = k.telefon
         ? `<a class="tel" href="tel:${esc(String(k.telefon).replace(/[^\d+]/g, ''))}">${esc(k.telefon)}</a>` : '';
@@ -666,6 +782,399 @@
       ladujOsoby();
     }));
   }
+
+  // ===== GRAFIK JAZD =====
+  const DNI = ['niedziela', 'poniedziałek', 'wtorek', 'środa', 'czwartek', 'piątek', 'sobota'];
+  const MIES = ['stycznia', 'lutego', 'marca', 'kwietnia', 'maja', 'czerwca', 'lipca', 'sierpnia', 'września', 'października', 'listopada', 'grudnia'];
+  const pad = n => String(n).padStart(2, '0');
+  function dzisStr(d = new Date()) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function parseD(s) { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); }
+  function dodajDni(s, n) { const d = parseD(s); d.setDate(d.getDate() + n); return dzisStr(d); }
+  function relDzien(s) {
+    const r = Math.round((parseD(s) - parseD(dzisStr())) / 86400000);
+    const m = { '-2': 'Przedwczoraj', '-1': 'Wczoraj', '0': 'Dziś', '1': 'Jutro', '2': 'Pojutrze' };
+    if (m[r] !== undefined) return m[r];
+    const d = DNI[parseD(s).getDay()]; return d.charAt(0).toUpperCase() + d.slice(1);
+  }
+  const godzina = v => { const d = new Date(v); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+  const naMin = t => { const [h, m] = String(t).split(':').map(Number); return h * 60 + m; };
+  const zMin = m => pad(Math.floor(m / 60)) + ':' + pad(m % 60);
+  const isoZ = (dzien, t) => new Date(dzien + 'T' + t + ':00').toISOString();
+  const minutyJazdy = j => Math.max(0, (new Date(j.koniec) - new Date(j.poczatek)) / 60000);
+  const fmtH = min => (min / 60).toLocaleString('pl-PL', { maximumFractionDigits: 2 });
+  const telLink = t => String(t || '').replace(/[^\d+]/g, '');
+  const nazwaK = k => k ? ((k.nazwisko || '') + ' ' + (k.imie || '')).trim() : '';
+  const slowoJazd = n => n === 1 ? 'jazda' : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? 'jazdy' : 'jazd');
+  function ust() {
+    const s = profil.szkoly || {};
+    return { od: s.grafik_od || '06:00', do: s.grafik_do || '22:00', dl: Number(s.dlugosc_jazdy) || 120 };
+  }
+
+  let gDzien = dzisStr();
+  let gInstr = null;
+  let instruktorzy = [];
+  let gJazdy = [];
+  let gKursanci = new Map();
+  let gPostep = new Map();
+  let gEtyk = new Map();
+  let gTimer = null;
+  let edytJazda = null;
+
+  async function startGrafik() {
+    await ladujInstruktorow();
+    await ladujKursantowDoGrafiku();
+    if (profil.rola === 'biuro') {
+      try { gInstr = localStorage.getItem('g_instr_' + profil.szkola_id); } catch (_) {}
+      if (!instruktorzy.some(i => i.id === gInstr && i.aktywny)) gInstr = (instruktorzy.find(i => i.aktywny) || {}).id || null;
+    } else {
+      const moj = instruktorzy.find(i => i.user_id === ja.id);
+      gInstr = moj ? moj.id : null;
+    }
+    wypelnijInstr();
+    pokazUstawienia();
+    await ladujDzien();
+    clearInterval(gTimer);
+    gTimer = setInterval(() => { if (!document.hidden && widacGrafik()) ladujDzien(true); }, 30000);
+  }
+  function widacGrafik() {
+    return profil && !$('s-panel').classList.contains('hidden') && !$('tab-grafik').classList.contains('hidden') &&
+      $('modal-jazda').classList.contains('hidden') && $('modal-kursant').classList.contains('hidden');
+  }
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && widacGrafik()) ladujDzien(true); });
+
+  async function ladujInstruktorow() {
+    const { data, error } = await sb.from('instruktorzy').select('*').eq('szkola_id', profil.szkola_id).order('imie_nazwisko');
+    if (error) { msg('m-grafik', tlumacz(error)); return; }
+    instruktorzy = data;
+  }
+  async function ladujKursantowDoGrafiku() {
+    const { data, error } = await sb.from('kursanci')
+      .select('id, imie, nazwisko, telefon, kategoria, pkk, godziny_kurs, godziny_dokupione, aktywny')
+      .eq('szkola_id', profil.szkola_id);
+    if (!error) gKursanci = new Map(data.map(k => [k.id, k]));
+  }
+  function wypelnijInstr() {
+    const akt = instruktorzy.filter(i => i.aktywny || i.id === gInstr);
+    const opcje = akt.map(i => `<option value="${i.id}">${esc(i.imie_nazwisko)}</option>`).join('');
+    $('g-instr').innerHTML = opcje || '<option value="">— brak instruktorów —</option>';
+    if (gInstr) $('g-instr').value = gInstr;
+    $('j-instr').innerHTML = instruktorzy.filter(i => i.aktywny).map(i => `<option value="${i.id}">${esc(i.imie_nazwisko)}</option>`).join('');
+  }
+  function pokazNaglowek() {
+    const d = parseD(gDzien);
+    $('g-rel').textContent = relDzien(gDzien);
+    $('g-data').textContent = `${DNI[d.getDay()]}, ${d.getDate()} ${MIES[d.getMonth()]} ${d.getFullYear()}`;
+    $('g-date').value = gDzien;
+  }
+  function zmienDzien(n) { gDzien = n === 0 ? dzisStr() : dodajDni(gDzien, n); ladujDzien(); }
+  $('g-prev').onclick = () => zmienDzien(-1);
+  $('g-next').onclick = () => zmienDzien(1);
+  $('g-dzis').onclick = () => zmienDzien(0);
+  $('g-date').onchange = () => { if ($('g-date').value) { gDzien = $('g-date').value; ladujDzien(); } };
+  $('g-date').onclick = () => { try { $('g-date').showPicker(); } catch (_) {} };
+  $('g-instr').onchange = () => {
+    gInstr = $('g-instr').value || null;
+    try { localStorage.setItem('g_instr_' + profil.szkola_id, gInstr); } catch (_) {}
+    ladujDzien();
+  };
+
+  async function ladujDzien(cicho) {
+    if (!profil) return;
+    pokazNaglowek();
+    if (!gInstr) {
+      $('g-lista').innerHTML = profil.rola === 'biuro'
+        ? '<p class="hint">Nie ma jeszcze instruktorów w grafiku. Dodaj ich w zakładce „Osoby” → „Instruktorzy w grafiku”.</p>'
+        : '<p class="hint">Twoje konto nie jest jeszcze połączone z grafikiem. Poproś biuro, żeby sprawdziło zatwierdzenie.</p>';
+      $('g-suma').textContent = '';
+      return;
+    }
+    const od = new Date(gDzien + 'T00:00:00'), doo = new Date(dodajDni(gDzien, 1) + 'T00:00:00');
+    const { data, error } = await sb.from('jazdy').select('*')
+      .eq('instruktor_id', gInstr).gte('poczatek', od.toISOString()).lt('poczatek', doo.toISOString()).order('poczatek');
+    if (error) { msg('m-grafik', tlumacz(error)); return; }
+    if (!cicho) msg('m-grafik', '');
+    gJazdy = data;
+    const ids = [...new Set(data.map(j => j.kursant_id).filter(Boolean))];
+    if (ids.some(id => !gKursanci.has(id))) await ladujKursantowDoGrafiku();
+    gPostep = new Map();
+    if (ids.length) {
+      const r = await sb.rpc('jazdy_kursantow', { p_ids: ids });
+      if (!r.error) r.data.forEach(x => { if (!gPostep.has(x.kursant_id)) gPostep.set(x.kursant_id, []); gPostep.get(x.kursant_id).push(x); });
+    }
+    rysujDzien();
+  }
+
+  function wymaganeH(k) { return liczba(k.godziny_kurs, 0) + liczba(k.godziny_dokupione, 0); }
+  // „która godzina kursu”: suma wcześniejszych jazd i egzaminów kursanta (u wszystkich instruktorów)
+  function postepTekst(k, j) {
+    const lista = (gPostep.get(k.id) || []).filter(x => x.rodzaj !== 'inne');
+    const przed = lista.filter(x => new Date(x.poczatek) < new Date(j.poczatek)).reduce((a, x) => a + minutyJazdy(x), 0);
+    const ta = minutyJazdy(j), wym = wymaganeH(k);
+    return `godz. ${fmtH(przed)}–${fmtH(przed + ta)}${wym ? ' z ' + godz(wym) : ''}`;
+  }
+  function smsLink(k, j) {
+    const d = new Date(j.poczatek);
+    const txt = `Dzień dobry, przypominam o ${j.rodzaj === 'egzamin' ? 'egzaminie' : 'jeździe'} ` +
+      `${DNI[d.getDay()]} ${pad(d.getDate())}.${pad(d.getMonth() + 1)} o godz. ${godzina(j.poczatek)}. ` +
+      `${(profil.szkoly && profil.szkoly.nazwa) || ''}`.trim();
+    return `sms:${telLink(k.telefon)}?body=${encodeURIComponent(txt)}`;
+  }
+
+  function wolneOkna(busy) {
+    const u = ust(), S = naMin(u.od), E = naMin(u.do), len = u.dl, out = [];
+    const fill = (a, b) => {
+      if (b - a < 60) return;
+      for (let x = a; x < b;) { const e = Math.min(x + len, b); if (e - x >= 30) out.push({ od: x, do: e }); x = e; }
+    };
+    let t = S;
+    busy.slice().sort((x, y) => x[0] - y[0]).forEach(([a, b]) => { if (a > t) fill(t, Math.min(a, E)); t = Math.max(t, b); });
+    if (t < E) fill(t, E);
+    return out;
+  }
+
+  function rysujDzien() {
+    const edyt = profil.rola === 'biuro';
+    const p0 = new Date(gDzien + 'T00:00:00');
+    const odMin = v => Math.round((new Date(v) - p0) / 60000);
+    const busy = gJazdy.map(j => [odMin(j.poczatek), odMin(j.koniec)]);
+    const elementy = gJazdy.map(j => ({ t: odMin(j.poczatek), j }));
+    if (edyt) wolneOkna(busy).forEach(w => elementy.push({ t: w.od, w }));
+    elementy.sort((a, b) => a.t - b.t);
+
+    const suma = gJazdy.filter(j => j.rodzaj !== 'inne').reduce((a, j) => a + minutyJazdy(j), 0);
+    const n = gJazdy.filter(j => j.rodzaj !== 'inne').length;
+    $('g-suma').textContent = n ? `${n} ${slowoJazd(n)} · ${fmtH(suma)} h` : '';
+
+    if (!elementy.length) {
+      $('g-lista').innerHTML = '<p class="hint">Brak jazd tego dnia.</p>';
+      return;
+    }
+    $('g-lista').innerHTML = elementy.map(e => {
+      if (e.w) return `<div class="wolne edyt" data-od="${zMin(e.w.od)}" data-do="${zMin(e.w.do)}">
+          <span class="godz">${zMin(e.w.od)}–${zMin(e.w.do)}</span> wolne <span class="plus">+ dodaj</span></div>`;
+      const j = e.j, k = j.kursant_id ? gKursanci.get(j.kursant_id) : null;
+      const kto = k ? esc(nazwaK(k)) : (j.rodzaj === 'inne' ? 'Inne' : '<i>bez kursanta</i>');
+      const kat = k && k.kategoria ? `<span class="kat">${esc(k.kategoria)}</span>` : '';
+      const opis = [j.rodzaj === 'egzamin' ? '🎓 egzamin' : '', k && j.rodzaj !== 'inne' ? postepTekst(k, j) : '', j.uwagi ? esc(j.uwagi) : '']
+        .filter(Boolean).join(' · ');
+      const tel = k && k.telefon
+        ? `<div class="tele"><a href="tel:${esc(telLink(k.telefon))}">📞 ${esc(k.telefon)}</a><a href="${esc(smsLink(k, j))}">✉️ SMS</a></div>` : '';
+      return `<div class="jazda ${j.rodzaj}${edyt ? ' edyt' : ''}" data-id="${j.id}">
+          <span class="godz">${godzina(j.poczatek)}–${godzina(j.koniec)}</span>
+          <div class="kto"><b>${kto}</b>${kat}${opis ? '<br><span>' + opis + '</span>' : ''}</div>${tel}</div>`;
+    }).join('');
+
+    if (!edyt) return;
+    $('g-lista').querySelectorAll('.jazda.edyt').forEach(el => el.onclick = e => {
+      if (e.target.closest('a')) return;
+      otworzJazde(gJazdy.find(j => j.id === el.dataset.id));
+    });
+    $('g-lista').querySelectorAll('.wolne.edyt').forEach(el => el.onclick = () =>
+      otworzJazde(null, { od: el.dataset.od, do: el.dataset.do }));
+  }
+  $('g-dodaj').onclick = () => {
+    if (!gInstr) { msg('m-grafik', 'Najpierw dodaj instruktora w zakładce „Osoby”.'); return; }
+    const u = ust(), p0 = new Date(gDzien + 'T00:00:00');
+    let t = gJazdy.length ? Math.max(...gJazdy.map(j => Math.round((new Date(j.koniec) - p0) / 60000))) : naMin(u.od);
+    t = Math.min(t, 23 * 60);
+    otworzJazde(null, { od: zMin(t), do: zMin(Math.min(t + u.dl, 23 * 60 + 55)) });
+  };
+
+  // ----- okno jazdy -----
+  function etykietaK(k, wszyscy) {
+    let e = nazwaK(k) + (k.kategoria ? ' · ' + k.kategoria : '');
+    const tacy = wszyscy.filter(x => nazwaK(x) === nazwaK(k) && (x.kategoria || '') === (k.kategoria || ''));
+    if (tacy.length > 1) e += k.pkk ? ' · PKK …' + String(k.pkk).slice(-4) : (k.telefon ? ' · ' + k.telefon : '');
+    return e;
+  }
+  function budujListeK(aktualnyId) {
+    const wszyscy = [...gKursanci.values()];
+    const lista = wszyscy.filter(k => k.aktywny || k.id === aktualnyId)
+      .sort((a, b) => nazwaK(a).localeCompare(nazwaK(b), 'pl'));
+    gEtyk = new Map();
+    $('lista-kursantow').innerHTML = lista.map(k => {
+      const e = etykietaK(k, wszyscy); gEtyk.set(e, k.id);
+      return `<option value="${esc(e)}">`;
+    }).join('');
+  }
+  function znajdzK(txt) {
+    if (!txt) return { id: null };
+    if (gEtyk.has(txt)) return { id: gEtyk.get(txt) };
+    const t = bezOgonkow(txt);
+    const kand = [...gKursanci.values()].filter(k =>
+      bezOgonkow(nazwaK(k)) === t || bezOgonkow((k.imie + ' ' + k.nazwisko).trim()) === t);
+    if (kand.length === 1) return { id: kand[0].id };
+    return { id: null, wielu: kand.length > 1 };
+  }
+  let infoT = null;
+  function infoKursanta() {
+    clearTimeout(infoT);
+    infoT = setTimeout(async () => {
+      const z = znajdzK($('j-kursant').value.trim()), el = $('j-kursant-info');
+      if (!z.id) { el.textContent = $('j-kursant').value.trim() && !z.wielu ? 'Nowy kursant – zostanie dodany do rejestru przy zapisie.' : ''; return; }
+      const k = gKursanci.get(z.id);
+      const r = await sb.rpc('jazdy_kursantow', { p_ids: [z.id] });
+      const teraz = new Date();
+      let zrob = 0, plan = 0;
+      (r.data || []).filter(x => x.rodzaj !== 'inne' && !(edytJazda && new Date(x.poczatek).getTime() === new Date(edytJazda.poczatek).getTime() && x.koniec === edytJazda.koniec))
+        .forEach(x => { if (new Date(x.koniec) <= teraz) zrob += minutyJazdy(x); else plan += minutyJazdy(x); });
+      const wym = wymaganeH(k);
+      el.textContent = [k.telefon ? '📞 ' + k.telefon : '',
+        `odbyte ${fmtH(zrob)} h${wym ? ' z ' + godz(wym) : ''}`, plan ? `zaplanowane ${fmtH(plan)} h` : ''].filter(Boolean).join(' · ');
+    }, 250);
+  }
+  $('j-kursant').oninput = infoKursanta;
+
+  function otworzJazde(j, pre) {
+    edytJazda = j || null;
+    $('mj-tytul').textContent = j ? 'Edycja jazdy' : 'Nowa jazda';
+    wypelnijInstr();
+    $('j-instr').value = j ? j.instruktor_id : gInstr;
+    $('j-data').value = j ? dzisStr(new Date(j.poczatek)) : gDzien;
+    $('j-od').value = j ? godzina(j.poczatek) : pre.od;
+    $('j-do').value = j ? godzina(j.koniec) : pre.do;
+    budujListeK(j && j.kursant_id);
+    const k = j && j.kursant_id ? gKursanci.get(j.kursant_id) : null;
+    $('j-kursant').value = k ? etykietaK(k, [...gKursanci.values()]) : '';
+    $('j-rodzaj').value = j ? j.rodzaj : 'jazda';
+    $('j-uwagi').value = j ? (j.uwagi || '') : '';
+    $('j-usun').classList.toggle('hidden', !j);
+    $('j-kursant-info').textContent = '';
+    msg('m-jazda', '');
+    $('modal-jazda').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    if (k) infoKursanta();
+    if (!j) setTimeout(() => $('j-kursant').focus(), 50);
+  }
+  function zamknijJazde() {
+    $('modal-jazda').classList.add('hidden');
+    document.body.style.overflow = '';
+    edytJazda = null;
+  }
+  $('j-anuluj').onclick = zamknijJazde;
+  $('modal-jazda').onclick = e => { if (e.target.id === 'modal-jazda') zamknijJazde(); };
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !$('modal-jazda').classList.contains('hidden')) zamknijJazde();
+  });
+
+  async function kolizje(d, pomin) {
+    let q = sb.from('jazdy').select('id, instruktor_id, kursant_id, poczatek, koniec')
+      .lt('poczatek', d.koniec).gt('koniec', d.poczatek);
+    q = d.kursant_id ? q.or(`instruktor_id.eq.${d.instruktor_id},kursant_id.eq.${d.kursant_id}`) : q.eq('instruktor_id', d.instruktor_id);
+    const { data, error } = await q;
+    if (error) return [];
+    return data.filter(x => x.id !== pomin).map(x => {
+      const czas = `${godzina(x.poczatek)}–${godzina(x.koniec)}`;
+      if (x.instruktor_id === d.instruktor_id) {
+        const k = gKursanci.get(x.kursant_id);
+        return `• instruktor ma już w tym czasie jazdę ${czas}${k ? ' (' + nazwaK(k) + ')' : ''}`;
+      }
+      const ins = instruktorzy.find(i => i.id === x.instruktor_id);
+      return `• kursant ma w tym czasie jazdę ${czas}${ins ? ' z ' + ins.imie_nazwisko : ''}`;
+    });
+  }
+
+  $('f-jazda').onsubmit = e => {
+    e.preventDefault();
+    zajety($('j-zapisz'), async () => {
+      msg('m-jazda', '');
+      const dzien = $('j-data').value, od = $('j-od').value, doo = $('j-do').value;
+      if (naMin(doo) <= naMin(od)) { msg('m-jazda', 'Godzina „do” musi być późniejsza niż „od”.'); return; }
+      const txt = $('j-kursant').value.trim(), rodzaj = $('j-rodzaj').value;
+      let kid = null;
+      if (txt) {
+        const z = znajdzK(txt);
+        if (z.wielu) { msg('m-jazda', 'Jest kilku kursantów o tej nazwie – wybierz właściwego z listy podpowiedzi.'); return; }
+        kid = z.id;
+        if (!kid) {
+          const nm = rozdzielNazwe(txt.split(' · ')[0]);
+          if (!confirm(`Nie ma kursanta „${txt}” w rejestrze.\n\nDodać go teraz jako: nazwisko „${nm.nazwisko}”, imię „${nm.imie}”?\nResztę danych uzupełnisz w zakładce Kursanci.`)) return;
+          const { data, error } = await sb.from('kursanci')
+            .insert({ szkola_id: profil.szkola_id, imie: nm.imie, nazwisko: nm.nazwisko }).select().single();
+          if (error) { msg('m-jazda', tlumacz(error)); return; }
+          gKursanci.set(data.id, data); kid = data.id;
+          ladujKursantow();
+        }
+      } else if (rodzaj !== 'inne' && !confirm('Zapisać jazdę bez kursanta?')) return;
+
+      const dane = {
+        instruktor_id: $('j-instr').value, kursant_id: kid,
+        poczatek: isoZ(dzien, od), koniec: isoZ(dzien, doo),
+        rodzaj, uwagi: $('j-uwagi').value.trim() || null
+      };
+      const k = await kolizje(dane, edytJazda && edytJazda.id);
+      if (k.length && !confirm('Uwaga – nakładają się jazdy:\n' + k.join('\n') + '\n\nZapisać mimo to?')) return;
+      const w = edytJazda
+        ? await sb.from('jazdy').update(dane).eq('id', edytJazda.id)
+        : await sb.from('jazdy').insert({ ...dane, szkola_id: profil.szkola_id });
+      if (w.error) { msg('m-jazda', tlumacz(w.error)); return; }
+      zamknijJazde();
+      gInstr = dane.instruktor_id; gDzien = dzien;
+      try { localStorage.setItem('g_instr_' + profil.szkola_id, gInstr); } catch (_) {}
+      wypelnijInstr();
+      await ladujDzien();
+    });
+  };
+  $('j-usun').onclick = () => zajety($('j-usun'), async () => {
+    if (!edytJazda) return;
+    const k = gKursanci.get(edytJazda.kursant_id);
+    if (!confirm(`Usunąć jazdę ${godzina(edytJazda.poczatek)}–${godzina(edytJazda.koniec)}${k ? ' (' + nazwaK(k) + ')' : ''}?`)) return;
+    const { error } = await sb.from('jazdy').delete().eq('id', edytJazda.id);
+    if (error) { msg('m-jazda', tlumacz(error)); return; }
+    zamknijJazde();
+    await ladujDzien();
+  });
+
+  // ----- ustawienia grafiku -----
+  function pokazUstawienia() {
+    const u = ust();
+    $('u-od').value = u.od; $('u-do').value = u.do; $('u-dl').value = u.dl;
+  }
+  $('u-zapisz').onclick = () => zajety($('u-zapisz'), async () => {
+    const d = { grafik_od: $('u-od').value, grafik_do: $('u-do').value, dlugosc_jazdy: parseInt($('u-dl').value, 10) };
+    if (!d.grafik_od || !d.grafik_do || naMin(d.grafik_do) <= naMin(d.grafik_od)) { msg('m-ust', 'Sprawdź godziny pracy.'); return; }
+    if (!(d.dlugosc_jazdy >= 30 && d.dlugosc_jazdy <= 480)) { msg('m-ust', 'Długość jazdy: od 30 do 480 minut.'); return; }
+    const { error } = await sb.from('szkoly').update(d).eq('id', profil.szkola_id);
+    if (error) { msg('m-ust', tlumacz(error)); return; }
+    Object.assign(profil.szkoly, d);
+    msg('m-ust', 'Zapisano.', 'ok');
+    rysujDzien();
+  });
+
+  // ----- instruktorzy w grafiku (zakładka Osoby) -----
+  async function ladujInstruktorowLista() {
+    await ladujInstruktorow();
+    msg('m-instruktorzy', '');
+    $('p-instruktorzy').innerHTML = instruktorzy.map(i => `<div class="row">
+        <div class="who"><b>${esc(i.imie_nazwisko)} ${i.aktywny ? '' : '<span class="pill szary">ukryty</span>'}</b>
+          <span>${i.user_id ? 'ma konto w programie' : 'bez konta'}</span></div>
+        <div class="acts"><button data-a="nazwa" data-id="${i.id}">Zmień</button>
+          <button data-a="ukryj" data-id="${i.id}">${i.aktywny ? 'Ukryj' : 'Przywróć'}</button></div></div>`).join('')
+      || '<p class="hint">Brak instruktorów.</p>';
+    $('p-instruktorzy').querySelectorAll('button[data-a]').forEach(b => b.onclick = () => zajety(b, async () => {
+      const i = instruktorzy.find(x => x.id === b.dataset.id);
+      let zm;
+      if (b.dataset.a === 'nazwa') {
+        const n = prompt('Imię i nazwisko instruktora:', i.imie_nazwisko);
+        if (!n || !n.trim()) return;
+        zm = { imie_nazwisko: n.trim() };
+      } else {
+        if (i.aktywny && !confirm(`Ukryć instruktora „${i.imie_nazwisko}” w grafiku? Jego jazdy zostaną zachowane.`)) return;
+        zm = { aktywny: !i.aktywny };
+      }
+      const { error } = await sb.from('instruktorzy').update(zm).eq('id', i.id);
+      if (error) { msg('m-instruktorzy', tlumacz(error)); return; }
+      await ladujInstruktorowLista(); wypelnijInstr();
+    }));
+  }
+  $('i-dodaj').onclick = () => zajety($('i-dodaj'), async () => {
+    const n = prompt('Imię i nazwisko instruktora:');
+    if (!n || !n.trim()) return;
+    const { data, error } = await sb.from('instruktorzy').insert({ szkola_id: profil.szkola_id, imie_nazwisko: n.trim() }).select().single();
+    if (error) { msg('m-instruktorzy', tlumacz(error)); return; }
+    if (!gInstr) gInstr = data.id;
+    await ladujInstruktorowLista(); wypelnijInstr(); ladujDzien();
+  });
 
   // ===== Skan PKK ze zdjęcia (przeniesione z rejestru PKK 1.5) =====
   const fmtPkk = p => (p || '').replace(/\D/g, '').replace(/(\d{5})(?=\d)/g, '$1 ');
