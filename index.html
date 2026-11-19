@@ -101,6 +101,13 @@
   .ust summary{font-weight:600;color:var(--t);font-size:15px;margin:0}
   .ust .btn{margin-top:14px}
   .ostrz{color:#a15c00}
+  .zmiany{background:#fff4e0;border:1px solid #f5c27a;border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:14px}
+  .zmiany .zm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:4px 0}
+  .zmiany .zm span{flex:1;min-width:180px}
+  .zmiany button{padding:6px 12px}
+  .wysl{font-size:12px;font-weight:600;white-space:nowrap}
+  .wysl.ok{color:var(--ok)}
+  .wysl.zm{color:#c2410c}
   @media (min-width:900px){
     .wrap{max-width:1240px;padding:24px 28px 48px}
     #tab-kursanci .card,#tab-osoby .card,#tab-miesiac .card,#p-instr-extra .card,#g-ustawienia{max-width:900px}
@@ -286,6 +293,7 @@
 
     <!-- Grafik (biuro: edycja, instruktor: podgląd swoich jazd) -->
     <div id="tab-grafik">
+      <div id="g-zmiany" class="zmiany hidden"></div>
       <div class="card">
         <div id="g-instr-pasek">
           <div class="inst-zakl" id="g-instr-zakl"></div>
@@ -329,6 +337,7 @@
     <!-- Instruktor: wyszukiwarka i godziny -->
     <div id="p-instr-extra" class="hidden">
       <div class="card">
+        <button id="i-powiad" class="btn2" type="button" style="margin:0 0 14px">🔔 Włącz powiadomienia o zmianach</button>
         <h2>🔎 Szukaj kursanta</h2>
         <input id="is-szukaj" type="search" placeholder="Nazwisko, imię lub telefon…" autocomplete="off">
         <div id="is-wyniki" style="margin-top:8px"></div>
@@ -443,7 +452,8 @@
     </div>
     <p class="hint" id="wa-opis"></p>
     <textarea id="wa-tekst" style="min-height:220px;margin-top:8px;font-size:14px"></textarea>
-    <button id="wa-wyslij" class="btn" type="button">📲 Otwórz WhatsApp</button>
+    <button id="wa-wyslij" class="btn" type="button">📲 Wyślij tekst przez WhatsApp</button>
+    <button id="wa-obrazek" class="btn2" type="button">🖼 Wyślij jako obrazek</button>
     <button id="wa-kopiuj" class="btn2" type="button">📋 Kopiuj tekst</button>
     <button id="wa-anuluj" class="btn2" type="button">Zamknij</button>
     <div id="m-wa" class="msg"></div>
@@ -564,7 +574,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.2';
+  const WERSJA = '1.3';
   // ======================
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -1093,7 +1103,11 @@
     pokazUstawienia();
     await ladujDzien();
     clearInterval(gTimer);
-    gTimer = setInterval(() => { if (!document.hidden && widacGrafik()) ladujDzien(true); }, 30000);
+    gTimer = setInterval(() => {
+      if (!document.hidden && widacGrafik()) ladujDzien(true);
+      if (profil && profil.rola !== 'biuro') sprawdzZmiany();
+    }, 30000);
+    if (profil.rola !== 'biuro') sprawdzZmiany();
   }
   function widacGrafik() {
     return profil && !$('s-panel').classList.contains('hidden') && !$('tab-grafik').classList.contains('hidden') &&
@@ -1165,6 +1179,7 @@
         gWolne = d.wolne.filter(w => w.instruktor_id === gInstr);
       } catch (err) { msg('m-grafik', tlumacz(err)); return; }
       if (!cicho) msg('m-grafik', '');
+      await ladujWysylki();
       rysujDzien();
       return;
     }
@@ -1183,6 +1198,7 @@
       const r = await sb.rpc('jazdy_kursantow', { p_ids: ids });
       if (!r.error) r.data.forEach(x => { if (!gPostep.has(x.kursant_id)) gPostep.set(x.kursant_id, []); gPostep.get(x.kursant_id).push(x); });
     }
+    await ladujWysylki();
     rysujDzien();
   }
 
@@ -1272,8 +1288,9 @@
       const akt = instruktorzy.filter(i => i.aktywny);
       $('g-lista').innerHTML = `<div class="kolumny">${akt.map(i => {
         const jz = gWszJazdy.filter(j => j.instruktor_id === i.id), wl = gWszWolne.filter(w => w.instruktor_id === i.id);
+        const bw = znacznikWysl(i.id, jz, wl);
         return `<div class="kol${i.id === gInstr ? ' wyb' : ''}"><h3 data-kol="${i.id}" title="Zaznacz (WhatsApp / druk)">${esc(i.imie_nazwisko)}<small>${sumaTxt(jz)}</small></h3>
-          ${listaDnia(i.id, jz, wl, edyt)}</div>`;
+          ${bw ? `<div style="margin:-4px 4px 6px">${bw}</div>` : ''}${listaDnia(i.id, jz, wl, edyt)}</div>`;
       }).join('')}</div>`;
       $('g-suma').textContent = sumaTxt(gWszJazdy) ? 'razem: ' + sumaTxt(gWszJazdy) : '';
       $('g-lista').querySelectorAll('h3[data-kol]').forEach(h => h.onclick = () => {
@@ -1283,10 +1300,10 @@
         wypelnijInstr(); rysujDzien();
       });
     } else {
-      $('g-suma').textContent = sumaTxt(gJazdy);
+      $('g-suma').innerHTML = esc(sumaTxt(gJazdy)) + (edyt ? ' ' + znacznikWysl(gInstr, gJazdy, gWolne) : '');
       $('g-lista').innerHTML = listaDnia(gInstr, gJazdy, gWolne, edyt);
     }
-    if (!edyt) return;
+    if (!edyt) { oznaczWidziane(gInstr, gDzien, gJazdy, gWolne); return; }
     $('g-lista').querySelectorAll('.jazda.edyt').forEach(el => el.onclick = e => {
       if (e.target.closest('a')) return;
       otworzJazde(wszJ.find(j => j.id === el.dataset.id));
@@ -1705,7 +1722,7 @@
   };
   $('wa-wyslij').onclick = () => zajety($('wa-wyslij'), async () => {
     const txt = encodeURIComponent($('wa-tekst').value);
-    if (waTryb === 'grupa') { window.open('https://wa.me/?text=' + txt, '_blank'); return; }
+    if (waTryb === 'grupa') { window.open('https://wa.me/?text=' + txt, '_blank'); await zapiszWysylke('grupa'); return; }
     const ins = instruktorzy.find(i => i.id === gInstr);
     let tel = ins.telefon;
     if (!tel) {
@@ -1716,6 +1733,7 @@
       ins.telefon = tel.trim();
     }
     window.open(`https://wa.me/${waNumer(tel)}?text=${txt}`, '_blank');
+    await zapiszWysylke('tekst');
   });
 
   // ===== WYDRUK =====
@@ -1939,6 +1957,172 @@
         || '<tr><td colspan="3" class="hint">Brak jazd w tym miesiącu.</td></tr>'}
       <tr class="razem"><td>RAZEM${egz ? ` <small>(egzaminów: ${egz})</small>` : ''}</td><td class="num">${n}</td><td class="num">${fmtH(min)}</td></tr></tbody></table>`;
   }
+
+  // ===== „WYSŁANO” I ZMIANY =====
+  function podpisDnia(jazdy, wolne) {
+    const t = JSON.stringify([
+      jazdy.map(j => [new Date(j.poczatek).getTime(), new Date(j.koniec).getTime(), j.kursant_id || '', j.rodzaj, j.uwagi || '']).sort(),
+      wolne.map(w => [w.godz_od || '', w.godz_do || '', w.uwagi || '']).sort()]);
+    let h = 5381; for (let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) >>> 0;
+    return h.toString(36) + '.' + t.length;
+  }
+  let gWysylki = new Map();
+  async function ladujWysylki() {
+    gWysylki = new Map();
+    if (!profil || profil.rola !== 'biuro') return;
+    const { data, error } = await sb.from('wysylki').select('instruktor_id, podpis, wyslano, rodzaj')
+      .eq('dzien', gDzien).order('wyslano', { ascending: false });
+    if (error) return;
+    data.forEach(w => { if (w.instruktor_id && !gWysylki.has(w.instruktor_id)) gWysylki.set(w.instruktor_id, w); });
+  }
+  function znacznikWysl(idI, jazdy, wolne) {
+    const w = gWysylki.get(idI); if (!w) return '';
+    const kiedy = dzisStr(new Date(w.wyslano)) === dzisStr() ? godzina(w.wyslano)
+      : `${pad(new Date(w.wyslano).getDate())}.${pad(new Date(w.wyslano).getMonth() + 1)} ${godzina(w.wyslano)}`;
+    return podpisDnia(jazdy, wolne) === w.podpis
+      ? `<span class="wysl ok" title="Grafik wysłany – bez zmian od wysyłki">✅ wysłano ${kiedy}</span>`
+      : `<span class="wysl zm" title="Po wysłaniu grafik się zmienił – wyślij ponownie">⚠️ zmiany po wysłaniu (${kiedy})</span>`;
+  }
+  async function zapiszWysylke(rodzaj) {
+    if (!waDane) return;
+    const wiersze = rodzaj === 'grupa'
+      ? instruktorzy.filter(i => i.aktywny).map(i => ({
+          instruktor_id: i.id,
+          podpis: podpisDnia(waDane.wszyscy.jazdy.filter(j => j.instruktor_id === i.id), waDane.wszyscy.wolne.filter(w => w.instruktor_id === i.id)) }))
+      : [{ instruktor_id: gInstr, podpis: podpisDnia(waDane.jeden.jazdy, waDane.jeden.wolne) }];
+    const { error } = await sb.from('wysylki').insert(wiersze.map(w => ({ ...w, szkola_id: profil.szkola_id, dzien: gDzien, rodzaj })));
+    if (error) { msg('m-wa', /wysylki/.test(error.message) ? 'Wysłano, ale znacznik „wysłano” zadziała po uruchomieniu krok7_wysylki.sql.' : tlumacz(error)); return; }
+    msg('m-wa', 'Zapisano: wysłano ' + godzina(new Date()) + '.', 'ok');
+    ladujDzien(true);
+  }
+
+  // ----- instruktor: powiadomienia o zmianach (dziś i jutro) -----
+  const kluczWidz = (idI, dz) => 'widz_' + idI + '_' + dz;
+  function oznaczWidziane(idI, dz, jazdy, wolne) {
+    if (!idI) return;
+    try { localStorage.setItem(kluczWidz(idI, dz), podpisDnia(jazdy, wolne)); } catch (_) {}
+    gZmiany = gZmiany.filter(z => z.dz !== dz); pokazZmiany();
+  }
+  let gZmiany = [];
+  async function sprawdzZmiany() {
+    if (!gInstr || profil.rola === 'biuro') return;
+    const dni = [dzisStr(), dodajDni(dzisStr(), 1)];
+    const nowe = [];
+    for (const dz of dni) {
+      let d; try { d = await daneDnia(dz, gInstr); } catch (_) { continue; }
+      const p = podpisDnia(d.jazdy, d.wolne);
+      let byl = null; try { byl = localStorage.getItem(kluczWidz(gInstr, dz)); } catch (_) {}
+      if (byl === null) { try { localStorage.setItem(kluczWidz(gInstr, dz), p); } catch (_) {} continue; }
+      if (byl !== p) {
+        nowe.push({ dz, n: sumaJazd(d.jazdy).n });
+        let powiad = null; try { powiad = localStorage.getItem('powiad_' + gInstr + '_' + dz); } catch (_) {}
+        if (powiad !== p && 'Notification' in window && Notification.permission === 'granted') {
+          try { new Notification('Zmiana w grafiku', { body: `${relDzien(dz)} (${dataKrotka(dz)}) – ${sumaJazd(d.jazdy).n} ${slowoJazd(sumaJazd(d.jazdy).n)}`, icon: 'icon-192.png', tag: 'grafik-' + dz }); } catch (_) {}
+          try { localStorage.setItem('powiad_' + gInstr + '_' + dz, p); } catch (_) {}
+        }
+      }
+    }
+    // dzień, który właśnie oglądam, jest już „widziany”
+    gZmiany = nowe.filter(z => !(z.dz === gDzien && widacGrafik()));
+    if (nowe.some(z => z.dz === gDzien) && widacGrafik()) ladujDzien(true);
+    pokazZmiany();
+  }
+  function pokazZmiany() {
+    const el = $('g-zmiany');
+    if (!gZmiany.length || !profil || profil.rola === 'biuro') { el.classList.add('hidden'); el.innerHTML = ''; return; }
+    el.classList.remove('hidden');
+    el.innerHTML = gZmiany.map(z => `<div class="zm"><span>⚠️ <b>Zmienił się Twój grafik – ${relDzien(z.dz).toLowerCase()}</b> (${dataKrotka(z.dz)})</span>
+      <button type="button" data-dz="${z.dz}">Pokaż</button></div>`).join('');
+    el.querySelectorAll('button[data-dz]').forEach(b => b.onclick = () => { gDzien = b.dataset.dz; ladujDzien(); window.scrollTo(0, 0); });
+  }
+  $('i-powiad').onclick = async () => {
+    if (!('Notification' in window)) { alert('Ta przeglądarka nie obsługuje powiadomień.'); return; }
+    const p = await Notification.requestPermission();
+    $('i-powiad').textContent = p === 'granted' ? '🔔 Powiadomienia włączone' : '🔕 Powiadomienia zablokowane w przeglądarce';
+  };
+  if ('Notification' in window && Notification.permission === 'granted') $('i-powiad').textContent = '🔔 Powiadomienia włączone';
+
+  // ===== GRAFIK JAKO OBRAZEK =====
+  function rysujKarte(sekcje, dzien) {
+    // sekcje: [{ ins, jazdy, wolne }]
+    const W = 1080, P = 48, LH = 64;
+    const linie = [];
+    sekcje.forEach((sek, si) => {
+      if (sekcje.length > 1) linie.push({ typ: 'inst', t: sek.ins.imie_nazwisko, s: sumaTxt(sek.jazdy) || 'brak jazd' });
+      if (!sek.jazdy.length && !sek.wolne.length) linie.push({ typ: 'brak' });
+      sek.jazdy.forEach((j, i) => {
+        linie.push({ typ: 'jazda', j });
+        const n = sek.jazdy[i + 1];
+        if (n) { const p = (new Date(n.poczatek) - new Date(j.koniec)) / 60000; if (p >= 15) linie.push({ typ: 'prz', t: `– przerwa ${fmtDur(p)} –` }); }
+      });
+      sek.wolne.forEach(w => linie.push({ typ: 'wolne', t: `⛔ Wolne: ${w.godz_od ? hm(w.godz_od) + '–' + hm(w.godz_do) : 'cały dzień'}${w.uwagi ? ' (' + w.uwagi + ')' : ''}` }));
+      if (si < sekcje.length - 1) linie.push({ typ: 'odstep' });
+    });
+    const wys = l => ({ inst: 84, jazda: 92, prz: 46, wolne: 56, brak: 56, odstep: 24 }[l.typ]);
+    const naglowek = 190, stopka = 110;
+    const H = naglowek + linie.reduce((a, l) => a + wys(l), 0) + stopka;
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    const x = c.getContext('2d');
+    const css = getComputedStyle(document.documentElement);
+    const kG = css.getPropertyValue('--g').trim() || '#1f2937', kA = css.getPropertyValue('--ga').trim() || '#facc15';
+    const kY = css.getPropertyValue('--gy').trim() || '#eab308';
+    x.fillStyle = '#ffffff'; x.fillRect(0, 0, W, H);
+    x.fillStyle = kG; x.fillRect(0, 0, W, naglowek - 30);
+    x.fillStyle = kA; x.font = 'bold 40px Arial, sans-serif';
+    x.fillText(((profil.szkoly && profil.szkoly.nazwa) || 'Grafik').toUpperCase(), P, 70);
+    x.fillStyle = '#ffffff'; x.font = '32px Arial, sans-serif';
+    x.fillText((sekcje.length === 1 ? sekcje[0].ins.imie_nazwisko + ' · ' : 'Grafik instruktorów · ') + dataKrotka(dzien), P, 122);
+    let y = naglowek;
+    const tnij = (t, maxW) => { if (x.measureText(t).width <= maxW) return t; while (t.length > 1 && x.measureText(t + '…').width > maxW) t = t.slice(0, -1); return t + '…'; };
+    linie.forEach(l => {
+      const h = wys(l);
+      if (l.typ === 'inst') {
+        x.fillStyle = '#1d2329'; x.font = 'bold 36px Arial, sans-serif'; x.fillText('👤 ' + l.t, P, y + 52);
+        x.fillStyle = '#66707a'; x.font = '26px Arial, sans-serif'; const tw = x.measureText(l.s).width; x.fillText(l.s, W - P - tw, y + 52);
+      } else if (l.typ === 'jazda') {
+        const j = l.j, k = gKursanci.get(j.kursant_id);
+        x.fillStyle = j.rodzaj === 'egzamin' ? '#fff4e0' : '#f7f8f9'; x.fillRect(P, y + 8, W - 2 * P, h - 16);
+        x.fillStyle = j.rodzaj === 'egzamin' ? '#c2410c' : kY; x.fillRect(P, y + 8, 10, h - 16);
+        x.fillStyle = '#1d2329'; x.font = 'bold 34px Arial, sans-serif'; x.fillText(`${godzina(j.poczatek)}–${godzina(j.koniec)}`, P + 30, y + 58);
+        const kto = (k ? nazwaK(k) : (j.rodzaj === 'inne' ? 'Inne' : '(bez kursanta)')) + (k && k.kategoria ? '  [' + k.kategoria + ']' : '') +
+          (j.rodzaj === 'egzamin' ? '  🎓 EGZAMIN' : '') + (j.uwagi ? '  (' + j.uwagi + ')' : '');
+        x.font = '32px Arial, sans-serif'; x.fillText(tnij(kto, W - 2 * P - 300), P + 290, y + 58);
+      } else if (l.typ === 'prz') {
+        x.fillStyle = '#66707a'; x.font = 'italic 26px Arial, sans-serif'; const tw = x.measureText(l.t).width; x.fillText(l.t, (W - tw) / 2, y + 32);
+      } else if (l.typ === 'wolne') {
+        x.fillStyle = '#8a2c22'; x.font = '30px Arial, sans-serif'; x.fillText(tnij(l.t, W - 2 * P), P + 10, y + 40);
+      } else if (l.typ === 'brak') {
+        x.fillStyle = '#66707a'; x.font = 'italic 30px Arial, sans-serif'; x.fillText('Brak zaplanowanych jazd.', P + 10, y + 40);
+      }
+      y += h;
+    });
+    const wszystkie = sekcje.flatMap(s => s.jazdy), sm = sumaJazd(wszystkie);
+    x.fillStyle = '#dde2e6'; x.fillRect(P, y + 10, W - 2 * P, 2);
+    x.fillStyle = '#1d2329'; x.font = 'bold 34px Arial, sans-serif'; x.fillText(`Razem: ${sm.n} ${slowoJazd(sm.n)}, ${fmtH(sm.min)} h`, P, y + 66);
+    return c;
+  }
+  $('wa-obrazek').onclick = () => zajety($('wa-obrazek'), async () => {
+    if (!waDane) return;
+    const grupa = waTryb === 'grupa';
+    const ins = instruktorzy.find(i => i.id === gInstr);
+    const sekcje = grupa
+      ? instruktorzy.filter(i => i.aktywny).map(i => ({ ins: i, jazdy: waDane.wszyscy.jazdy.filter(j => j.instruktor_id === i.id), wolne: waDane.wszyscy.wolne.filter(w => w.instruktor_id === i.id) }))
+      : [{ ins, jazdy: waDane.jeden.jazdy, wolne: waDane.jeden.wolne }];
+    const c = rysujKarte(sekcje, gDzien);
+    const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+    const nazwa = `grafik-${grupa ? 'wszyscy' : slugNazwy(ins.imie_nazwisko)}-${gDzien}.png`;
+    const plik = new File([blob], nazwa, { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [plik] })) {
+      try { await navigator.share({ files: [plik], title: 'Grafik ' + dataKrotka(gDzien) }); await zapiszWysylke(grupa ? 'grupa' : 'obrazek'); return; }
+      catch (err) { if (err && err.name === 'AbortError') return; }
+    }
+    pobierzPlik(nazwa, blob, 'image/png');
+    msg('m-wa', 'Obrazek zapisany w Pobranych – dołącz go w WhatsAppie (📎 spinacz). Otwieram czat…', 'ok');
+    if (!grupa && ins.telefon) window.open(`https://wa.me/${waNumer(ins.telefon)}`, '_blank');
+    else if (grupa) window.open('https://web.whatsapp.com/', '_blank');
+    await zapiszWysylke(grupa ? 'grupa' : 'obrazek');
+  });
+  const slugNazwy = t => String(t).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ł/g, 'l').replace(/Ł/g, 'L').replace(/[^A-Za-z0-9]+/g, '-').toLowerCase();
 
   // ===== Skan PKK ze zdjęcia (przeniesione z rejestru PKK 1.5) =====
   const fmtPkk = p => (p || '').replace(/\D/g, '').replace(/(\d{5})(?=\d)/g, '$1 ');
