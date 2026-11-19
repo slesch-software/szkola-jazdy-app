@@ -107,6 +107,19 @@
   .zmiany .zm span{flex:1;min-width:180px}
   .zmiany button{padding:6px 12px}
   .wysl{font-size:12px;font-weight:600;white-space:nowrap}
+  .wyr{font-size:12px;font-weight:600;color:#7c2d12;background:#ffedd5;border-radius:5px;padding:0 5px;margin-left:6px}
+  .ostrz{display:inline-block;font-size:12.5px;font-weight:600;border-radius:6px;padding:1px 7px;margin-top:3px}
+  .ostrz.zle{background:#fdecea;color:var(--r)}
+  .ostrz.kon{background:#fff4e0;color:#a15c00}
+  .ostrz.ok{background:var(--ok2);color:var(--ok)}
+  .ostrz a{color:inherit;margin-left:6px}
+  .kbar{height:6px;border-radius:4px;background:#e5e7eb;overflow:hidden;display:flex;margin:5px 0 2px;max-width:260px}
+  .kbar i{display:block;height:100%}
+  .kbar i.d{background:var(--ok)} .kbar i.p{background:var(--gy)}
+  .kolejka{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}
+  .kolejka td{padding:7px 4px;border-top:1px solid var(--b);vertical-align:middle}
+  .kolejka tr.nast td{background:var(--wb)}
+  .kolejka button{padding:5px 9px;font-size:13px}
   .wysl.ok{color:var(--ok)}
   .wysl.zm{color:#c2410c}
   @media (min-width:900px){
@@ -174,6 +187,9 @@
     #druk th,#druk td{border:1px solid #444;padding:4pt 6pt;text-align:left;vertical-align:top;word-wrap:break-word}
     #druk th{background:#eee}
     #druk .num{text-align:right}
+    #druk tr.pusty td{height:22pt}
+    #druk .tydz{page-break-inside:avoid;margin-bottom:10pt}
+    #druk .tydz h2{margin:8pt 0 4pt;font-weight:700}
     #druk .dlogo{float:right;max-height:48pt;max-width:140pt;object-fit:contain;margin:0 0 6pt 10pt}
     #druk .stopka{font-size:9pt;color:#555;margin-top:8pt}
     #druk .strona{page-break-after:always}
@@ -329,6 +345,7 @@
           <button id="g-wa" type="button">📲 WhatsApp</button>
           <button id="g-druk" type="button">🖨 Drukuj</button>
         </div>
+        <button id="g-wyczysc" type="button" class="link" style="margin-top:10px;font-size:13px;color:var(--r);background:none;border:none;padding:0;cursor:pointer;text-decoration:underline">🗑 Wyczyść dzień</button>
         <div id="m-grafik" class="msg"></div>
       </div>
       <details id="g-ustawienia" class="card ust hidden">
@@ -376,8 +393,17 @@
           <div class="pasek">
             <select id="k-filtr">
               <option value="aktywni">W trakcie kursu</option>
+              <option value="bez">Bez zaplanowanej jazdy</option>
+              <option value="komplet">Z kompletem godzin</option>
               <option value="zakonczeni">Zakończeni</option>
               <option value="wszyscy">Wszyscy</option>
+            </select>
+            <select id="k-instr"><option value="">każdy prowadzący</option></select>
+            <select id="k-sort">
+              <option value="nazwisko">sortuj: nazwisko</option>
+              <option value="zostalo">sortuj: najmniej zostało</option>
+              <option value="najblizsza">sortuj: najbliższa jazda</option>
+              <option value="zapis">sortuj: data zapisu</option>
             </select>
             <button id="k-csv" type="button" style="margin-left:auto">⬇ Excel (CSV)</button>
           </div>
@@ -496,7 +522,10 @@
     <h2 id="mw-tytul">Wolne instruktora</h2>
     <form id="f-wolne">
       <label for="w-instr">Instruktor</label><select id="w-instr" required></select>
-      <label for="w-data">Data</label><input type="date" id="w-data" required>
+      <div class="siatka">
+        <div><label for="w-data">Data</label><input type="date" id="w-data" required></div>
+        <div id="w-do-dnia-box"><label for="w-data2">Do dnia (urlop)</label><input type="date" id="w-data2"></div>
+      </div>
       <label class="check"><input id="w-caly" type="checkbox"> Cały dzień</label>
       <div class="siatka" id="w-godziny">
         <div><label for="w-od">Od</label><input type="time" id="w-od" step="300"></div>
@@ -518,12 +547,26 @@
     <div class="tabs" style="margin-bottom:10px">
       <button id="wa-t1" class="on" type="button">Do instruktora</button>
       <button id="wa-t2" type="button">Wszyscy (grupa)</button>
+      <button id="wa-t3" type="button">Po kolei</button>
     </div>
+    <div id="wa-kolejka" class="hidden">
+      <p class="hint">Kliknij „Wyślij następnemu” – otworzy się czat pierwszego instruktora. Wyślij wiadomość, wróć tutaj i kliknij ponownie – otworzy się następny.</p>
+      <label class="check"><input id="wk-pomin" type="checkbox" checked> pomiń instruktorów bez jazd w tym dniu</label>
+      <label class="check"><input id="wk-tylko" type="checkbox"> tylko niewysłane / zmienione</label>
+      <table class="kolejka"><tbody id="wk-lista"></tbody></table>
+      <div class="akcje" style="margin-top:10px">
+        <button id="wk-tekst" type="button">▶ Wyślij następnemu – tekst</button>
+        <button id="wk-obraz" type="button">▶ Wyślij następnemu – obrazek</button>
+      </div>
+    </div>
+    <div id="wa-zwykly">
     <p class="hint" id="wa-opis"></p>
     <textarea id="wa-tekst" style="min-height:220px;margin-top:8px;font-size:14px"></textarea>
     <button id="wa-wyslij" class="btn" type="button">📲 Wyślij tekst przez WhatsApp</button>
     <button id="wa-obrazek" class="btn2" type="button">🖼 Wyślij jako obrazek</button>
     <button id="wa-kopiuj" class="btn2" type="button">📋 Kopiuj tekst</button>
+    <button id="wa-kop-obr" class="btn2" type="button">🖼 Kopiuj obrazek (wklej Ctrl+V w WhatsApp Web)</button>
+    </div>
     <button id="wa-anuluj" class="btn2" type="button">Zamknij</button>
     <div id="m-wa" class="msg"></div>
   </div>
@@ -556,6 +599,8 @@
     <p class="hint" id="md-opis"></p>
     <button id="md-jeden" class="btn" type="button"></button>
     <button id="md-wszyscy" class="btn2" type="button">Wszyscy instruktorzy (każdy na osobnej stronie)</button>
+    <button id="md-tydzien" class="btn2" type="button"></button>
+    <button id="md-tydzien-wsz" class="btn2" type="button">Cały tydzień – wszyscy instruktorzy</button>
     <button id="md-anuluj" class="btn2" type="button">Anuluj</button>
   </div>
 </div>
@@ -614,6 +659,8 @@
         <div><label for="k-nazwisko">Nazwisko <button type="button" id="k-zamien" class="zamien" title="Zamień imię z nazwiskiem">⇄ zamień</button></label><input id="k-nazwisko" required autocomplete="off"></div>
         <div><label for="k-telefon">Telefon</label><input id="k-telefon" type="tel" autocomplete="off"></div>
         <div><label for="k-email">E-mail</label><input id="k-email" type="email" autocomplete="off"></div>
+        <div><label for="k-pesel">PESEL</label><input id="k-pesel" inputmode="numeric" maxlength="11" autocomplete="off"></div>
+        <div><label for="k-zapis">Data zapisu</label><input id="k-zapis" type="date"></div>
         <div class="cala"><label for="k-pkk">Numer PKK (20 cyfr)</label>
           <div class="pkkpole"><input id="k-pkk" inputmode="numeric" autocomplete="off">
             <button type="button" id="k-skanuj-kod" title="Skanuj kod kreskowy">▥ Skanuj</button></div>
@@ -652,6 +699,8 @@
         <div><label for="k-prawko">Nr prawa jazdy</label><input id="k-prawko" autocomplete="off"></div>
         <div class="cala"><label for="k-uwagi">Uwagi</label><textarea id="k-uwagi"></textarea></div>
       </div>
+      <label for="k-prowadzacy">Instruktor prowadzący</label>
+      <select id="k-prowadzacy"></select>
       <label class="check"><input id="k-zakonczony" type="checkbox"> Kurs zakończony</label>
       <button id="k-zapisz" class="btn" type="submit">Zapisz</button>
       <button id="k-anuluj" class="btn2" type="button">Anuluj</button>
@@ -674,7 +723,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.10';
+  const WERSJA = '1.12';
   // ======================
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -843,6 +892,7 @@
     $('g-instr-pasek').classList.toggle('hidden', !biuro);
     $('g-dodaj').classList.toggle('hidden', !biuro);
     $('g-wolne').classList.toggle('hidden', !biuro);
+    $('g-wyczysc').classList.toggle('hidden', !biuro);
     $('g-wa').classList.toggle('hidden', !biuro);
     $('g-ustawienia').classList.toggle('hidden', !biuro);
     pokaz('s-panel');
@@ -903,31 +953,50 @@
       const r = await sb.rpc('jazdy_kursantow', { p_ids: kursanci.map(k => k.id) });
       const teraz = new Date();
       if (!r.error) r.data.filter(x => x.rodzaj !== 'inne').forEach(x => {
-        const p = postepAll.get(x.kursant_id) || { zrob: 0, plan: 0 };
-        if (new Date(x.koniec) <= teraz) p.zrob += minutyJazdy(x); else p.plan += minutyJazdy(x);
+        const p = postepAll.get(x.kursant_id) || { zrob: 0, plan: 0, nast: null, ost: null };
+        if (new Date(x.koniec) <= teraz) { p.zrob += minutyJazdy(x); if (!p.ost || x.poczatek > p.ost) p.ost = x.poczatek; }
+        else { p.plan += minutyJazdy(x); if (!p.nast || x.poczatek < p.nast) p.nast = x.poczatek; }
         postepAll.set(x.kursant_id, p);
       });
     }
     pokazKursantow();
   }
 
+  function wypelnijFiltrInstr() {
+    const el = $('k-instr'), v = el.value;
+    el.innerHTML = '<option value="">każdy prowadzący</option>' +
+      instruktorzy.filter(i => i.aktywny).map(i => `<option value="${i.id}">prowadzi: ${esc(i.imie_nazwisko)}</option>`).join('') +
+      '<option value="-">bez prowadzącego</option>';
+    el.value = [...el.options].some(o => o.value === v) ? v : '';
+  }
   function pokazKursantow() {
+    wypelnijFiltrInstr();
     const filtr = $('k-filtr').value;
     const fraza = bezOgonkow($('k-szukaj').value.trim());
     const cyfry = fraza.replace(/\D/g, '');
+    const pst = k => postepAll.get(k.id) || { zrob: 0, plan: 0 };
+    const zostalo = k => { const w = wymaganeH(k); return w ? w * 60 - pst(k).zrob - pst(k).plan : Infinity; };
     const lista = kursanci.filter(k => {
       if (filtr === 'aktywni' && !k.aktywny) return false;
+      if (filtr === 'bez' && (!k.aktywny || pst(k).nast)) return false;
+      if (filtr === 'komplet' && (!k.aktywny || !wymaganeH(k) || pst(k).zrob < wymaganeH(k) * 60)) return false;
       if (filtr === 'zakonczeni' && k.aktywny) return false;
+      const fi = $('k-instr').value;
+      if (fi === '-' ? k.instruktor_id : (fi && k.instruktor_id !== fi)) return false;
       if (!fraza) return true;
       const tekst = bezOgonkow([k.imie, k.nazwisko, k.nazwisko + ' ' + k.imie, k.email, k.kategoria].join(' '));
       if (tekst.includes(fraza)) return true;
       if (cyfry.length >= 3) {
-        const numery = String(k.telefon || '').replace(/\D/g, '') + ' ' + String(k.pkk || '').replace(/\D/g, '');
+        const numery = String(k.telefon || '').replace(/\D/g, '') + ' ' + String(k.pkk || '').replace(/\D/g, '') + ' ' + (k.pesel || '');
         if (numery.includes(cyfry)) return true;
       }
       return false;
     });
 
+    const sort = $('k-sort').value;
+    if (sort === 'zostalo') lista.sort((a, b) => zostalo(a) - zostalo(b));
+    else if (sort === 'najblizsza') lista.sort((a, b) => (pst(a).nast || '9999').localeCompare(pst(b).nast || '9999'));
+    else if (sort === 'zapis') lista.sort((a, b) => String(b.utworzono || '').localeCompare(String(a.utworzono || '')));
     $('k-licznik').textContent = lista.length + ' z ' + kursanci.length;
     if (!kursanci.length) {
       $('k-lista').innerHTML = '<p class="hint">Rejestr jest pusty. Kliknij „+ Dodaj”, aby dodać pierwszego kursanta.</p>';
@@ -941,11 +1010,18 @@
         (p.plan ? ` (+ ${fmtH(p.plan)} h zaplanowane)` : '') +
         (liczba(k.godziny_dokupione, 0) > 0 ? ` · w tym ${godz(k.godziny_dokupione)} h dokupione` : '');
       const zak = k.aktywny ? '' : '<span class="pill szary">zakończony</span>';
+      const wyr = wyroznik(k, true);
+      const pasek = wym ? `<div class="kbar"><i class="d" style="width:${Math.min(100, p.zrob / (wym * 60) * 100)}%"></i><i class="p" style="width:${Math.max(0, Math.min(100 - p.zrob / (wym * 60) * 100, p.plan / (wym * 60) * 100))}%"></i></div>` : '';
+      const nd = p.nast ? new Date(p.nast) : null;
+      const nast = nd ? `najbliższa jazda: ${DNI[nd.getDay()]} ${pad(nd.getDate())}.${pad(nd.getMonth() + 1)} ${godzina(p.nast)}`
+        : (k.aktywny ? 'brak zaplanowanej jazdy' : '');
+      const st = k.aktywny ? stanKursu(k, p.zrob + p.plan) : null;
+      const prow = k.instruktor_id ? instruktorzy.find(i => i.id === k.instruktor_id) : null;
       const tel = k.telefon
         ? `<a class="tel" href="tel:${esc(String(k.telefon).replace(/[^\d+]/g, ''))}">${esc(k.telefon)}</a>` : '';
       return `<div class="row kursant" data-id="${k.id}">
-        <div class="who"><b>${esc(k.nazwisko)} ${esc(k.imie)} ${zak}</b>
-          <span>${esc(opis)}${opis ? '<br>' : ''}${esc(godziny)}</span></div>
+        <div class="who"><b>${esc(k.nazwisko)} ${esc(k.imie)} ${zak}</b>${wyr ? `<span class="wyr">${esc(wyr)}</span>` : ''}
+          <span>${prow ? '👤 prowadzi: <b>' + esc(prow.imie_nazwisko) + '</b><br>' : ''}${esc(opis)}${opis ? '<br>' : ''}${esc(godziny)}${pasek}${esc(nast)}</span>${st ? `<span class="ostrz ${st.cls}">${esc(st.t)}</span>` : ''}</div>
         <div class="acts">${tel}</div></div>`;
     }).join('') || '<p class="hint">Nikt nie pasuje do wyszukiwania.</p>';
 
@@ -956,6 +1032,9 @@
   }
   $('k-szukaj').oninput = pokazKursantow;
   $('k-filtr').onchange = pokazKursantow;
+  $('k-instr').onchange = pokazKursantow;
+  $('k-sort').onchange = () => { try { localStorage.setItem('k_sort', $('k-sort').value); } catch (_) {} pokazKursantow(); };
+  try { const v = localStorage.getItem('k_sort'); if (v) $('k-sort').value = v; } catch (_) {}
 
   function otworzKursanta(k) {
     edytowany = k || null;
@@ -964,6 +1043,12 @@
     $('k-nazwisko').value = k ? k.nazwisko : '';
     $('k-telefon').value = (k && k.telefon) || '';
     $('k-email').value = (k && k.email) || '';
+    $('k-prowadzacy').innerHTML = '<option value="">— nie wybrano —</option>' + instruktorzy
+      .filter(i => i.aktywny || (k && i.id === k.instruktor_id))
+      .map(i => `<option value="${i.id}">${esc(i.imie_nazwisko)}</option>`).join('');
+    $('k-prowadzacy').value = (k && k.instruktor_id) || '';
+    $('k-pesel').value = (k && k.pesel) || '';
+    $('k-zapis').value = k && k.utworzono ? dzisStr(new Date(k.utworzono)) : dzisStr();
     $('k-pkk').value = (k && k.pkk) || '';
     $('k-kategoria').value = (k && k.kategoria) || 'B';
     $('k-typ').value = (k && k.typ_kursu) || 'Podstawowy';
@@ -1074,6 +1159,26 @@
         nr_prawa_jazdy: $('k-prawko').value.trim() || null,
         aktywny: !$('k-zakonczony').checked
       };
+      if ($('k-prowadzacy').value || (edytowany && edytowany.instruktor_id)) dane.instruktor_id = $('k-prowadzacy').value || null;
+      const pesel = $('k-pesel').value.replace(/\D/g, '');
+      if (pesel || (edytowany && edytowany.pesel)) dane.pesel = pesel || null;
+      if (pesel && !peselOk(pesel) && !confirm('Numer PESEL wygląda na błędny (zła liczba cyfr albo suma kontrolna). Zapisać mimo to?')) return;
+      if (pesel) {
+        const inny = kursanci.find(x => x.pesel === pesel && (!edytowany || x.id !== edytowany.id));
+        if (inny && !confirm(`Ten PESEL ma już kursant „${nazwaK(inny)}”${inny.kategoria ? ' (kat. ' + inny.kategoria + ')' : ''}.\n\nTo może być ta sama osoba na innym kursie. Zapisać mimo to?`)) return;
+      }
+      const zapis = $('k-zapis').value;
+      if (zapis && zapis !== (edytowany && edytowany.utworzono ? dzisStr(new Date(edytowany.utworzono)) : dzisStr()))
+        dane.utworzono = new Date(zapis + 'T12:00:00').toISOString();
+      if (dane.pkk) {
+        const ten = kursanci.find(x => x.pkk === dane.pkk && (!edytowany || x.id !== edytowany.id));
+        if (ten) {
+          if (confirm(`Kursant z tym numerem PKK już jest w rejestrze: ${nazwaK(ten)}${ten.kategoria ? ' (kat. ' + ten.kategoria + ')' : ''}.\n\nOtworzyć jego kartę zamiast zapisywać nowego?`)) {
+            zamknijKursanta(); otworzKursanta(ten);
+          }
+          return;
+        }
+      }
       if (dane.pkk && dane.pkk.length !== 20 &&
           !confirm('Numer PKK ma ' + dane.pkk.length + ' cyfr zamiast 20. Zapisać mimo to?')) return;
       let wynik;
@@ -1082,7 +1187,10 @@
       } else {
         wynik = await sb.from('kursanci').insert({ ...dane, szkola_id: profil.szkola_id });
       }
-      if (wynik.error) { msg('m-kursant', tlumacz(wynik.error)); return; }
+      if (wynik.error) {
+        msg('m-kursant', /pesel/.test(wynik.error.message) ? 'Najpierw uruchom w Supabase plik krok11_pesel.sql.'
+          : /instruktor_id/.test(wynik.error.message) ? 'Najpierw uruchom w Supabase plik krok12_prowadzacy.sql.' : tlumacz(wynik.error)); return;
+      }
 
       // dodatkowe numery PKK z tej samej kartki – osobne wpisy tej samej osoby
       const bledy = [];
@@ -1167,6 +1275,53 @@
   const fmtH = min => (min / 60).toLocaleString('pl-PL', { maximumFractionDigits: 2 });
   const telLink = t => String(t || '').replace(/[^\d+]/g, '');
   const nazwaK = k => k ? ((k.nazwisko || '') + ' ' + (k.imie || '')).trim() : '';
+  // PESEL: suma kontrolna i data urodzenia
+  function peselOk(p) {
+    if (!/^\d{11}$/.test(p)) return false;
+    const w = [1, 3, 7, 9, 1, 3, 7, 9, 1, 3];
+    const s = w.reduce((a, x, i) => a + x * Number(p[i]), 0);
+    return (10 - (s % 10)) % 10 === Number(p[10]);
+  }
+  function rokZPesel(p) {
+    if (!/^\d{11}$/.test(p || '')) return null;
+    const yy = Number(p.slice(0, 2)), mm = Number(p.slice(2, 4));
+    const wiek = mm > 80 ? 1800 : mm > 60 ? 2200 : mm > 40 ? 2100 : mm > 20 ? 2000 : 1900;
+    return wiek + yy;
+  }
+  // kursanci o takim samym imieniu i nazwisku – czym ich odróżnić
+  function tacySami(k) {
+    const n = bezOgonkow(nazwaK(k));
+    return [...gKursanci.values()].filter(x => x.id !== k.id && bezOgonkow(nazwaK(x)) === n);
+  }
+  function wyroznik(k, dlaBiura) {
+    if (!k || !tacySami(k).length) return '';
+    if (dlaBiura && k.pesel) return 'PESEL ' + k.pesel;
+    const r = rokZPesel(k.pesel) || k.rok_ur;
+    if (r) return 'ur. ' + r;
+    if (k.telefon) return 'tel. …' + String(k.telefon).replace(/\D/g, '').slice(-3);
+    return k.utworzono ? 'zapisany ' + fmtData(k.utworzono) : (k.kategoria ? 'kat. ' + k.kategoria : '');
+  }
+  // stan godzin kursu po danej jeździe: ponad kurs / końcówka / komplet
+  function stanKursu(k, poMin) {
+    const wym = wymaganeH(k); if (!wym) return null;
+    const zost = wym * 60 - poMin;
+    if (zost < 0) return { cls: 'zle', t: `⚠️ ponad kurs o ${fmtH(-zost)} h`, ponad: -zost };
+    if (zost === 0) return { cls: 'ok', t: '✅ komplet godzin' };
+    if (zost <= 120) return { cls: 'kon', t: `zostało ${fmtH(zost)} h` };
+    return null;
+  }
+  async function dokupGodziny(kid, sugestia) {
+    const k = gKursanci.get(kid); if (!k) return;
+    const v = prompt(`${nazwaK(k)} – ile godzin dokupił?`, sugestia ? godz(Math.ceil(sugestia / 30) / 2) : '2');
+    if (v === null) return;
+    const h = liczba(v, 0);
+    if (!(h > 0)) { alert('Wpisz liczbę godzin większą od zera.'); return; }
+    const { error } = await sb.from('dokupione').insert({ szkola_id: profil.szkola_id, kursant_id: kid, godziny: h, dzien: dzisStr(), uwagi: null });
+    if (error) { alert(tlumacz(error)); return; }
+    const { data } = await sb.from('kursanci').select('*').eq('id', kid).maybeSingle();
+    if (data) gKursanci.set(kid, data);
+    ladujKursantow(); ladujDzien(true);
+  }
   const slowoJazd = n => n === 1 ? 'jazda' : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? 'jazdy' : 'jazd');
   function ustI(id) {
     const u = ust(), i = instruktorzy.find(x => x.id === (id || gInstr));
@@ -1226,9 +1381,18 @@
     instruktorzy = data;
   }
   async function ladujKursantowDoGrafiku() {
-    const { data, error } = await sb.from('kursanci')
-      .select('id, imie, nazwisko, telefon, kategoria, typ_kursu, pkk, godziny_kurs, godziny_dokupione, aktywny')
-      .eq('szkola_id', profil.szkola_id);
+    if (profil.rola === 'biuro') {
+      const { data, error } = await sb.from('kursanci').select('*').eq('szkola_id', profil.szkola_id);
+      if (!error) gKursanci = new Map(data.map(k => [k.id, k]));
+      return;
+    }
+    // instruktor: tylko podstawowe dane swoich kursantów (bez PESEL, PKK, e-maila)
+    let { data, error } = await sb.rpc('kursanci_instruktora');
+    if (error && /kursanci_instruktora/.test(error.message || '')) {   // przed krokiem 12
+      ({ data, error } = await sb.from('kursanci')
+        .select('id, imie, nazwisko, telefon, kategoria, typ_kursu, godziny_kurs, godziny_dokupione, aktywny, utworzono')
+        .eq('szkola_id', profil.szkola_id));
+    }
     if (!error) gKursanci = new Map(data.map(k => [k.id, k]));
   }
   function wypelnijInstr() {
@@ -1373,13 +1537,23 @@
       const j = e.j, k = j.kursant_id ? gKursanci.get(j.kursant_id) : null;
       const kto = k ? esc(nazwaK(k)) : (j.rodzaj === 'inne' ? 'Inne' : '<i>bez kursanta</i>');
       const kat = k && k.kategoria ? `<span class="kat">${esc(k.kategoria)}</span>` : '';
-      const opis = [j.rodzaj === 'egzamin' ? '🎓 egzamin' : '', k && j.rodzaj !== 'inne' ? postepTekst(k, j) : '', j.uwagi ? esc(j.uwagi) : '']
+      const wyr = k ? wyroznik(k, edyt) : '';
+      const prow = edyt && k && k.instruktor_id && k.instruktor_id !== idI ? instruktorzy.find(i => i.id === k.instruktor_id) : null;
+      const opis = [j.rodzaj === 'egzamin' ? '🎓 egzamin' : '', k && j.rodzaj !== 'inne' ? postepTekst(k, j) : '', j.uwagi ? esc(j.uwagi) : '',
+        prow ? '👤 prowadzi: ' + esc(prow.imie_nazwisko) : '']
         .filter(Boolean).join(' · ');
+      let ostrz = '';
+      if (k && j.rodzaj !== 'inne') {
+        const po = (gPostep.get(k.id) || []).filter(x => x.rodzaj !== 'inne' && new Date(x.poczatek) <= new Date(j.poczatek)).reduce((a, x) => a + minutyJazdy(x), 0)
+          + ((gPostep.get(k.id) || []).some(x => new Date(x.poczatek).getTime() === new Date(j.poczatek).getTime()) ? 0 : minutyJazdy(j));
+        const st = stanKursu(k, po);
+        if (st) ostrz = `<br><span class="ostrz ${st.cls}">${esc(st.t)}${st.ponad && edyt ? `<a href="#" data-dokup="${k.id}" data-ile="${st.ponad}">➕ dokupił godziny?</a>` : ''}</span>`;
+      }
       const tel = k && k.telefon
         ? `<div class="tele"><a href="tel:${esc(telLink(k.telefon))}">📞 ${esc(k.telefon)}</a><a href="${esc(smsLink(k, j))}">✉️ SMS</a></div>` : '';
       return `<div class="jazda ${j.rodzaj}${edyt ? ' edyt' : ''}" data-id="${j.id}">
           <span class="godz">${godzina(j.poczatek)}–${godzina(j.koniec)}</span>
-          <div class="kto"><b>${kto}</b>${kat}${opis ? '<br><span>' + opis + '</span>' : ''}</div>${tel}</div>`;
+          <div class="kto"><b>${kto}</b>${kat}${wyr ? `<span class="wyr">${esc(wyr)}</span>` : ''}${opis ? '<br><span>' + opis + '</span>' : ''}${ostrz}</div>${tel}</div>`;
     }).join('');
   }
   const sumaTxt = jz => { const r = jz.filter(j => j.rodzaj !== 'inne'); const m = r.reduce((a, j) => a + minutyJazdy(j), 0);
@@ -1409,6 +1583,9 @@
       $('g-lista').innerHTML = listaDnia(gInstr, gJazdy, gWolne, edyt);
     }
     if (!edyt) { oznaczWidziane(gInstr, gDzien, gJazdy, gWolne); return; }
+    $('g-lista').querySelectorAll('a[data-dokup]').forEach(a => a.onclick = e => {
+      e.preventDefault(); e.stopPropagation(); dokupGodziny(a.dataset.dokup, Number(a.dataset.ile));
+    });
     $('g-lista').querySelectorAll('.jazda.edyt').forEach(el => el.onclick = e => {
       if (e.target.closest('a')) return;
       otworzJazde(wszJ.find(j => j.id === el.dataset.id));
@@ -1452,8 +1629,13 @@
   // ----- okno jazdy -----
   function etykietaK(k, wszyscy) {
     let e = nazwaK(k) + (k.kategoria ? ' · ' + k.kategoria : '');
-    const tacy = wszyscy.filter(x => nazwaK(x) === nazwaK(k) && (x.kategoria || '') === (k.kategoria || ''));
-    if (tacy.length > 1) e += k.pkk ? ' · PKK …' + String(k.pkk).slice(-4) : (k.telefon ? ' · ' + k.telefon : '');
+    const tacy = wszyscy.filter(x => bezOgonkow(nazwaK(x)) === bezOgonkow(nazwaK(k)));
+    if (tacy.length > 1) {
+      const dod = k.pesel ? 'PESEL ' + k.pesel : (k.telefon ? 'tel. ' + k.telefon : '');
+      if (dod) e += ' · ' + dod;
+      if (tacy.filter(x => (x.kategoria || '') === (k.kategoria || '') && (x.pesel || x.telefon || '') === (k.pesel || k.telefon || '')).length > 1)
+        e += k.utworzono ? ' · zapisany ' + fmtData(k.utworzono) : (k.pkk ? ' · PKK ' + fmtPkk(k.pkk) : '');
+    }
     return e;
   }
   function budujListeK(aktualnyId) {
@@ -1488,8 +1670,11 @@
       (r.data || []).filter(x => x.rodzaj !== 'inne' && !(edytJazda && new Date(x.poczatek).getTime() === new Date(edytJazda.poczatek).getTime() && x.koniec === edytJazda.koniec))
         .forEach(x => { if (new Date(x.koniec) <= teraz) zrob += minutyJazdy(x); else plan += minutyJazdy(x); });
       const wym = wymaganeH(k);
-      el.textContent = [k.telefon ? '📞 ' + k.telefon : '',
-        `odbyte ${fmtH(zrob)} h${wym ? ' z ' + godz(wym) : ''}`, plan ? `zaplanowane ${fmtH(plan)} h` : ''].filter(Boolean).join(' · ');
+      const st = stanKursu(k, zrob + plan + (naMin($('j-do').value) - naMin($('j-od').value) || 0));
+      const prow = k.instruktor_id ? instruktorzy.find(i => i.id === k.instruktor_id) : null;
+      el.textContent = [prow ? '👤 prowadzi: ' + prow.imie_nazwisko : '', k.pesel && tacySami(k).length ? 'PESEL ' + k.pesel : '', k.telefon ? '📞 ' + k.telefon : '',
+        `odbyte ${fmtH(zrob)} h${wym ? ' z ' + godz(wym) : ''}`, plan ? `zaplanowane ${fmtH(plan)} h` : '',
+        st && st.cls === 'zle' ? st.t + ' (z tą jazdą)' : ''].filter(Boolean).join(' · ');
     }, 250);
   }
   $('j-kursant').oninput = infoKursanta;
@@ -1553,7 +1738,7 @@
       let kid = null;
       if (txt) {
         const z = znajdzK(txt);
-        if (z.wielu) { msg('m-jazda', 'Jest kilku kursantów o tej nazwie – wybierz właściwego z listy podpowiedzi.'); return; }
+        if (z.wielu) { msg('m-jazda', 'Jest kilku kursantów o tym imieniu i nazwisku – wybierz właściwego z listy podpowiedzi (rozróżnia ich PESEL).'); return; }
         kid = z.id;
         if (!kid) {
           const nm = rozdzielNazwe(txt.split(' · ')[0]);
@@ -1675,6 +1860,8 @@
       .map(i => `<option value="${i.id}">${esc(i.imie_nazwisko)}</option>`).join('');
     $('w-instr').value = w ? w.instruktor_id : gInstr;
     $('w-data').value = w ? w.dzien : gDzien;
+    $('w-data2').value = '';
+    $('w-do-dnia-box').classList.toggle('hidden', !!w);
     $('w-caly').checked = w ? !w.godz_od : false;
     $('w-od').value = w && w.godz_od ? hm(w.godz_od) : ustI($('w-instr').value).od;
     $('w-do').value = w && w.godz_do ? hm(w.godz_do) : ustI($('w-instr').value).do;
@@ -1692,6 +1879,17 @@
     otworzWolne(null);
   };
   $('w-anuluj').onclick = zamknijWolne;
+  $('g-wyczysc').onclick = () => zajety($('g-wyczysc'), async () => {
+    const ins = instruktorzy.find(i => i.id === gInstr); if (!ins) return;
+    const jz = gJazdy.filter(j => j.instruktor_id === gInstr);
+    if (!jz.length) { msg('m-grafik', `${ins.imie_nazwisko} nie ma jazd ${dataKrotka(gDzien)}.`); return; }
+    if (!confirm(`Usunąć WSZYSTKIE jazdy (${jz.length}) instruktora ${ins.imie_nazwisko} – ${dataKrotka(gDzien)}?\n\nW razie pomyłki przywrócisz je z kosza (Ustawienia → Kosz).`)) return;
+    if (!(await wymagajPin('Wyczyszczenie dnia – ' + ins.imie_nazwisko))) return;
+    const { error } = await sb.from('jazdy').delete().in('id', jz.map(j => j.id));
+    if (error) { msg('m-grafik', tlumacz(error)); return; }
+    msg('m-grafik', `Usunięto ${jz.length} ${slowoJazd(jz.length)}.`, 'ok');
+    await ladujDzien(true);
+  });
   $('modal-wolne').onclick = e => { if (e.target.id === 'modal-wolne') zamknijWolne(); };
   $('f-wolne').onsubmit = e => {
     e.preventDefault();
@@ -1705,17 +1903,24 @@
       if (!caly && (!d.godz_od || !d.godz_do || naMin(d.godz_do) <= naMin(d.godz_od))) {
         msg('m-wolne', 'Godzina „do” musi być późniejsza niż „od”.'); return;
       }
+      // kilka dni (urlop)
+      const d2 = !edytWolne && $('w-data2').value && $('w-data2').value > d.dzien ? $('w-data2').value : d.dzien;
+      const dni = []; for (let x = d.dzien; x <= d2 && dni.length < 92; x = dodajDni(x, 1)) dni.push(x);
+      if (dni.length > 1 && !confirm(`Zapisać wolne na ${dni.length} dni (${fmtData(d.dzien)} – ${fmtData(d2)})?`)) return;
       // jazdy w czasie wolnego – ostrzeżenie
-      const p0 = new Date(d.dzien + 'T00:00:00');
-      const od = caly ? p0 : new Date(d.dzien + 'T' + d.godz_od + ':00');
-      const doo = caly ? new Date(dodajDni(d.dzien, 1) + 'T00:00:00') : new Date(d.dzien + 'T' + d.godz_do + ':00');
-      const { data: kol } = await sb.from('jazdy').select('poczatek, koniec').eq('instruktor_id', d.instruktor_id)
-        .lt('poczatek', doo.toISOString()).gt('koniec', od.toISOString());
-      if (kol && kol.length && !confirm(`W tym czasie instruktor ma ${kol.length} ${slowoJazd(kol.length)}: ` +
-          kol.map(x => godzina(x.poczatek) + '–' + godzina(x.koniec)).join(', ') + '.\n\nZapisać wolne mimo to?')) return;
+      const kol = [];
+      for (const dz of dni) {
+        const od = caly ? new Date(dz + 'T00:00:00') : new Date(dz + 'T' + d.godz_od + ':00');
+        const doo = caly ? new Date(dodajDni(dz, 1) + 'T00:00:00') : new Date(dz + 'T' + d.godz_do + ':00');
+        const r = await sb.from('jazdy').select('poczatek, koniec').eq('instruktor_id', d.instruktor_id)
+          .lt('poczatek', doo.toISOString()).gt('koniec', od.toISOString());
+        (r.data || []).forEach(x => kol.push((dni.length > 1 ? pad(new Date(x.poczatek).getDate()) + '.' + pad(new Date(x.poczatek).getMonth() + 1) + ' ' : '') + godzina(x.poczatek) + '–' + godzina(x.koniec)));
+      }
+      if (kol.length && !confirm(`W tym czasie instruktor ma ${kol.length} ${slowoJazd(kol.length)}: ` +
+          kol.join(', ') + '.\n\nZapisać wolne mimo to?')) return;
       const w = edytWolne
         ? await sb.from('wolne').update(d).eq('id', edytWolne.id)
-        : await sb.from('wolne').insert({ ...d, szkola_id: profil.szkola_id });
+        : await sb.from('wolne').insert(dni.map(dz => ({ ...d, dzien: dz, szkola_id: profil.szkola_id })));
       if (w.error) {
         msg('m-wolne', /relation .*wolne|wolne.*does not exist|schema cache/i.test(w.error.message)
           ? 'Najpierw uruchom w Supabase plik krok5_wolne.sql.' : tlumacz(w.error));
@@ -1757,7 +1962,8 @@
     jazdy.forEach((j, i) => {
       const k = gKursanci.get(j.kursant_id);
       const kat = k && k.kategoria ? `[${k.kategoria}] ` : '';
-      const kto = k ? nazwaK(k) : (j.rodzaj === 'inne' ? 'Inne' : '(bez kursanta)');
+      const wyr = k ? wyroznik(k, false) : '';
+      const kto = k ? nazwaK(k) + (wyr ? ` (${wyr})` : '') : (j.rodzaj === 'inne' ? 'Inne' : '(bez kursanta)');
       const ex = j.rodzaj === 'egzamin' ? ' 🎓 EGZAMIN' : '';
       L.push(`*${godzina(j.poczatek)}-${godzina(j.koniec)}* ${kat}${kto}${ex}${j.uwagi ? ` _(${j.uwagi})_` : ''}`);
       const nast = jazdy[i + 1];
@@ -1800,7 +2006,11 @@
   async function waPokaz() {
     $('wa-t1').classList.toggle('on', waTryb === 'instr');
     $('wa-t2').classList.toggle('on', waTryb === 'grupa');
+    $('wa-t3').classList.toggle('on', waTryb === 'kolejka');
+    $('wa-kolejka').classList.toggle('hidden', waTryb !== 'kolejka');
+    $('wa-zwykly').classList.toggle('hidden', waTryb === 'kolejka');
     msg('m-wa', '');
+    if (waTryb === 'kolejka') { pokazKolejke(); return; }
     const ins = instruktorzy.find(i => i.id === gInstr);
     if (waTryb === 'instr') {
       $('wa-opis').textContent = ins.telefon
@@ -1825,9 +2035,75 @@
   });
   $('wa-t1').onclick = () => { waTryb = 'instr'; waPokaz(); };
   $('wa-t2').onclick = () => { waTryb = 'grupa'; waPokaz(); };
+  $('wa-t3').onclick = () => { waTryb = 'kolejka'; waPokaz(); };
+  // --- wysyłka po kolei ---
+  const daneInstr = id => ({ jazdy: waDane.wszyscy.jazdy.filter(j => j.instruktor_id === id), wolne: waDane.wszyscy.wolne.filter(w => w.instruktor_id === id), post: waDane.wszyscy.post });
+  function stanWysylki(id) {
+    const w = gWysylki.get(id), d = daneInstr(id);
+    if (!w) return 'nie';
+    return podpisDnia(d.jazdy, d.wolne) === w.podpis ? 'ok' : 'zm';
+  }
+  function listaKolejki() {
+    return instruktorzy.filter(i => i.aktywny)
+      .filter(i => !$('wk-pomin').checked || daneInstr(i.id).jazdy.length)
+      .filter(i => !$('wk-tylko').checked || stanWysylki(i.id) !== 'ok');
+  }
+  function pokazKolejke() {
+    const l = listaKolejki(), nast = l.find(i => stanWysylki(i.id) !== 'ok');
+    $('wk-lista').innerHTML = l.map(i => { const d = daneInstr(i.id), s = sumaJazd(d.jazdy);
+      return `<tr class="${nast && nast.id === i.id ? 'nast' : ''}"><td><b>${esc(i.imie_nazwisko)}</b><br><small class="hint">${i.telefon ? '📞 ' + esc(i.telefon) : 'brak telefonu'}</small></td>
+        <td>${s.n} ${slowoJazd(s.n)} · ${fmtH(s.min)} h</td><td>${znacznikWysl(i.id, d.jazdy, d.wolne) || '<span class="hint">nie wysłano</span>'}</td>
+        <td style="text-align:right;white-space:nowrap"><button type="button" data-wt="${i.id}" title="Wyślij tekst">💬</button> <button type="button" data-wo="${i.id}" title="Wyślij obrazek">🖼</button></td></tr>`; }).join('')
+      || '<tr><td class="hint">Brak instruktorów do wysłania.</td></tr>';
+    $('wk-lista').querySelectorAll('[data-wt]').forEach(b => b.onclick = () => zajety(b, () => wyslijInstr(b.dataset.wt, 'tekst')));
+    $('wk-lista').querySelectorAll('[data-wo]').forEach(b => b.onclick = () => zajety(b, () => wyslijInstr(b.dataset.wo, 'obrazek')));
+    $('wk-tekst').disabled = $('wk-obraz').disabled = !nast;
+    $('wk-tekst').textContent = nast ? `▶ Wyślij następnemu – tekst (${nast.imie_nazwisko})` : '✅ Wszystkim wysłano';
+    $('wk-obraz').textContent = nast ? `▶ Wyślij następnemu – obrazek` : '✅ Wszystkim wysłano';
+  }
+  $('wk-pomin').onchange = pokazKolejke; $('wk-tylko').onchange = pokazKolejke;
+  async function telInstr(ins) {
+    if (ins.telefon) return ins.telefon;
+    const tel = prompt(`Numer telefonu (WhatsApp) instruktora ${ins.imie_nazwisko}:`);
+    if (!tel || !tel.trim()) return null;
+    const { error } = await sb.from('instruktorzy').update({ telefon: tel.trim() }).eq('id', ins.id);
+    if (error) { msg('m-wa', tlumacz(error)); return null; }
+    ins.telefon = tel.trim(); return ins.telefon;
+  }
+  async function wyslijInstr(id, rodzaj) {
+    const ins = instruktorzy.find(i => i.id === id), d = daneInstr(id);
+    const tel = await telInstr(ins); if (!tel) return;
+    if (rodzaj === 'tekst') window.open(`https://wa.me/${waNumer(tel)}?text=${encodeURIComponent(tekstInstruktora(ins, gDzien, d))}`, '_blank');
+    else {
+      const blob = await new Promise(r => rysujKarte([{ ins, jazdy: d.jazdy, wolne: d.wolne }], gDzien).toBlob(r, 'image/png'));
+      if (!(await doSchowka(blob))) pobierzPlik(`grafik-${slugNazwy(ins.imie_nazwisko)}-${gDzien}.png`, blob, 'image/png');
+      window.open(`https://wa.me/${waNumer(tel)}`, '_blank');
+      msg('m-wa', `Obrazek dla ${ins.imie_nazwisko} jest w schowku – w czacie naciśnij Ctrl+V i Enter.`, 'ok');
+    }
+    const { error } = await sb.from('wysylki').insert({ szkola_id: profil.szkola_id, dzien: gDzien, instruktor_id: id, rodzaj, podpis: podpisDnia(d.jazdy, d.wolne) });
+    if (!error) { await ladujWysylki(); pokazKolejke(); ladujDzien(true); }
+  }
+  $('wk-tekst').onclick = () => zajety($('wk-tekst'), async () => { const n = listaKolejki().find(i => stanWysylki(i.id) !== 'ok'); if (n) await wyslijInstr(n.id, 'tekst'); });
+  $('wk-obraz').onclick = () => zajety($('wk-obraz'), async () => { const n = listaKolejki().find(i => stanWysylki(i.id) !== 'ok'); if (n) await wyslijInstr(n.id, 'obrazek'); });
+  async function doSchowka(blob) {
+    if (!(navigator.clipboard && window.ClipboardItem)) return false;
+    try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]); return true; } catch (_) { return false; }
+  }
   function zamknijWa() { $('modal-wa').classList.add('hidden'); document.body.style.overflow = ''; }
   $('wa-anuluj').onclick = zamknijWa;
   $('modal-wa').onclick = e => { if (e.target.id === 'modal-wa') zamknijWa(); };
+  $('wa-kop-obr').onclick = () => zajety($('wa-kop-obr'), async () => {
+    if (!waDane) return;
+    const grupa = waTryb === 'grupa', ins = instruktorzy.find(i => i.id === gInstr);
+    const sekcje = grupa ? instruktorzy.filter(i => i.aktywny).map(i => ({ ins: i, ...daneInstr(i.id) }))
+      : [{ ins, jazdy: waDane.jeden.jazdy, wolne: waDane.jeden.wolne }];
+    const blob = await new Promise(r => rysujKarte(sekcje, gDzien).toBlob(r, 'image/png'));
+    if (await doSchowka(blob)) {
+      msg('m-wa', 'Obrazek skopiowany. W WhatsApp Web otwórz czat, naciśnij Ctrl+V i Enter.', 'ok');
+      if (!grupa && ins.telefon) window.open(`https://wa.me/${waNumer(ins.telefon)}`, '_blank');
+      await zapiszWysylke(grupa ? 'grupa' : 'obrazek');
+    } else msg('m-wa', 'Ta przeglądarka nie pozwala skopiować obrazka – użyj „Wyślij jako obrazek”.');
+  });
   $('wa-kopiuj').onclick = async () => {
     try { await navigator.clipboard.writeText($('wa-tekst').value); msg('m-wa', 'Skopiowano – wklej w WhatsAppie.', 'ok'); }
     catch (_) { $('wa-tekst').select(); document.execCommand('copy'); msg('m-wa', 'Skopiowano.', 'ok'); }
@@ -1853,8 +2129,8 @@
     $('druk').innerHTML = html;
     setTimeout(() => window.print(), 50);
   }
-  const stopkaDruku = () => `<div class="stopka">Wydrukowano: ${new Date().toLocaleString('pl-PL')} · ${esc((profil.szkoly && profil.szkoly.nazwa) || '')}</div>`;
-  function htmlDnia(ins, dzien, d) {
+  const stopkaDruku = () => `<div class="stopka">Wydrukowano: ${new Date().toLocaleString('pl-PL')} · ${esc((profil.szkoly && profil.szkoly.nazwa) || '')} · program przygotował Slesch</div>`;
+  function htmlDnia(ins, dzien, d, tydz) {
     const s = sumaJazd(d.jazdy);
     const wiersze = d.jazdy.map((j, i) => {
       const nast = d.jazdy[i + 1];
@@ -1868,15 +2144,17 @@
         post = `${fmtH(przed)}–${fmtH(przed + minutyJazdy(j))}${wymaganeH(k) ? ' z ' + godz(wymaganeH(k)) : ''}`;
       }
       return `<tr><td>${godzina(j.poczatek)}–${godzina(j.koniec)}</td>
-        <td>${k ? esc(nazwaK(k)) : (j.rodzaj === 'inne' ? 'Inne' : '—')}${j.rodzaj === 'egzamin' ? ' <b>(EGZAMIN)</b>' : ''}</td>
+        <td>${k ? esc(nazwaK(k)) + (wyroznik(k, false) ? ` <small>(${esc(wyroznik(k, false))})</small>` : '') : (j.rodzaj === 'inne' ? 'Inne' : '—')}${j.rodzaj === 'egzamin' ? ' <b>(EGZAMIN)</b>' : ''}</td>
         <td>${k ? esc(k.kategoria || '') : ''}</td><td>${k ? esc(k.telefon || '') : ''}</td>
         <td>${post}</td><td>${esc(j.uwagi || '')}</td></tr>${przerwa}`;
     }).join('') || '<tr><td colspan="6">Brak zaplanowanych jazd.</td></tr>';
+    const pusty = '<tr class="pusty"><td></td><td></td><td></td><td></td><td></td><td></td></tr>';
     const wolne = d.wolne.length ? `<p><b>Wolne:</b> ${d.wolne.map(w => (w.godz_od ? hm(w.godz_od) + '–' + hm(w.godz_do) : 'cały dzień') + (w.uwagi ? ' (' + esc(w.uwagi) + ')' : '')).join(', ')}</p>` : '';
+    const tabela = `<table><thead><tr><th style="width:13%">Godzina</th><th>Kursant</th><th style="width:7%">Kat.</th><th style="width:14%">Telefon</th><th style="width:12%">Godz. kursu</th><th style="width:20%">Uwagi</th></tr></thead>
+      <tbody>${wiersze}${pusty}</tbody></table>${wolne}`;
+    if (tydz) return `<div class="tydz"><h2>${dataKrotka(dzien)} – ${s.n} ${slowoJazd(s.n)}, ${fmtH(s.min)} h</h2>${tabela}</div>`;
     return `<div class="strona">${logoDruku('druk')}<h1>${esc((profil.szkoly && profil.szkoly.nazwa) || '')} – grafik pracy</h1>
-      <h2>${esc(ins.imie_nazwisko)} · ${dataKrotka(dzien)}</h2>
-      <table><thead><tr><th>Godzina</th><th>Kursant</th><th>Kat.</th><th>Telefon</th><th>Godz. kursu</th><th>Uwagi</th></tr></thead>
-      <tbody>${wiersze}</tbody></table>${wolne}
+      <h2>${esc(ins.imie_nazwisko)} · ${dataKrotka(dzien)}</h2>${tabela}
       <p><b>Razem: ${s.n} ${slowoJazd(s.n)}, ${fmtH(s.min)} h</b></p>${stopkaDruku()}</div>`;
   }
   async function drukujJednego() {
@@ -1889,6 +2167,17 @@
       jazdy: d.jazdy.filter(j => j.instruktor_id === ins.id), wolne: d.wolne.filter(w => w.instruktor_id === ins.id), post: d.post
     })).join(''));
   }
+  const poniedzialek = dz => { const d = parseD(dz); return dodajDni(dz, -((d.getDay() + 6) % 7)); };
+  async function htmlTygodnia(ins) {
+    const pon = poniedzialek(gDzien), dni = [...Array(7)].map((_, i) => dodajDni(pon, i));
+    const dane = await Promise.all(dni.map(dz => daneDnia(dz, ins.id)));
+    const czesci = dni.map((dz, i) => (dane[i].jazdy.length || dane[i].wolne.length) ? htmlDnia(ins, dz, dane[i], true) : '').filter(Boolean);
+    const sm = sumaJazd(dane.flatMap(d => d.jazdy));
+    return `<div class="strona">${logoDruku('druk')}<h1>${esc((profil.szkoly && profil.szkoly.nazwa) || '')} – grafik pracy</h1>
+      <h2>${esc(ins.imie_nazwisko)} · tydzień ${fmtData(parseD(dni[0]))} – ${fmtData(parseD(dni[6]))}</h2>
+      ${czesci.join('') || '<p>Brak jazd w tym tygodniu.</p>'}
+      <p><b>Razem w tygodniu: ${sm.n} ${slowoJazd(sm.n)}, ${fmtH(sm.min)} h</b></p>${stopkaDruku()}</div>`;
+  }
   const zamknijDruk = () => { $('modal-druk').classList.add('hidden'); document.body.style.overflow = ''; };
   $('g-druk').onclick = () => {
     if (!gInstr) return;
@@ -1896,10 +2185,17 @@
     const ins = instruktorzy.find(i => i.id === gInstr);
     $('md-opis').textContent = dataKrotka(gDzien);
     $('md-jeden').textContent = 'Tylko: ' + ins.imie_nazwisko;
+    const pon = poniedzialek(gDzien);
+    $('md-tydzien').textContent = `Cały tydzień (${fmtData(parseD(pon)).slice(0, 5)}–${fmtData(parseD(dodajDni(pon, 6))).slice(0, 5)}) – ${ins.imie_nazwisko}`;
     $('modal-druk').classList.remove('hidden'); document.body.style.overflow = 'hidden';
   };
   $('md-jeden').onclick = () => zajety($('md-jeden'), async () => { zamknijDruk(); try { await drukujJednego(); } catch (err) { msg('m-grafik', tlumacz(err)); } });
   $('md-wszyscy').onclick = () => zajety($('md-wszyscy'), async () => { zamknijDruk(); try { await drukujWszystkich(); } catch (err) { msg('m-grafik', tlumacz(err)); } });
+  $('md-tydzien').onclick = () => zajety($('md-tydzien'), async () => { zamknijDruk();
+    try { drukuj(await htmlTygodnia(instruktorzy.find(i => i.id === gInstr))); } catch (err) { msg('m-grafik', tlumacz(err)); } });
+  $('md-tydzien-wsz').onclick = () => zajety($('md-tydzien-wsz'), async () => { zamknijDruk();
+    try { const h = []; for (const ins of instruktorzy.filter(i => i.aktywny)) h.push(await htmlTygodnia(ins)); drukuj(h.join('')); }
+    catch (err) { msg('m-grafik', tlumacz(err)); } });
   $('md-anuluj').onclick = zamknijDruk;
   $('modal-druk').onclick = e => { if (e.target.id === 'modal-druk') zamknijDruk(); };
 
@@ -2020,7 +2316,7 @@
       ['Kategoria', k.kategoria], ['Rodzaj kursu', k.typ_kursu], ['Posiadane kategorie', k.posiadane_kategorie],
       ['Nr prawa jazdy', k.nr_prawa_jazdy], ['Data zapisu', fmtData(k.utworzono)],
       ['Godziny kursu', (wym ? godz(wym) + ' h' : '') + (liczba(k.godziny_dokupione, 0) ? ` (w tym ${godz(k.godziny_dokupione)} h dokupione)` : '')],
-      ['Odbyte jazdy', `${fmtH(p.zrob)} h${p.plan ? ` (+ ${fmtH(p.plan)} h zaplanowane)` : ''}`], ['Uwagi', k.uwagi]];
+      ['Odbyte jazdy', `${fmtH(p.zrob)} h${p.plan ? ` (+ ${fmtH(p.plan)} h zaplanowane)` : ''}`], ['Instruktor prowadzący', (instruktorzy.find(i => i.id === k.instruktor_id) || {}).imie_nazwisko], ['PESEL', k.pesel], ['Uwagi', k.uwagi]];
     const tytul = document.title; document.title = 'Kursant - ' + nazwaK(k);
     drukuj(`<div>${logoDruku('karta')}<h1>${esc((profil.szkoly && profil.szkoly.nazwa) || '')}</h1><h2>Karta kursanta · wydruk ${fmtData(new Date())}</h2>
       <table class="karta">${wiersze.map(([a, b]) => `<tr><td>${a}</td><td>${esc(b || '') || '&nbsp;'}</td></tr>`).join('')}</table>
@@ -2214,7 +2510,7 @@
         x.fillStyle = j.rodzaj === 'egzamin' ? '#fff4e0' : '#f7f8f9'; x.fillRect(P, y + 8, W - 2 * P, h - 16);
         x.fillStyle = j.rodzaj === 'egzamin' ? '#c2410c' : kY; x.fillRect(P, y + 8, 10, h - 16);
         x.fillStyle = '#1d2329'; x.font = 'bold 34px Arial, sans-serif'; x.fillText(`${godzina(j.poczatek)}–${godzina(j.koniec)}`, P + 30, y + 58);
-        const kto = (k ? nazwaK(k) : (j.rodzaj === 'inne' ? 'Inne' : '(bez kursanta)')) + (k && k.kategoria ? '  [' + k.kategoria + ']' : '') +
+        const kto = (k ? nazwaK(k) + (wyroznik(k, false) ? ' (' + wyroznik(k, false) + ')' : '') : (j.rodzaj === 'inne' ? 'Inne' : '(bez kursanta)')) + (k && k.kategoria ? '  [' + k.kategoria + ']' : '') +
           (j.rodzaj === 'egzamin' ? '  🎓 EGZAMIN' : '') + (j.uwagi ? '  (' + j.uwagi + ')' : '');
         x.font = '32px Arial, sans-serif'; x.fillText(tnij(kto, W - 2 * P - 300), P + 290, y + 58);
       } else if (l.typ === 'prz') {
@@ -2893,6 +3189,9 @@ function parse(texts) {
         if (nm.length >= 2) out.name = titleCase(nm.join(' '));
       }
     }
+    if (!out.pesel) {  // PESEL: 11 cyfr z poprawną sumą kontrolną
+      for (const m of flat.replace(/(\d)[ \-](?=\d)/g, '$1').matchAll(/(?<!\d)(\d{11})(?!\d)/g)) if (peselOk(m[1])) { out.pesel = m[1]; break; }
+    }
     if (!out.phone) {  // po „Telefon:”, a jak brak – samodzielny numer 9-cyfrowy
       let m = flat.match(/Tel[a-z0-9]*\s*[:;.]?\s*((?:\+?48)?[\s\-]?\d[\d\s\-]{7,12}\d)/i), d = m && m[1].replace(/\D/g, '').replace(/^48(?=\d{9}$)/, '');
       if (!d || d.length !== 9) { const c = flat.match(/(?<![\d ])(?:\+?48[\s\-]?)?([4-8]\d{2}[\s\-]?\d{3}[\s\-]?\d{3})(?!\d)/); d = c && c[1].replace(/\D/g, ''); }
@@ -3130,7 +3429,7 @@ async function readBarcodes(img) {
       const first = r.pkks[0] || {};
       const nm = rozdzielNazwe(r.name);
       const pola = [
-        ['k-imie', nm.imie], ['k-nazwisko', nm.nazwisko], ['k-telefon', r.phone],
+        ['k-imie', nm.imie], ['k-nazwisko', nm.nazwisko], ['k-telefon', r.phone], ['k-pesel', r.pesel],
         ['k-email', r.email], ['k-pkk', first.pkk ? fmtPkk(first.pkk) : ''], ['k-kategoria', first.cat]
       ];
       let n = 0;
