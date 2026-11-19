@@ -87,6 +87,9 @@
   .ust summary{font-weight:600;color:var(--t);font-size:15px;margin:0}
   .ust .btn{margin-top:14px}
   .ostrz{color:#a15c00}
+  .inst-zakl{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin:-4px -4px 8px;padding-left:4px;scrollbar-width:thin}
+  .inst-zakl button{flex-shrink:0;white-space:nowrap;padding:8px 14px;border-radius:99px}
+  .inst-zakl button.on{background:var(--g);border-color:var(--g);color:#fff;font-weight:600}
   .dok-dodaj{display:grid;grid-template-columns:70px 1fr;gap:6px;margin-top:6px}
   .dok-dodaj input{padding:8px}
   .dok-dodaj #k-dok-uw{grid-column:1/-1}
@@ -246,7 +249,10 @@
     <!-- Grafik (biuro: edycja, instruktor: podgląd swoich jazd) -->
     <div id="tab-grafik">
       <div class="card">
-        <div class="pasek" id="g-instr-pasek"><select id="g-instr"></select></div>
+        <div id="g-instr-pasek">
+          <div class="inst-zakl" id="g-instr-zakl"></div>
+          <select id="g-instr" class="hidden"></select>
+        </div>
         <div class="dzien">
           <button id="g-prev" type="button" aria-label="Poprzedni dzień">‹</button>
           <label class="dz-opis" for="g-date"><b id="g-rel"></b><span id="g-data"></span>
@@ -496,7 +502,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '0.6';
+  const WERSJA = '0.7';
   // ======================
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -1042,6 +1048,15 @@
     const opcje = akt.map(i => `<option value="${i.id}">${esc(i.imie_nazwisko)}</option>`).join('');
     $('g-instr').innerHTML = opcje || '<option value="">— brak instruktorów —</option>';
     if (gInstr) $('g-instr').value = gInstr;
+    $('g-instr-zakl').innerHTML = akt.map(i =>
+      `<button type="button" data-id="${i.id}" class="${i.id === gInstr ? 'on' : ''}">${esc(i.imie_nazwisko)}</button>`).join('');
+    $('g-instr-zakl').querySelectorAll('button').forEach(b => b.onclick = () => {
+      gInstr = b.dataset.id;
+      try { localStorage.setItem('g_instr_' + profil.szkola_id, gInstr); } catch (_) {}
+      wypelnijInstr(); ladujDzien();
+    });
+    const on = $('g-instr-zakl').querySelector('.on');
+    if (on) on.scrollIntoView({ inline: 'nearest', block: 'nearest' });
     $('j-instr').innerHTML = instruktorzy.filter(i => i.aktywny).map(i => `<option value="${i.id}">${esc(i.imie_nazwisko)}</option>`).join('');
   }
   function pokazNaglowek() {
