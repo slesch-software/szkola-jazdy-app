@@ -32,12 +32,32 @@
   .pill.wait{background:#fff4e0;color:#a15c00}
   .kod{font-family:ui-monospace,Consolas,monospace;font-size:24px;letter-spacing:3px;font-weight:700;margin:6px 0}
   .hint{font-size:13px;color:var(--m);margin:0}
-  .row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 0;border-top:1px solid var(--b)}
+  .row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 12px;padding:12px 0;border-top:1px solid var(--b)}
   .row:first-child{border-top:none;padding-top:0}
-  .who{min-width:0}
-  .who b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .who span{font-size:13px;color:var(--m);word-break:break-all}
-  .acts{display:flex;gap:6px;flex-shrink:0}
+  .who{min-width:0;flex:1 1 200px}
+  .who b{display:block}
+  .who span{font-size:13px;color:var(--m);word-break:break-word}
+  .acts{display:flex;gap:6px;flex-shrink:0;margin-left:auto}
+  select,textarea{width:100%;padding:12px;border:1px solid var(--b);border-radius:8px;font:inherit;font-size:16px;background:#fff;color:var(--t)}
+  textarea{min-height:70px;resize:vertical}
+  .tabs.panel{margin-bottom:16px}
+  .pasek{display:flex;gap:8px;margin-bottom:10px}
+  .pasek input{flex:1}
+  .pasek select{width:auto;flex-shrink:0}
+  .dodaj{background:var(--g);color:#fff;border-color:var(--g);font-weight:600;flex-shrink:0}
+  .licznik{font-size:13px;color:var(--m);margin:0 0 6px}
+  .kursant{cursor:pointer}
+  .kursant:hover b{color:var(--g)}
+  .kursant .tel{color:var(--g);text-decoration:none;font-weight:600;white-space:nowrap}
+  .pill.szary{background:#eef0f2;color:var(--m)}
+  .siatka{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+  .siatka .cala{grid-column:1/-1}
+  .check{display:flex;align-items:center;gap:10px;margin-top:16px;font-weight:600;font-size:14px}
+  .check input{width:auto}
+  .modal{position:fixed;inset:0;background:rgba(20,25,30,.45);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:16px;z-index:10}
+  .sheet{background:#fff;border-radius:12px;padding:20px;width:100%;max-width:560px;margin:auto 0}
+  .sheet h2{font-size:19px}
+  .usun{width:100%;margin-top:10px;color:var(--r)}
   .acts .tak{background:var(--g);color:#fff;border-color:var(--g)}
   .acts .nie{color:var(--r)}
   .hidden{display:none!important}
@@ -126,15 +146,43 @@
     </div>
 
     <div id="p-biuro" class="hidden">
-      <div class="card">
-        <h2>Kod dla instruktorów</h2>
-        <div class="kod" id="p-kod"></div>
-        <p class="hint">Instruktor zakłada konto, wpisuje ten kod, a Ty zatwierdzasz go poniżej.</p>
+      <div class="tabs panel">
+        <button id="t-kursanci" class="on" type="button">Kursanci</button>
+        <button id="t-osoby" type="button">Osoby</button>
       </div>
-      <div class="card">
-        <h2>Osoby w szkole</h2>
-        <div id="p-osoby"><p class="hint">Ładowanie…</p></div>
-        <div id="m-osoby" class="msg"></div>
+
+      <!-- Zakładka: kursanci -->
+      <div id="tab-kursanci">
+        <div class="card">
+          <div class="pasek">
+            <input id="k-szukaj" type="search" placeholder="Szukaj: nazwisko, telefon, PKK…" autocomplete="off">
+            <button id="k-dodaj" class="dodaj" type="button">+ Dodaj</button>
+          </div>
+          <div class="pasek">
+            <select id="k-filtr">
+              <option value="aktywni">W trakcie kursu</option>
+              <option value="zakonczeni">Zakończeni</option>
+              <option value="wszyscy">Wszyscy</option>
+            </select>
+          </div>
+          <p class="licznik" id="k-licznik"></p>
+          <div id="k-lista"><p class="hint">Ładowanie…</p></div>
+          <div id="m-kursanci" class="msg"></div>
+        </div>
+      </div>
+
+      <!-- Zakładka: osoby -->
+      <div id="tab-osoby" class="hidden">
+        <div class="card">
+          <h2>Kod dla instruktorów</h2>
+          <div class="kod" id="p-kod"></div>
+          <p class="hint">Instruktor zakłada konto, wpisuje ten kod, a Ty zatwierdzasz go poniżej.</p>
+        </div>
+        <div class="card">
+          <h2>Osoby w szkole</h2>
+          <div id="p-osoby"><p class="hint">Ładowanie…</p></div>
+          <div id="m-osoby" class="msg"></div>
+        </div>
       </div>
     </div>
 
@@ -149,12 +197,51 @@
   <footer>wersja <span id="wersja"></span></footer>
 </div>
 
+<!-- Okno: dodawanie / edycja kursanta -->
+<div id="modal-kursant" class="modal hidden">
+  <div class="sheet">
+    <h2 id="mk-tytul">Nowy kursant</h2>
+    <form id="f-kursant">
+      <div class="siatka">
+        <div><label for="k-imie">Imię</label><input id="k-imie" required autocomplete="off"></div>
+        <div><label for="k-nazwisko">Nazwisko</label><input id="k-nazwisko" required autocomplete="off"></div>
+        <div><label for="k-telefon">Telefon</label><input id="k-telefon" type="tel" autocomplete="off"></div>
+        <div><label for="k-email">E-mail</label><input id="k-email" type="email" autocomplete="off"></div>
+        <div class="cala"><label for="k-pkk">Numer PKK</label><input id="k-pkk" inputmode="numeric" autocomplete="off"></div>
+        <div><label for="k-kategoria">Kategoria</label>
+          <input id="k-kategoria" list="kategorie" autocomplete="off" autocapitalize="characters">
+          <datalist id="kategorie">
+            <option value="AM"><option value="A1"><option value="A2"><option value="A">
+            <option value="B"><option value="B1"><option value="BE"><option value="C">
+            <option value="C1"><option value="CE"><option value="D"><option value="T">
+          </datalist>
+        </div>
+        <div><label for="k-typ">Typ kursu</label>
+          <select id="k-typ">
+            <option value="">—</option>
+            <option>Podstawowy</option>
+            <option>Uzupełniający</option>
+          </select>
+        </div>
+        <div><label for="k-godziny">Godziny kursu</label><input id="k-godziny" type="number" min="0" step="0.5" inputmode="decimal"></div>
+        <div><label for="k-dokupione">Dokupione godziny</label><input id="k-dokupione" type="number" min="0" step="0.5" inputmode="decimal"></div>
+        <div class="cala"><label for="k-uwagi">Uwagi</label><textarea id="k-uwagi"></textarea></div>
+      </div>
+      <label class="check"><input id="k-zakonczony" type="checkbox"> Kurs zakończony</label>
+      <button id="k-zapisz" class="btn" type="submit">Zapisz</button>
+      <button id="k-anuluj" class="btn2" type="button">Anuluj</button>
+      <button id="k-usun" class="usun hidden" type="button">Usuń kursanta</button>
+      <div id="m-kursant" class="msg"></div>
+    </form>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '0.1';
+  const WERSJA = '0.2';
   // ======================
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -190,6 +277,8 @@
     if (/MASZ_JUZ_PROFIL/.test(m)) return 'To konto jest już przypisane do szkoły.';
     if (/NIE_MOZNA_USUNAC_SIEBIE/.test(m)) return 'Nie możesz usunąć samego siebie.';
     if (/BRAK_UPRAWNIEN/.test(m)) return 'Nie masz uprawnień do tej operacji.';
+    if (/kursanci_pkk_unikalny/.test(m)) return 'Kursant z tym numerem PKK już jest w rejestrze.';
+    if (/row-level security/i.test(m)) return 'Nie masz uprawnień do tej operacji.';
     if (/Failed to fetch|NetworkError/i.test(m)) return 'Brak połączenia z serwerem. Sprawdź internet.';
     return m;
   }
@@ -321,8 +410,159 @@
     if (biuro) {
       $('p-kod').textContent = (profil.szkoly && profil.szkoly.kod_zaproszenia) || '';
       ladujOsoby();
+      ladujKursantow();
     }
   }
+
+  // ----- Zakładki panelu biura -----
+  function ustawZakladke(z) {
+    $('t-kursanci').classList.toggle('on', z === 'kursanci');
+    $('t-osoby').classList.toggle('on', z === 'osoby');
+    $('tab-kursanci').classList.toggle('hidden', z !== 'kursanci');
+    $('tab-osoby').classList.toggle('hidden', z !== 'osoby');
+  }
+  $('t-kursanci').onclick = () => ustawZakladke('kursanci');
+  $('t-osoby').onclick = () => { ustawZakladke('osoby'); ladujOsoby(); };
+
+  // ----- Rejestr kursantów -----
+  let kursanci = [];
+  let edytowany = null;
+
+  function bezOgonkow(s) {
+    return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ł/g, 'l');
+  }
+  function liczba(v, domyslna) {
+    const n = parseFloat(String(v).replace(',', '.'));
+    return isNaN(n) ? domyslna : n;
+  }
+  function godz(n) {
+    return String(n).replace('.', ',');
+  }
+
+  async function ladujKursantow() {
+    msg('m-kursanci', '');
+    const { data, error } = await sb.from('kursanci')
+      .select('*')
+      .eq('szkola_id', profil.szkola_id)
+      .order('nazwisko').order('imie');
+    if (error) { msg('m-kursanci', tlumacz(error)); return; }
+    kursanci = data;
+    pokazKursantow();
+  }
+
+  function pokazKursantow() {
+    const filtr = $('k-filtr').value;
+    const fraza = bezOgonkow($('k-szukaj').value.trim());
+    const cyfry = fraza.replace(/\D/g, '');
+    const lista = kursanci.filter(k => {
+      if (filtr === 'aktywni' && !k.aktywny) return false;
+      if (filtr === 'zakonczeni' && k.aktywny) return false;
+      if (!fraza) return true;
+      const tekst = bezOgonkow([k.imie, k.nazwisko, k.nazwisko + ' ' + k.imie, k.email, k.kategoria].join(' '));
+      if (tekst.includes(fraza)) return true;
+      if (cyfry.length >= 3) {
+        const numery = String(k.telefon || '').replace(/\D/g, '') + ' ' + String(k.pkk || '').replace(/\D/g, '');
+        if (numery.includes(cyfry)) return true;
+      }
+      return false;
+    });
+
+    $('k-licznik').textContent = lista.length + ' z ' + kursanci.length;
+    if (!kursanci.length) {
+      $('k-lista').innerHTML = '<p class="hint">Rejestr jest pusty. Kliknij „+ Dodaj”, aby dodać pierwszego kursanta.</p>';
+      return;
+    }
+    $('k-lista').innerHTML = lista.map(k => {
+      const opis = [k.kategoria, k.typ_kursu, k.pkk ? 'PKK ' + k.pkk : ''].filter(Boolean).join(' · ');
+      const godziny = godz(liczba(k.godziny_kurs, 0) + liczba(k.godziny_dokupione, 0)) + ' h' +
+        (liczba(k.godziny_dokupione, 0) > 0 ? ' (w tym ' + godz(k.godziny_dokupione) + ' dokupione)' : '');
+      const zak = k.aktywny ? '' : '<span class="pill szary">zakończony</span>';
+      const tel = k.telefon
+        ? `<a class="tel" href="tel:${esc(String(k.telefon).replace(/[^\d+]/g, ''))}">${esc(k.telefon)}</a>` : '';
+      return `<div class="row kursant" data-id="${k.id}">
+        <div class="who"><b>${esc(k.nazwisko)} ${esc(k.imie)} ${zak}</b>
+          <span>${esc(opis)}${opis ? '<br>' : ''}${esc(godziny)}</span></div>
+        <div class="acts">${tel}</div></div>`;
+    }).join('') || '<p class="hint">Nikt nie pasuje do wyszukiwania.</p>';
+
+    $('k-lista').querySelectorAll('.kursant').forEach(el => el.onclick = e => {
+      if (e.target.closest('a')) return;
+      otworzKursanta(kursanci.find(k => k.id === el.dataset.id));
+    });
+  }
+  $('k-szukaj').oninput = pokazKursantow;
+  $('k-filtr').onchange = pokazKursantow;
+
+  function otworzKursanta(k) {
+    edytowany = k || null;
+    $('mk-tytul').textContent = k ? 'Edycja kursanta' : 'Nowy kursant';
+    $('k-imie').value = k ? k.imie : '';
+    $('k-nazwisko').value = k ? k.nazwisko : '';
+    $('k-telefon').value = (k && k.telefon) || '';
+    $('k-email').value = (k && k.email) || '';
+    $('k-pkk').value = (k && k.pkk) || '';
+    $('k-kategoria').value = (k && k.kategoria) || 'B';
+    $('k-typ').value = (k && k.typ_kursu) || 'Podstawowy';
+    $('k-godziny').value = k ? k.godziny_kurs : 30;
+    $('k-dokupione').value = k ? k.godziny_dokupione : 0;
+    $('k-uwagi').value = (k && k.uwagi) || '';
+    $('k-zakonczony').checked = k ? !k.aktywny : false;
+    $('k-usun').classList.toggle('hidden', !k);
+    msg('m-kursant', '');
+    $('modal-kursant').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    if (!k) setTimeout(() => $('k-imie').focus(), 50);
+  }
+  function zamknijKursanta() {
+    $('modal-kursant').classList.add('hidden');
+    document.body.style.overflow = '';
+    edytowany = null;
+  }
+  $('k-dodaj').onclick = () => otworzKursanta(null);
+  $('k-anuluj').onclick = zamknijKursanta;
+  $('modal-kursant').onclick = e => { if (e.target.id === 'modal-kursant') zamknijKursanta(); };
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !$('modal-kursant').classList.contains('hidden')) zamknijKursanta();
+  });
+
+  $('f-kursant').onsubmit = e => {
+    e.preventDefault();
+    zajety($('k-zapisz'), async () => {
+      msg('m-kursant', '');
+      const dane = {
+        imie: $('k-imie').value.trim(),
+        nazwisko: $('k-nazwisko').value.trim(),
+        telefon: $('k-telefon').value.trim() || null,
+        email: $('k-email').value.trim() || null,
+        pkk: $('k-pkk').value.replace(/\s/g, '') || null,
+        kategoria: $('k-kategoria').value.trim().toUpperCase() || null,
+        typ_kursu: $('k-typ').value || null,
+        godziny_kurs: liczba($('k-godziny').value, 0),
+        godziny_dokupione: liczba($('k-dokupione').value, 0),
+        uwagi: $('k-uwagi').value.trim() || null,
+        aktywny: !$('k-zakonczony').checked
+      };
+      let wynik;
+      if (edytowany) {
+        wynik = await sb.from('kursanci').update(dane).eq('id', edytowany.id);
+      } else {
+        wynik = await sb.from('kursanci').insert({ ...dane, szkola_id: profil.szkola_id });
+      }
+      if (wynik.error) { msg('m-kursant', tlumacz(wynik.error)); return; }
+      zamknijKursanta();
+      await ladujKursantow();
+    });
+  };
+
+  $('k-usun').onclick = () => zajety($('k-usun'), async () => {
+    if (!edytowany) return;
+    if (!confirm('Usunąć kursanta „' + edytowany.nazwisko + ' ' + edytowany.imie +
+                 '” z rejestru na stałe?\n\nJeśli kurs się skończył, lepiej zaznaczyć „Kurs zakończony”.')) return;
+    const { error } = await sb.from('kursanci').delete().eq('id', edytowany.id);
+    if (error) { msg('m-kursant', tlumacz(error)); return; }
+    zamknijKursanta();
+    await ladujKursantow();
+  });
 
   async function ladujOsoby() {
     msg('m-osoby', '');
