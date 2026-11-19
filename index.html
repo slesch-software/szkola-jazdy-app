@@ -160,6 +160,10 @@
   table.mc tr.det a{color:var(--gl)}
   table.mc tr.razem td{font-weight:700;border-top:2px solid var(--t)}
   #druk{display:none}
+  .top-l{display:flex;align-items:center;gap:12px;min-width:0}
+  .logo-n{max-height:52px;max-width:140px;object-fit:contain;flex:none}
+  .logo-l{display:block;max-height:90px;max-width:220px;object-fit:contain;margin:0 auto 10px}
+  .logo-pod{max-height:90px;max-width:240px;object-fit:contain;border:1px solid var(--b);border-radius:8px;padding:6px;background:#fff}
   @media print{
     body>*:not(#druk){display:none!important}
     html,body{background:#fff!important}
@@ -170,6 +174,7 @@
     #druk th,#druk td{border:1px solid #444;padding:4pt 6pt;text-align:left;vertical-align:top;word-wrap:break-word}
     #druk th{background:#eee}
     #druk .num{text-align:right}
+    #druk .dlogo{float:right;max-height:48pt;max-width:140pt;object-fit:contain;margin:0 0 6pt 10pt}
     #druk .stopka{font-size:9pt;color:#555;margin-top:8pt}
     #druk .strona{page-break-after:always}
     #druk .strona:last-child{page-break-after:auto}
@@ -212,6 +217,7 @@
 
   <!-- Logowanie / rejestracja -->
   <div id="s-login" class="hidden">
+    <img id="l-logo" class="logo-l hidden" alt="">
     <h1>Program dla szkół jazdy</h1>
     <p class="sub">Grafik jazd, kursanci, instruktorzy</p>
     <div class="card">
@@ -278,9 +284,12 @@
   <!-- Panel -->
   <div id="s-panel" class="hidden">
     <div class="top">
-      <div>
-        <h1 id="p-szkola"></h1>
-        <p class="sub" id="p-ja" style="margin:0"></p>
+      <div class="top-l">
+        <img id="p-logo" class="logo-n hidden" alt="">
+        <div>
+          <h1 id="p-szkola"></h1>
+          <p class="sub" id="p-ja" style="margin:0"></p>
+        </div>
       </div>
       <button class="wyloguj" type="button">Wyloguj</button>
     </div>
@@ -430,6 +439,22 @@
             <button id="pin-wylacz" type="button" class="hidden">Wyłącz PIN</button>
           </div>
           <div id="m-pin" class="msg"></div>
+        </div>
+        <div class="card">
+          <h2>🖼 Logo szkoły</h2>
+          <p class="hint" id="lg-status">Brak logo.</p>
+          <img id="lg-podglad" class="logo-pod hidden" alt="" style="margin-top:10px">
+          <div class="akcje" style="margin-top:10px">
+            <button id="lg-wybierz" type="button">🖼 Wybierz plik z logo</button>
+            <button id="lg-usun" type="button" class="hidden">Usuń logo</button>
+          </div>
+          <p class="hint" style="margin-top:12px"><b>Gdzie pokazywać logo:</b></p>
+          <label class="check"><input type="checkbox" data-lm="naglowek"> Na górze programu</label>
+          <label class="check"><input type="checkbox" data-lm="logowanie"> Na ekranie logowania</label>
+          <label class="check"><input type="checkbox" data-lm="druk"> Na wydrukach grafiku i zestawienia miesiąca</label>
+          <label class="check"><input type="checkbox" data-lm="obrazek"> Na obrazku grafiku (WhatsApp)</label>
+          <label class="check"><input type="checkbox" data-lm="karta"> Na karcie kursanta</label>
+          <div id="m-logo" class="msg"></div>
         </div>
         <div class="card">
           <h2>💾 Kopia zapasowa</h2>
@@ -649,7 +674,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.8';
+  const WERSJA = '1.9';
   // ======================
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -785,7 +810,7 @@
 
     ja = session.user;
     const { data, error } = await sb.from('profile')
-      .select('id, rola, imie_nazwisko, zatwierdzony, szkola_id, szkoly(nazwa, kod_zaproszenia, grafik_od, grafik_do, dlugosc_jazdy, godziny_kategorii, google_client_id, kopia_dysk)')
+      .select('id, rola, imie_nazwisko, zatwierdzony, szkola_id, szkoly(nazwa, kod_zaproszenia, grafik_od, grafik_do, dlugosc_jazdy, godziny_kategorii, google_client_id, kopia_dysk, logo, logo_miejsca)')
       .eq('id', ja.id).maybeSingle();
 
     if (error) {
@@ -810,6 +835,7 @@
     }
 
     $('p-szkola').textContent = (profil.szkoly && profil.szkoly.nazwa) || '';
+    ustawLogo();
     $('p-ja').textContent = profil.imie_nazwisko + ' · ' + (profil.rola === 'biuro' ? 'Biuro' : 'Instruktor');
     const biuro = profil.rola === 'biuro';
     $('p-biuro-tabs').classList.toggle('hidden', !biuro);
@@ -844,7 +870,7 @@
   }
   $('t-grafik').onclick = () => { ustawZakladke('grafik'); ladujDzien(); };
   $('t-kursanci').onclick = () => { ustawZakladke('kursanci'); ladujKursantow(); };
-  $('t-osoby').onclick = () => { ustawZakladke('osoby'); ladujOsoby(); ladujInstruktorowLista(); ladujPin(); ladujKosz(); pokazKopie(); };
+  $('t-osoby').onclick = () => { ustawZakladke('osoby'); ladujOsoby(); ladujInstruktorowLista(); ladujPin(); ladujKosz(); pokazKopie(); pokazLogoUst(); };
   $('t-miesiac').onclick = () => { ustawZakladke('miesiac'); ladujMiesiac(); };
 
   // ----- Rejestr kursantów -----
@@ -1847,7 +1873,7 @@
         <td>${post}</td><td>${esc(j.uwagi || '')}</td></tr>${przerwa}`;
     }).join('') || '<tr><td colspan="6">Brak zaplanowanych jazd.</td></tr>';
     const wolne = d.wolne.length ? `<p><b>Wolne:</b> ${d.wolne.map(w => (w.godz_od ? hm(w.godz_od) + '–' + hm(w.godz_do) : 'cały dzień') + (w.uwagi ? ' (' + esc(w.uwagi) + ')' : '')).join(', ')}</p>` : '';
-    return `<div class="strona"><h1>${esc((profil.szkoly && profil.szkoly.nazwa) || '')} – grafik pracy</h1>
+    return `<div class="strona">${logoDruku('druk')}<h1>${esc((profil.szkoly && profil.szkoly.nazwa) || '')} – grafik pracy</h1>
       <h2>${esc(ins.imie_nazwisko)} · ${dataKrotka(dzien)}</h2>
       <table><thead><tr><th>Godzina</th><th>Kursant</th><th>Kat.</th><th>Telefon</th><th>Godz. kursu</th><th>Uwagi</th></tr></thead>
       <tbody>${wiersze}</tbody></table>${wolne}
@@ -1936,7 +1962,7 @@
       <table><thead><tr><th>Dzień</th><th>Godziny pracy</th><th class="num">Jazd</th><th class="num">Godzin</th></tr></thead><tbody>
       ${[...x.dni.entries()].map(([dz, d]) => `<tr><td>${dataKrotka(dz)}</td><td>${d.od}–${d.do}</td><td class="num">${d.n}</td><td class="num">${fmtH(d.min)}</td></tr>`).join('')}
       <tr><td colspan="2"><b>Razem</b></td><td class="num"><b>${x.n}</b></td><td class="num"><b>${fmtH(x.min)}</b></td></tr></tbody></table>`).join('');
-    drukuj(`<div><h1>${esc((profil.szkoly && profil.szkoly.nazwa) || '')} – zestawienie godzin</h1>
+    drukuj(`<div>${logoDruku('druk')}<h1>${esc((profil.szkoly && profil.szkoly.nazwa) || '')} – zestawienie godzin</h1>
       <h2 style="text-transform:capitalize">${nazwaMies(mcMiesiac)}</h2>
       <table><thead><tr><th>Instruktor</th><th class="num">Dni</th><th class="num">Jazd</th><th class="num">Egzaminów</th><th class="num">Godzin</th></tr></thead>
       <tbody>${wiersze}<tr><td><b>RAZEM</b></td><td></td><td class="num"><b>${tn}</b></td><td></td><td class="num"><b>${fmtH(tm)}</b></td></tr></tbody></table>
@@ -1996,7 +2022,7 @@
       ['Godziny kursu', (wym ? godz(wym) + ' h' : '') + (liczba(k.godziny_dokupione, 0) ? ` (w tym ${godz(k.godziny_dokupione)} h dokupione)` : '')],
       ['Odbyte jazdy', `${fmtH(p.zrob)} h${p.plan ? ` (+ ${fmtH(p.plan)} h zaplanowane)` : ''}`], ['Uwagi', k.uwagi]];
     const tytul = document.title; document.title = 'Kursant - ' + nazwaK(k);
-    drukuj(`<div><h1>${esc((profil.szkoly && profil.szkoly.nazwa) || '')}</h1><h2>Karta kursanta · wydruk ${fmtData(new Date())}</h2>
+    drukuj(`<div>${logoDruku('karta')}<h1>${esc((profil.szkoly && profil.szkoly.nazwa) || '')}</h1><h2>Karta kursanta · wydruk ${fmtData(new Date())}</h2>
       <table class="karta">${wiersze.map(([a, b]) => `<tr><td>${a}</td><td>${esc(b || '') || '&nbsp;'}</td></tr>`).join('')}</table>
       <div class="podpisy"><div>Podpis kursanta</div><div>Podpis pracownika OSK</div></div></div>`);
     setTimeout(() => document.title = tytul, 1500);
@@ -2163,12 +2189,21 @@
     const kY = css.getPropertyValue('--gy').trim() || '#eab308';
     x.fillStyle = '#ffffff'; x.fillRect(0, 0, W, H);
     x.fillStyle = kG; x.fillRect(0, 0, W, naglowek - 30);
-    x.fillStyle = kA; x.font = 'bold 40px Arial, sans-serif';
-    x.fillText(((profil.szkoly && profil.szkoly.nazwa) || 'Grafik').toUpperCase(), P, 70);
-    x.fillStyle = '#ffffff'; x.font = '32px Arial, sans-serif';
-    x.fillText((sekcje.length === 1 ? sekcje[0].ins.imie_nazwisko + ' · ' : 'Grafik instruktorów · ') + dataKrotka(dzien), P, 122);
-    let y = naglowek;
     const tnij = (t, maxW) => { if (x.measureText(t).width <= maxW) return t; while (t.length > 1 && x.measureText(t + '…').width > maxW) t = t.slice(0, -1); return t + '…'; };
+    let szerTxt = W - 2 * P;
+    if (logoGdzie('obrazek') && gLogoImg && gLogoImg.complete && gLogoImg.naturalWidth) {
+      const mh = 116, mw = 230, sk = Math.min(mh / gLogoImg.naturalHeight, mw / gLogoImg.naturalWidth);
+      const lw = gLogoImg.naturalWidth * sk, lh = gLogoImg.naturalHeight * sk, bx = W - P - lw - 16, by = (naglowek - 30 - lh) / 2 - 8;
+      x.fillStyle = '#ffffff'; x.beginPath();
+      if (x.roundRect) x.roundRect(bx, by, lw + 16, lh + 16, 12); else x.rect(bx, by, lw + 16, lh + 16);
+      x.fill(); x.drawImage(gLogoImg, bx + 8, by + 8, lw, lh);
+      szerTxt = bx - P - 20;
+    }
+    x.fillStyle = kA; x.font = 'bold 40px Arial, sans-serif';
+    x.fillText(tnij(((profil.szkoly && profil.szkoly.nazwa) || 'Grafik').toUpperCase(), szerTxt), P, 70);
+    x.fillStyle = '#ffffff'; x.font = '32px Arial, sans-serif';
+    x.fillText(tnij((sekcje.length === 1 ? sekcje[0].ins.imie_nazwisko + ' · ' : 'Grafik instruktorów · ') + dataKrotka(dzien), szerTxt), P, 122);
+    let y = naglowek;
     linie.forEach(l => {
       const h = wys(l);
       if (l.typ === 'inst') {
@@ -2573,6 +2608,75 @@ function cellTime(v) {
       msg('m-kosz', 'Przywrócono.', 'ok');
     }));
   }
+
+  // ===== LOGO SZKOŁY =====
+  const LOGO_MIEJSCA = ['naglowek', 'logowanie', 'druk', 'obrazek', 'karta'];
+  let gLogoImg = null;
+  const miejscaLogo = () => ({ naglowek: true, logowanie: true, druk: true, obrazek: true, karta: true, ...((profil && profil.szkoly && profil.szkoly.logo_miejsca) || {}) });
+  const logoGdzie = m => !!(profil && profil.szkoly && profil.szkoly.logo) && miejscaLogo()[m] !== false;
+  const logoDruku = m => logoGdzie(m) ? `<img class="dlogo" src="${profil.szkoly.logo}" alt="">` : '';
+  function logoLogowania() {
+    let v = ''; try { v = localStorage.getItem('logo_logowanie') || ''; } catch (_) {}
+    $('l-logo').classList.toggle('hidden', !v); if (v) $('l-logo').src = v;
+  }
+  function ustawLogo() {
+    const lg = profil && profil.szkoly && profil.szkoly.logo;
+    $('p-logo').classList.toggle('hidden', !logoGdzie('naglowek'));
+    if (logoGdzie('naglowek')) $('p-logo').src = lg;
+    gLogoImg = null;
+    if (lg) { gLogoImg = new Image(); gLogoImg.src = lg; }
+    try { if (logoGdzie('logowanie')) localStorage.setItem('logo_logowanie', lg); else localStorage.removeItem('logo_logowanie'); } catch (_) {}
+    logoLogowania();
+  }
+  function pokazLogoUst() {
+    if (!profil || profil.rola !== 'biuro') return;
+    const lg = profil.szkoly && profil.szkoly.logo, mj = miejscaLogo();
+    $('lg-status').textContent = lg ? 'Logo jest ustawione. Możesz wybrać inny plik, żeby je zmienić.' : 'Brak logo. Wybierz plik z obrazkiem (PNG, JPG).';
+    $('lg-podglad').classList.toggle('hidden', !lg); if (lg) $('lg-podglad').src = lg;
+    $('lg-usun').classList.toggle('hidden', !lg);
+    document.querySelectorAll('[data-lm]').forEach(c => { c.checked = mj[c.dataset.lm] !== false; c.disabled = !lg; });
+  }
+  async function zapiszLogo(zmiana) {
+    const { error } = await sb.from('szkoly').update(zmiana).eq('id', profil.szkola_id);
+    if (error) throw new Error(/logo/.test(error.message) ? 'Najpierw uruchom w Supabase plik krok10_logo.sql.' : tlumacz(error));
+    Object.assign(profil.szkoly, zmiana); ustawLogo(); pokazLogoUst();
+  }
+  function zmniejszLogo(plik) {
+    return new Promise((res, rej) => {
+      const url = URL.createObjectURL(plik), im = new Image();
+      im.onload = () => {
+        URL.revokeObjectURL(url);
+        const sk = Math.min(1, 480 / im.naturalWidth, 240 / im.naturalHeight);
+        const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(im.naturalWidth * sk)); c.height = Math.max(1, Math.round(im.naturalHeight * sk));
+        const x = c.getContext('2d'); x.drawImage(im, 0, 0, c.width, c.height);
+        let d = c.toDataURL('image/png');
+        if (d.length > 200000) { const c2 = document.createElement('canvas'); c2.width = c.width; c2.height = c.height;
+          const x2 = c2.getContext('2d'); x2.fillStyle = '#fff'; x2.fillRect(0, 0, c2.width, c2.height); x2.drawImage(c, 0, 0); d = c2.toDataURL('image/jpeg', 0.88); }
+        res(d);
+      };
+      im.onerror = () => { URL.revokeObjectURL(url); rej(new Error('Nie udało się odczytać obrazka. Wybierz plik PNG lub JPG.')); };
+      im.src = url;
+    });
+  }
+  $('lg-wybierz').onclick = () => {
+    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+    inp.onchange = () => zajety($('lg-wybierz'), async () => {
+      const f = inp.files[0]; if (!f) return;
+      try { await zapiszLogo({ logo: await zmniejszLogo(f) }); msg('m-logo', 'Zapisano logo.', 'ok'); }
+      catch (err) { msg('m-logo', err.message || String(err)); }
+    });
+    inp.click();
+  };
+  $('lg-usun').onclick = () => zajety($('lg-usun'), async () => {
+    if (!confirm('Usunąć logo szkoły?')) return;
+    try { await zapiszLogo({ logo: null }); msg('m-logo', 'Usunięto logo.', 'ok'); } catch (err) { msg('m-logo', err.message || String(err)); }
+  });
+  document.querySelectorAll('[data-lm]').forEach(c => c.onchange = async () => {
+    const mj = miejscaLogo(); mj[c.dataset.lm] = c.checked;
+    try { await zapiszLogo({ logo_miejsca: mj }); msg('m-logo', 'Zapisano.', 'ok'); }
+    catch (err) { c.checked = !c.checked; msg('m-logo', err.message || String(err)); }
+  });
+  logoLogowania();
 
   // ===== KOPIA ZAPASOWA =====
   const KOPIA_TAB = ['instruktorzy', 'kursanci', 'jazdy', 'wolne', 'dokupione'];
