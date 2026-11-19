@@ -460,6 +460,17 @@
   </div>
 </div>
 
+<!-- Okno: co drukować -->
+<div id="modal-druk" class="modal hidden">
+  <div class="sheet">
+    <h2>Drukuj grafik</h2>
+    <p class="hint" id="md-opis"></p>
+    <button id="md-jeden" class="btn" type="button"></button>
+    <button id="md-wszyscy" class="btn2" type="button">Wszyscy instruktorzy (każdy na osobnej stronie)</button>
+    <button id="md-anuluj" class="btn2" type="button">Anuluj</button>
+  </div>
+</div>
+
 <div id="druk"></div>
 
 <!-- Okno: jazda -->
@@ -574,7 +585,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.3';
+  const WERSJA = '1.4';
   // ======================
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -1111,7 +1122,7 @@
   }
   function widacGrafik() {
     return profil && !$('s-panel').classList.contains('hidden') && !$('tab-grafik').classList.contains('hidden') &&
-      ['modal-jazda', 'modal-kursant', 'modal-wolne', 'modal-wa'].every(id => $(id).classList.contains('hidden'));
+      ['modal-jazda', 'modal-kursant', 'modal-wolne', 'modal-wa', 'modal-druk'].every(id => $(id).classList.contains('hidden'));
   }
   document.addEventListener('visibilitychange', () => { if (!document.hidden && widacGrafik()) ladujDzien(true); });
 
@@ -1767,20 +1778,29 @@
       <tbody>${wiersze}</tbody></table>${wolne}
       <p><b>Razem: ${s.n} ${slowoJazd(s.n)}, ${fmtH(s.min)} h</b></p>${stopkaDruku()}</div>`;
   }
-  $('g-druk').onclick = () => zajety($('g-druk'), async () => {
+  async function drukujJednego() {
+    const ins = instruktorzy.find(i => i.id === gInstr);
+    drukuj(htmlDnia(ins, gDzien, await daneDnia(gDzien, gInstr)));
+  }
+  async function drukujWszystkich() {
+    const d = await daneDnia(gDzien, null);
+    drukuj(instruktorzy.filter(i => i.aktywny).map(ins => htmlDnia(ins, gDzien, {
+      jazdy: d.jazdy.filter(j => j.instruktor_id === ins.id), wolne: d.wolne.filter(w => w.instruktor_id === ins.id), post: d.post
+    })).join(''));
+  }
+  const zamknijDruk = () => { $('modal-druk').classList.add('hidden'); document.body.style.overflow = ''; };
+  $('g-druk').onclick = () => {
     if (!gInstr) return;
-    try {
-      if (profil.rola === 'biuro' && confirm('Wydrukować grafik WSZYSTKICH instruktorów na ten dzień?\n\nOK – wszyscy (każdy na osobnej stronie)\nAnuluj – tylko wybrany instruktor')) {
-        const d = await daneDnia(gDzien, null);
-        drukuj(instruktorzy.filter(i => i.aktywny).map(ins => htmlDnia(ins, gDzien, {
-          jazdy: d.jazdy.filter(j => j.instruktor_id === ins.id), wolne: d.wolne.filter(w => w.instruktor_id === ins.id), post: d.post
-        })).join(''));
-      } else {
-        const ins = instruktorzy.find(i => i.id === gInstr);
-        drukuj(htmlDnia(ins, gDzien, await daneDnia(gDzien, gInstr)));
-      }
-    } catch (err) { msg('m-grafik', tlumacz(err)); }
-  });
+    if (profil.rola !== 'biuro') { drukujJednego().catch(err => msg('m-grafik', tlumacz(err))); return; }
+    const ins = instruktorzy.find(i => i.id === gInstr);
+    $('md-opis').textContent = dataKrotka(gDzien);
+    $('md-jeden').textContent = 'Tylko: ' + ins.imie_nazwisko;
+    $('modal-druk').classList.remove('hidden'); document.body.style.overflow = 'hidden';
+  };
+  $('md-jeden').onclick = () => zajety($('md-jeden'), async () => { zamknijDruk(); try { await drukujJednego(); } catch (err) { msg('m-grafik', tlumacz(err)); } });
+  $('md-wszyscy').onclick = () => zajety($('md-wszyscy'), async () => { zamknijDruk(); try { await drukujWszystkich(); } catch (err) { msg('m-grafik', tlumacz(err)); } });
+  $('md-anuluj').onclick = zamknijDruk;
+  $('modal-druk').onclick = e => { if (e.target.id === 'modal-druk') zamknijDruk(); };
 
   // ===== ZESTAWIENIE MIESIĘCZNE =====
   const MIES_M = ['styczeń', 'luty', 'marzec', 'kwiecień', 'maj', 'czerwiec', 'lipiec', 'sierpień', 'wrzesień', 'październik', 'listopad', 'grudzień'];
