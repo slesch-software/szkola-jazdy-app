@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Program dla szkół jazdy</title>
+<style>
+  :root{--g:#1f8a4c;--g2:#e8f5ee;--t:#1d2329;--m:#66707a;--b:#dde2e6;--r:#c0392b;--bg:#f4f6f8}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--t);font-size:16px}
+  .wrap{max-width:560px;margin:0 auto;padding:24px 16px 48px}
+  h1{font-size:22px;margin:0 0 4px}
+  h2{font-size:17px;margin:0 0 12px}
+  .sub{color:var(--m);margin:0 0 20px;font-size:14px}
+  .card{background:#fff;border:1px solid var(--b);border-radius:12px;padding:20px;margin-bottom:16px}
+  label{display:block;font-size:14px;font-weight:600;margin:14px 0 6px}
+  input{width:100%;padding:12px;border:1px solid var(--b);border-radius:8px;font-size:16px}
+  input:focus{outline:2px solid var(--g);border-color:var(--g)}
+  button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--b);background:#fff;padding:10px 14px;color:var(--t)}
+  button:disabled{opacity:.6;cursor:default}
+  .btn{width:100%;margin-top:18px;background:var(--g);color:#fff;border-color:var(--g);font-weight:600;padding:12px}
+  .btn2{width:100%;margin-top:10px}
+  .link{background:none;border:none;color:var(--g);padding:0;margin-top:14px;text-decoration:underline;font-size:14px}
+  .tabs{display:flex;gap:8px}
+  .tabs button{flex:1}
+  .tabs button.on{background:var(--g2);border-color:var(--g);color:var(--g);font-weight:600}
+  .msg{margin-top:14px;padding:10px 12px;border-radius:8px;font-size:14px;display:none}
+  .msg.err{display:block;background:#fdecea;color:var(--r)}
+  .msg.ok{display:block;background:var(--g2);color:var(--g)}
+  .top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px}
+  .pill{display:inline-block;font-size:12px;padding:2px 8px;border-radius:99px;background:var(--g2);color:var(--g);font-weight:600;margin-left:4px}
+  .pill.wait{background:#fff4e0;color:#a15c00}
+  .kod{font-family:ui-monospace,Consolas,monospace;font-size:24px;letter-spacing:3px;font-weight:700;margin:6px 0}
+  .hint{font-size:13px;color:var(--m);margin:0}
+  .row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 0;border-top:1px solid var(--b)}
+  .row:first-child{border-top:none;padding-top:0}
+  .who{min-width:0}
+  .who b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .who span{font-size:13px;color:var(--m);word-break:break-all}
+  .acts{display:flex;gap:6px;flex-shrink:0}
+  .acts .tak{background:var(--g);color:#fff;border-color:var(--g)}
+  .acts .nie{color:var(--r)}
+  .hidden{display:none!important}
+  footer{text-align:center;color:var(--m);font-size:12px;margin-top:24px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Ładowanie -->
+  <div id="s-ladowanie"><p class="sub">Ładowanie…</p></div>
+
+  <!-- Logowanie / rejestracja -->
+  <div id="s-login" class="hidden">
+    <h1>Program dla szkół jazdy</h1>
+    <p class="sub">Grafik jazd, kursanci, instruktorzy</p>
+    <div class="card">
+      <div class="tabs">
+        <button id="t-login" class="on" type="button">Logowanie</button>
+        <button id="t-rej" type="button">Nowe konto</button>
+      </div>
+      <form id="f-login">
+        <div id="box-imie" class="hidden">
+          <label for="i-imie">Imię i nazwisko</label>
+          <input id="i-imie" autocomplete="name">
+        </div>
+        <label for="i-email">E-mail</label>
+        <input id="i-email" type="email" autocomplete="email" required>
+        <label for="i-haslo">Hasło</label>
+        <input id="i-haslo" type="password" autocomplete="current-password" required minlength="6">
+        <button id="b-login" class="btn" type="submit">Zaloguj się</button>
+      </form>
+      <button id="b-zapomnialem" class="link" type="button">Nie pamiętam hasła</button>
+      <div id="m-login" class="msg"></div>
+    </div>
+  </div>
+
+  <!-- Nowe hasło (po linku z maila) -->
+  <div id="s-haslo" class="hidden">
+    <h1>Ustaw nowe hasło</h1>
+    <div class="card">
+      <form id="f-haslo">
+        <label for="i-nowe">Nowe hasło (min. 6 znaków)</label>
+        <input id="i-nowe" type="password" autocomplete="new-password" required minlength="6">
+        <button class="btn" type="submit">Zapisz hasło</button>
+      </form>
+      <div id="m-haslo" class="msg"></div>
+    </div>
+  </div>
+
+  <!-- Dołączenie do szkoły kodem -->
+  <div id="s-kod" class="hidden">
+    <h1>Dołącz do swojej szkoły</h1>
+    <p class="sub">Kod szkoły otrzymasz od biura.</p>
+    <div class="card">
+      <form id="f-kod">
+        <label for="i-kod-imie">Imię i nazwisko</label>
+        <input id="i-kod-imie" required>
+        <label for="i-kod">Kod szkoły</label>
+        <input id="i-kod" required autocapitalize="characters" autocomplete="off">
+        <button class="btn" type="submit">Dołącz</button>
+      </form>
+      <div id="m-kod" class="msg"></div>
+      <button class="btn2 wyloguj" type="button">Wyloguj</button>
+    </div>
+  </div>
+
+  <!-- Oczekiwanie / komunikat -->
+  <div id="s-czeka" class="hidden">
+    <h1 id="czeka-tytul">Czekasz na zatwierdzenie</h1>
+    <div class="card">
+      <p id="czeka-tekst" style="margin-top:0"></p>
+      <button id="b-odswiez" class="btn" type="button">Sprawdź ponownie</button>
+      <button class="btn2 wyloguj" type="button">Wyloguj</button>
+    </div>
+  </div>
+
+  <!-- Panel -->
+  <div id="s-panel" class="hidden">
+    <div class="top">
+      <div>
+        <h1 id="p-szkola"></h1>
+        <p class="sub" id="p-ja" style="margin:0"></p>
+      </div>
+      <button class="wyloguj" type="button">Wyloguj</button>
+    </div>
+
+    <div id="p-biuro" class="hidden">
+      <div class="card">
+        <h2>Kod dla instruktorów</h2>
+        <div class="kod" id="p-kod"></div>
+        <p class="hint">Instruktor zakłada konto, wpisuje ten kod, a Ty zatwierdzasz go poniżej.</p>
+      </div>
+      <div class="card">
+        <h2>Osoby w szkole</h2>
+        <div id="p-osoby"><p class="hint">Ładowanie…</p></div>
+        <div id="m-osoby" class="msg"></div>
+      </div>
+    </div>
+
+    <div id="p-instr" class="hidden">
+      <div class="card">
+        <h2>Mój grafik</h2>
+        <p class="hint">Tu wkrótce pojawi się Twój grafik jazd.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>wersja <span id="wersja"></span></footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // ===== USTAWIENIA =====
+  const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
+  const WERSJA = '0.1';
+  // ======================
+
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const ADRES = location.origin + location.pathname;
+  const $ = id => document.getElementById(id);
+  const EKRANY = ['s-ladowanie', 's-login', 's-haslo', 's-kod', 's-czeka', 's-panel'];
+
+  let tryb = 'login';
+  let ja = null;
+  let profil = null;
+  let odzyskiwanieHasla = /type=recovery/.test(location.hash);
+
+  $('wersja').textContent = WERSJA;
+
+  function pokaz(id) { EKRANY.forEach(e => $(e).classList.toggle('hidden', e !== id)); }
+  function esc(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+  function msg(id, tekst, typ = 'err') {
+    const el = $(id);
+    el.textContent = tekst || '';
+    el.className = 'msg ' + (tekst ? typ : '');
+  }
+  function tlumacz(e) {
+    const m = (e && e.message) || String(e);
+    if (/Invalid login credentials/i.test(m)) return 'Nieprawidłowy e-mail lub hasło.';
+    if (/Email not confirmed/i.test(m)) return 'E-mail nie jest jeszcze potwierdzony – kliknij link w wiadomości.';
+    if (/already registered|JUZ_ISTNIEJE/i.test(m)) return 'Konto z tym e-mailem już istnieje – zaloguj się.';
+    if (/Password should be at least/i.test(m)) return 'Hasło musi mieć co najmniej 6 znaków.';
+    if (/rate limit|too many/i.test(m)) return 'Za dużo prób. Odczekaj kilka minut i spróbuj ponownie.';
+    if (/NIEPRAWIDLOWY_KOD/.test(m)) return 'Nie ma szkoły z takim kodem. Sprawdź kod w biurze.';
+    if (/MASZ_JUZ_PROFIL/.test(m)) return 'To konto jest już przypisane do szkoły.';
+    if (/NIE_MOZNA_USUNAC_SIEBIE/.test(m)) return 'Nie możesz usunąć samego siebie.';
+    if (/BRAK_UPRAWNIEN/.test(m)) return 'Nie masz uprawnień do tej operacji.';
+    if (/Failed to fetch|NetworkError/i.test(m)) return 'Brak połączenia z serwerem. Sprawdź internet.';
+    return m;
+  }
+  async function zajety(btn, fn) {
+    btn.disabled = true;
+    try { await fn(); } finally { btn.disabled = false; }
+  }
+
+  // ----- Logowanie / rejestracja -----
+  function ustawTryb(t) {
+    tryb = t;
+    $('t-login').classList.toggle('on', t === 'login');
+    $('t-rej').classList.toggle('on', t === 'rej');
+    $('box-imie').classList.toggle('hidden', t !== 'rej');
+    $('i-imie').required = (t === 'rej');
+    $('i-haslo').autocomplete = t === 'rej' ? 'new-password' : 'current-password';
+    $('b-login').textContent = t === 'login' ? 'Zaloguj się' : 'Załóż konto';
+    $('b-zapomnialem').classList.toggle('hidden', t !== 'login');
+    msg('m-login', '');
+  }
+  $('t-login').onclick = () => ustawTryb('login');
+  $('t-rej').onclick = () => ustawTryb('rej');
+
+  $('f-login').onsubmit = e => {
+    e.preventDefault();
+    zajety($('b-login'), async () => {
+      msg('m-login', '');
+      const email = $('i-email').value.trim();
+      const haslo = $('i-haslo').value;
+      try {
+        if (tryb === 'login') {
+          const { error } = await sb.auth.signInWithPassword({ email, password: haslo });
+          if (error) throw error;
+        } else {
+          const imie = $('i-imie').value.trim();
+          const { data, error } = await sb.auth.signUp({
+            email, password: haslo,
+            options: { emailRedirectTo: ADRES, data: { imie_nazwisko: imie } }
+          });
+          if (error) throw error;
+          if (data.user && data.user.identities && data.user.identities.length === 0) throw new Error('JUZ_ISTNIEJE');
+          if (!data.session) {
+            ustawTryb('login');
+            msg('m-login', 'Konto założone. Sprawdź skrzynkę ' + email + ', kliknij link potwierdzający i zaloguj się.', 'ok');
+          }
+        }
+      } catch (err) { msg('m-login', tlumacz(err)); }
+    });
+  };
+
+  $('b-zapomnialem').onclick = () => zajety($('b-zapomnialem'), async () => {
+    const email = $('i-email').value.trim();
+    if (!email) { msg('m-login', 'Wpisz najpierw swój e-mail w polu powyżej.'); return; }
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: ADRES });
+    if (error) msg('m-login', tlumacz(error));
+    else msg('m-login', 'Wysłaliśmy link do zmiany hasła na ' + email + '.', 'ok');
+  });
+
+  $('f-haslo').onsubmit = e => {
+    e.preventDefault();
+    zajety(e.submitter || $('f-haslo').querySelector('button'), async () => {
+      const { error } = await sb.auth.updateUser({ password: $('i-nowe').value });
+      if (error) { msg('m-haslo', tlumacz(error)); return; }
+      odzyskiwanieHasla = false;
+      history.replaceState(null, '', ADRES);
+      odswiez();
+    });
+  };
+
+  document.querySelectorAll('.wyloguj').forEach(b => b.onclick = async () => {
+    await sb.auth.signOut();
+    profil = null; ja = null;
+    pokaz('s-login');
+  });
+
+  // ----- Dołączenie kodem -----
+  $('f-kod').onsubmit = e => {
+    e.preventDefault();
+    zajety($('f-kod').querySelector('button'), async () => {
+      msg('m-kod', '');
+      const { error } = await sb.rpc('dolacz_do_szkoly', {
+        p_kod: $('i-kod').value, p_imie_nazwisko: $('i-kod-imie').value
+      });
+      if (error) { msg('m-kod', tlumacz(error)); return; }
+      odswiez();
+    });
+  };
+  $('b-odswiez').onclick = () => zajety($('b-odswiez'), () => odswiez());
+
+  // ----- Główna logika -----
+  async function odswiez(session) {
+    if (odzyskiwanieHasla) { pokaz('s-haslo'); return; }
+    if (session === undefined) session = (await sb.auth.getSession()).data.session;
+    if (!session) { ja = null; profil = null; ustawTryb(tryb); pokaz('s-login'); return; }
+    if (location.hash.includes('access_token')) history.replaceState(null, '', ADRES);
+
+    ja = session.user;
+    const { data, error } = await sb.from('profile')
+      .select('id, rola, imie_nazwisko, zatwierdzony, szkola_id, szkoly(nazwa, kod_zaproszenia)')
+      .eq('id', ja.id).maybeSingle();
+
+    if (error) {
+      $('czeka-tytul').textContent = 'Coś poszło nie tak';
+      $('czeka-tekst').textContent = tlumacz(error);
+      pokaz('s-czeka');
+      return;
+    }
+    profil = data;
+
+    if (!profil) {
+      $('i-kod-imie').value = (ja.user_metadata && ja.user_metadata.imie_nazwisko) || '';
+      pokaz('s-kod');
+      return;
+    }
+    if (!profil.zatwierdzony) {
+      $('czeka-tytul').textContent = 'Czekasz na zatwierdzenie';
+      $('czeka-tekst').textContent = 'Twoje zgłoszenie trafiło do biura szkoły „' +
+        ((profil.szkoly && profil.szkoly.nazwa) || '') + '”. Gdy biuro je zatwierdzi, zobaczysz tu swój grafik.';
+      pokaz('s-czeka');
+      return;
+    }
+
+    $('p-szkola').textContent = (profil.szkoly && profil.szkoly.nazwa) || '';
+    $('p-ja').textContent = profil.imie_nazwisko + ' · ' + (profil.rola === 'biuro' ? 'Biuro' : 'Instruktor');
+    const biuro = profil.rola === 'biuro';
+    $('p-biuro').classList.toggle('hidden', !biuro);
+    $('p-instr').classList.toggle('hidden', biuro);
+    pokaz('s-panel');
+    if (biuro) {
+      $('p-kod').textContent = (profil.szkoly && profil.szkoly.kod_zaproszenia) || '';
+      ladujOsoby();
+    }
+  }
+
+  async function ladujOsoby() {
+    msg('m-osoby', '');
+    const { data, error } = await sb.from('profile')
+      .select('id, rola, imie_nazwisko, email, zatwierdzony, utworzono')
+      .eq('szkola_id', profil.szkola_id)
+      .order('zatwierdzony').order('utworzono');
+    if (error) { msg('m-osoby', tlumacz(error)); return; }
+
+    $('p-osoby').innerHTML = data.map(o => {
+      const rola = o.rola === 'biuro' ? 'Biuro' : 'Instruktor';
+      const status = o.zatwierdzony ? '' : '<span class="pill wait">czeka</span>';
+      let akcje = '';
+      if (!o.zatwierdzony) {
+        akcje = `<button class="tak" data-akcja="tak" data-id="${o.id}">Zatwierdź</button>
+                 <button class="nie" data-akcja="usun" data-id="${o.id}" data-nazwa="${esc(o.imie_nazwisko)}">Odrzuć</button>`;
+      } else if (o.id !== ja.id) {
+        akcje = `<button class="nie" data-akcja="usun" data-id="${o.id}" data-nazwa="${esc(o.imie_nazwisko)}">Usuń</button>`;
+      }
+      return `<div class="row">
+        <div class="who"><b>${esc(o.imie_nazwisko)} <span class="pill">${rola}</span>${status}</b>
+          <span>${esc(o.email || '')}</span></div>
+        <div class="acts">${akcje}</div></div>`;
+    }).join('') || '<p class="hint">Brak osób.</p>';
+
+    $('p-osoby').querySelectorAll('button[data-akcja]').forEach(b => b.onclick = () => zajety(b, async () => {
+      if (b.dataset.akcja === 'usun' &&
+          !confirm('Usunąć osobę „' + b.dataset.nazwa + '” ze szkoły? Jej jazdy w grafiku zostaną.')) return;
+      const fn = b.dataset.akcja === 'tak' ? 'zatwierdz_osobe' : 'usun_osobe';
+      const { error } = await sb.rpc(fn, { p_id: b.dataset.id });
+      if (error) { msg('m-osoby', tlumacz(error)); return; }
+      ladujOsoby();
+    }));
+  }
+
+  sb.auth.onAuthStateChange((event, session) => {
+    if (event === 'PASSWORD_RECOVERY') { odzyskiwanieHasla = true; pokaz('s-haslo'); return; }
+    if (['INITIAL_SESSION', 'SIGNED_IN', 'SIGNED_OUT'].includes(event)) {
+      setTimeout(() => odswiez(session), 0);
+    }
+  });
+</script>
+</body>
+</html>
