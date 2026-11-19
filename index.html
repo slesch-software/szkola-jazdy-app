@@ -87,6 +87,16 @@
   .ust summary{font-weight:600;color:var(--t);font-size:15px;margin:0}
   .ust .btn{margin-top:14px}
   .ostrz{color:#a15c00}
+  .dok-dodaj{display:grid;grid-template-columns:70px 1fr;gap:6px;margin-top:6px}
+  .dok-dodaj input{padding:8px}
+  .dok-dodaj #k-dok-uw{grid-column:1/-1}
+  .dok-dodaj button{grid-column:1/-1}
+  .dok-wiersz{display:flex;gap:8px;align-items:center;font-size:14px;padding:6px 0;border-bottom:1px solid var(--b)}
+  .dok-wiersz span{flex:1;color:var(--m)}
+  .dok-wiersz button{padding:2px 8px;color:var(--r)}
+  .katy{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px}
+  .katy label{margin:0;font-size:12px;font-weight:600}
+  .katy input{padding:6px;font-size:14px}
   .akcje{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
   .wolny-inst{display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid #f0c9c4;border-left:5px solid var(--r);border-radius:10px;margin-bottom:8px;background:#fdf1ef;color:#8a2c22;font-size:14px}
   .wolny-inst .godz{font-weight:700;min-width:92px}
@@ -263,6 +273,9 @@
           <div><label for="u-do">Praca do</label><input type="time" id="u-do" step="900"></div>
           <div class="cala"><label for="u-dl">Długość jazdy (minuty)</label><input type="number" id="u-dl" min="30" max="480" step="15"></div>
         </div>
+        <label style="margin-top:16px">Godziny kursu wg kategorii</label>
+        <p class="hint">Puste pole = jak w rozporządzeniu (szara liczba). Wpisz, jeśli szkoła prowadzi kurs w innym wymiarze.</p>
+        <div class="katy" id="u-katy"></div>
         <button id="u-zapisz" class="btn" type="button">Zapisz ustawienia</button>
         <div id="m-ust" class="msg"></div>
       </details>
@@ -433,8 +446,9 @@
           <input id="k-kategoria" list="kategorie" autocomplete="off" autocapitalize="characters">
           <datalist id="kategorie">
             <option value="AM"><option value="A1"><option value="A2"><option value="A">
-            <option value="B"><option value="B1"><option value="BE"><option value="C">
-            <option value="C1"><option value="CE"><option value="D"><option value="T">
+            <option value="B1"><option value="B"><option value="BE"><option value="C1">
+            <option value="C1E"><option value="C"><option value="CE"><option value="D1">
+            <option value="D1E"><option value="D"><option value="DE"><option value="T">
           </datalist>
         </div>
         <div><label for="k-typ">Typ kursu</label>
@@ -444,8 +458,19 @@
             <option>Uzupełniający</option>
           </select>
         </div>
-        <div><label for="k-godziny">Godziny kursu</label><input id="k-godziny" type="number" min="0" step="0.5" inputmode="decimal"></div>
-        <div><label for="k-dokupione">Dokupione godziny</label><input id="k-dokupione" type="number" min="0" step="0.5" inputmode="decimal"></div>
+        <div class="cala"><label for="k-godziny">Godziny kursu</label>
+          <input id="k-godziny" type="number" min="0" step="0.5" inputmode="decimal">
+          <p class="hint" id="k-godziny-info" style="margin-top:4px"></p></div>
+        <div class="cala"><label>Dokupione godziny <span id="k-dok-suma" class="hint"></span></label>
+          <div id="k-dok-lista"></div>
+          <div id="k-dok-dodaj" class="dok-dodaj">
+            <input id="k-dok-h" type="number" min="0.5" step="0.5" inputmode="decimal" placeholder="godz.">
+            <input id="k-dok-data" type="date">
+            <input id="k-dok-uw" placeholder="uwaga (np. gotówka)" autocomplete="off">
+            <button id="k-dok-btn" type="button">+ Dodaj</button>
+          </div>
+          <p class="hint" id="k-dok-info" style="margin-top:4px"></p>
+        </div>
         <div><label for="k-posiadane">Posiadane kategorie</label><input id="k-posiadane" autocomplete="off" autocapitalize="characters"></div>
         <div><label for="k-prawko">Nr prawa jazdy</label><input id="k-prawko" autocomplete="off"></div>
         <div class="cala"><label for="k-uwagi">Uwagi</label><textarea id="k-uwagi"></textarea></div>
@@ -471,7 +496,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '0.5';
+  const WERSJA = '0.6';
   // ======================
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -607,7 +632,7 @@
 
     ja = session.user;
     const { data, error } = await sb.from('profile')
-      .select('id, rola, imie_nazwisko, zatwierdzony, szkola_id, szkoly(nazwa, kod_zaproszenia, grafik_od, grafik_do, dlugosc_jazdy)')
+      .select('id, rola, imie_nazwisko, zatwierdzony, szkola_id, szkoly(nazwa, kod_zaproszenia, grafik_od, grafik_do, dlugosc_jazdy, godziny_kategorii)')
       .eq('id', ja.id).maybeSingle();
 
     if (error) {
@@ -730,7 +755,8 @@
     $('k-lista').innerHTML = lista.map(k => {
       const opis = [k.kategoria, k.typ_kursu, k.pkk ? 'PKK ' + fmtPkk(k.pkk) : ''].filter(Boolean).join(' · ');
       const p = postepAll.get(k.id) || { zrob: 0, plan: 0 };
-      const godziny = `jazdy: ${fmtH(p.zrob)} z ${godz(wymaganeH(k))} h` +
+      const wym = wymaganeH(k);
+      const godziny = `jazdy: ${fmtH(p.zrob)}${wym ? ' z ' + godz(wym) : ''} h` +
         (p.plan ? ` (+ ${fmtH(p.plan)} h zaplanowane)` : '') +
         (liczba(k.godziny_dokupione, 0) > 0 ? ` · w tym ${godz(k.godziny_dokupione)} h dokupione` : '');
       const zak = k.aktywny ? '' : '<span class="pill szary">zakończony</span>';
@@ -760,8 +786,9 @@
     $('k-pkk').value = (k && k.pkk) || '';
     $('k-kategoria').value = (k && k.kategoria) || 'B';
     $('k-typ').value = (k && k.typ_kursu) || 'Podstawowy';
-    $('k-godziny').value = k ? k.godziny_kurs : 30;
-    $('k-dokupione').value = k ? k.godziny_dokupione : 0;
+    $('k-godziny').value = k && k.godziny_kurs !== null && k.godziny_kurs !== undefined ? k.godziny_kurs : '';
+    infoGodzin();
+    pokazDokupione();
     $('k-uwagi').value = (k && k.uwagi) || '';
     $('k-posiadane').value = (k && k.posiadane_kategorie) || '';
     $('k-prawko').value = (k && k.nr_prawa_jazdy) || '';
@@ -780,6 +807,66 @@
     document.body.style.overflow = '';
     edytowany = null;
   }
+  // ----- godziny kursu i dokupione -----
+  function infoGodzin() {
+    const k = { kategoria: $('k-kategoria').value, typ_kursu: $('k-typ').value, godziny_kurs: null };
+    const b = bazaH(k), kat = katGlowna(k.kategoria);
+    $('k-godziny').placeholder = b ? `wg kategorii: ${b}` : 'wpisz liczbę godzin';
+    $('k-godziny-info').textContent = /uzup/i.test(k.typ_kursu)
+      ? 'Kurs uzupełniający – wpisz liczbę godzin ręcznie.'
+      : (b ? `Puste pole = wg kategorii ${kat}: ${b} h. Wpisz liczbę tylko, jeśli ten kursant ma inny wymiar kursu.`
+           : 'Nieznana kategoria – wpisz liczbę godzin ręcznie.');
+  }
+  $('k-kategoria').addEventListener('input', infoGodzin);
+  $('k-typ').addEventListener('change', infoGodzin);
+
+  async function pokazDokupione() {
+    const k = edytowany;
+    $('k-dok-dodaj').classList.toggle('hidden', !k);
+    $('k-dok-h').value = ''; $('k-dok-uw').value = ''; $('k-dok-data').value = dzisStr();
+    if (!k) {
+      $('k-dok-lista').innerHTML = ''; $('k-dok-suma').textContent = '';
+      $('k-dok-info').textContent = 'Dokupione godziny dodasz po zapisaniu kursanta.';
+      return;
+    }
+    $('k-dok-info').textContent = '';
+    const { data, error } = await sb.from('dokupione').select('*').eq('kursant_id', k.id).order('dzien');
+    if (error) {
+      $('k-dok-info').textContent = /dokupione/.test(error.message) ? 'Najpierw uruchom w Supabase plik krok6_godziny.sql.' : tlumacz(error);
+      return;
+    }
+    const suma = data.reduce((a, d) => a + Number(d.godziny), 0);
+    $('k-dok-suma').textContent = suma ? `– razem ${godz(suma)} h` : '';
+    $('k-dok-lista').innerHTML = data.map(d => {
+      const dt = parseD(d.dzien);
+      return `<div class="dok-wiersz"><b>+${godz(d.godziny)} h</b>
+        <span>${pad(dt.getDate())}.${pad(dt.getMonth() + 1)}.${dt.getFullYear()}${d.uwagi ? ' · ' + esc(d.uwagi) : ''}</span>
+        <button type="button" data-dok="${d.id}" title="Usuń">✕</button></div>`;
+    }).join('') || '<p class="hint">Brak dokupionych godzin.</p>';
+    $('k-dok-lista').querySelectorAll('button[data-dok]').forEach(b => b.onclick = () => zajety(b, async () => {
+      if (!confirm('Usunąć ten wpis dokupionych godzin?')) return;
+      const { error } = await sb.from('dokupione').delete().eq('id', b.dataset.dok);
+      if (error) { $('k-dok-info').textContent = tlumacz(error); return; }
+      await odswiezEdytowanego(); pokazDokupione();
+    }));
+  }
+  async function odswiezEdytowanego() {
+    if (!edytowany) return;
+    const { data } = await sb.from('kursanci').select('*').eq('id', edytowany.id).maybeSingle();
+    if (data) { edytowany = data; gKursanci.set(data.id, data); }
+    ladujKursantow();
+  }
+  $('k-dok-btn').onclick = () => zajety($('k-dok-btn'), async () => {
+    if (!edytowany) return;
+    const h = liczba($('k-dok-h').value, 0);
+    if (!(h > 0)) { $('k-dok-info').textContent = 'Wpisz liczbę godzin większą od zera.'; return; }
+    const { error } = await sb.from('dokupione').insert({
+      szkola_id: profil.szkola_id, kursant_id: edytowany.id, godziny: h,
+      dzien: $('k-dok-data').value || dzisStr(), uwagi: $('k-dok-uw').value.trim() || null });
+    if (error) { $('k-dok-info').textContent = tlumacz(error); return; }
+    await odswiezEdytowanego(); pokazDokupione();
+  });
+
   $('k-dodaj').onclick = () => otworzKursanta(null);
   $('k-anuluj').onclick = zamknijKursanta;
   $('modal-kursant').onclick = e => { if (e.target.id === 'modal-kursant') zamknijKursanta(); };
@@ -799,8 +886,7 @@
         pkk: $('k-pkk').value.replace(/\s/g, '') || null,
         kategoria: $('k-kategoria').value.trim().toUpperCase() || null,
         typ_kursu: $('k-typ').value || null,
-        godziny_kurs: liczba($('k-godziny').value, 0),
-        godziny_dokupione: liczba($('k-dokupione').value, 0),
+        godziny_kurs: $('k-godziny').value.trim() === '' ? null : liczba($('k-godziny').value, 0),
         uwagi: $('k-uwagi').value.trim() || null,
         posiadane_kategorie: $('k-posiadane').value.trim().toUpperCase() || null,
         nr_prawa_jazdy: $('k-prawko').value.trim() || null,
@@ -898,6 +984,10 @@
   const telLink = t => String(t || '').replace(/[^\d+]/g, '');
   const nazwaK = k => k ? ((k.nazwisko || '') + ' ' + (k.imie || '')).trim() : '';
   const slowoJazd = n => n === 1 ? 'jazda' : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? 'jazdy' : 'jazd');
+  function ustI(id) {
+    const u = ust(), i = instruktorzy.find(x => x.id === (id || gInstr));
+    return { od: (i && i.godz_od) || u.od, do: (i && i.godz_do) || u.do, dl: u.dl, wlasne: !!(i && i.godz_od) };
+  }
   function ust() {
     const s = profil.szkoly || {};
     return { od: s.grafik_od || '06:00', do: s.grafik_do || '22:00', dl: Number(s.dlugosc_jazdy) || 120 };
@@ -943,7 +1033,7 @@
   }
   async function ladujKursantowDoGrafiku() {
     const { data, error } = await sb.from('kursanci')
-      .select('id, imie, nazwisko, telefon, kategoria, pkk, godziny_kurs, godziny_dokupione, aktywny')
+      .select('id, imie, nazwisko, telefon, kategoria, typ_kursu, pkk, godziny_kurs, godziny_dokupione, aktywny')
       .eq('szkola_id', profil.szkola_id);
     if (!error) gKursanci = new Map(data.map(k => [k.id, k]));
   }
@@ -1000,7 +1090,18 @@
     rysujDzien();
   }
 
-  function wymaganeH(k) { return liczba(k.godziny_kurs, 0) + liczba(k.godziny_dokupione, 0); }
+  // godziny kursu wg rozporządzenia (szkoła może je zmienić w ustawieniach)
+  const GODZ_KAT = { AM: 5, A1: 20, A2: 20, A: 20, B1: 30, B: 30, BE: 15, C1: 20, C1E: 20, C: 30, CE: 25, D1: 30, D1E: 20, D: 60, DE: 25, T: 20 };
+  const tabelaKat = () => ({ ...GODZ_KAT, ...((profil.szkoly && profil.szkoly.godziny_kategorii) || {}) });
+  const katGlowna = kat => String(kat || '').toUpperCase().replace(/\+/g, '').split(/[\s,;/]+/).filter(Boolean)[0] || '';
+  // godziny kursu bez dokupionych: wpisane ręcznie albo wg kategorii (uzupełniający – tylko ręcznie)
+  function bazaH(k) {
+    if (k.godziny_kurs !== null && k.godziny_kurs !== undefined && k.godziny_kurs !== '') return liczba(k.godziny_kurs, 0);
+    if (/uzup/i.test(k.typ_kursu || '')) return null;
+    const h = tabelaKat()[katGlowna(k.kategoria)];
+    return h ? Number(h) : null;
+  }
+  function wymaganeH(k) { const b = bazaH(k), d = liczba(k.godziny_dokupione, 0); return b === null ? d : b + d; }
   // „która godzina kursu”: suma wcześniejszych jazd i egzaminów kursanta (u wszystkich instruktorów)
   function postepTekst(k, j) {
     const lista = (gPostep.get(k.id) || []).filter(x => x.rodzaj !== 'inne');
@@ -1017,7 +1118,7 @@
   }
 
   function wolneOkna(busy) {
-    const u = ust(), S = naMin(u.od), E = naMin(u.do), len = u.dl, out = [];
+    const u = ustI(gInstr), S = naMin(u.od), E = naMin(u.do), len = u.dl, out = [];
     const fill = (a, b) => {
       if (b - a < 60) return;
       for (let x = a; x < b;) { const e = Math.min(x + len, b); if (e - x >= 30) out.push({ od: x, do: e }); x = e; }
@@ -1077,7 +1178,7 @@
   }
   $('g-dodaj').onclick = () => {
     if (!gInstr) { msg('m-grafik', 'Najpierw dodaj instruktora w zakładce „Osoby”.'); return; }
-    const u = ust(), p0 = new Date(gDzien + 'T00:00:00');
+    const u = ustI(gInstr), p0 = new Date(gDzien + 'T00:00:00');
     let t = gJazdy.length ? Math.max(...gJazdy.map(j => Math.round((new Date(j.koniec) - p0) / 60000))) : naMin(u.od);
     t = Math.min(t, 23 * 60);
     otworzJazde(null, { od: zMin(t), do: zMin(Math.min(t + u.dl, 23 * 60 + 55)) });
@@ -1232,9 +1333,17 @@
   function pokazUstawienia() {
     const u = ust();
     $('u-od').value = u.od; $('u-do').value = u.do; $('u-dl').value = u.dl;
+    const wl = (profil.szkoly && profil.szkoly.godziny_kategorii) || {};
+    $('u-katy').innerHTML = Object.keys(GODZ_KAT).map(c => `<div><label for="u-kat-${c}">${c}</label>
+      <input id="u-kat-${c}" data-kat="${c}" type="number" min="1" max="200" inputmode="numeric" placeholder="${GODZ_KAT[c]}" value="${wl[c] ?? ''}"></div>`).join('');
   }
   $('u-zapisz').onclick = () => zajety($('u-zapisz'), async () => {
-    const d = { grafik_od: $('u-od').value, grafik_do: $('u-do').value, dlugosc_jazdy: parseInt($('u-dl').value, 10) };
+    const katy = {};
+    $('u-katy').querySelectorAll('input[data-kat]').forEach(el => {
+      const v = parseFloat(el.value);
+      if (v > 0 && v !== GODZ_KAT[el.dataset.kat]) katy[el.dataset.kat] = v;
+    });
+    const d = { grafik_od: $('u-od').value, grafik_do: $('u-do').value, dlugosc_jazdy: parseInt($('u-dl').value, 10), godziny_kategorii: katy };
     if (!d.grafik_od || !d.grafik_do || naMin(d.grafik_do) <= naMin(d.grafik_od)) { msg('m-ust', 'Sprawdź godziny pracy.'); return; }
     if (!(d.dlugosc_jazdy >= 30 && d.dlugosc_jazdy <= 480)) { msg('m-ust', 'Długość jazdy: od 30 do 480 minut.'); return; }
     const { error } = await sb.from('szkoly').update(d).eq('id', profil.szkola_id);
@@ -1250,7 +1359,7 @@
     msg('m-instruktorzy', '');
     $('p-instruktorzy').innerHTML = instruktorzy.map(i => `<div class="row">
         <div class="who"><b>${esc(i.imie_nazwisko)} ${i.aktywny ? '' : '<span class="pill szary">ukryty</span>'}</b>
-          <span>${i.user_id ? 'ma konto w programie' : 'bez konta'}${i.telefon ? ' · 📞 ' + esc(i.telefon) : ''}</span></div>
+          <span>${i.user_id ? 'ma konto w programie' : 'bez konta'}${i.telefon ? ' · 📞 ' + esc(i.telefon) : ''}${i.godz_od ? ' · 🕘 ' + esc(i.godz_od) + '–' + esc(i.godz_do) : ''}</span></div>
         <div class="acts"><button data-a="nazwa" data-id="${i.id}">Zmień</button>
           <button data-a="ukryj" data-id="${i.id}">${i.aktywny ? 'Ukryj' : 'Przywróć'}</button></div></div>`).join('')
       || '<p class="hint">Brak instruktorów.</p>';
@@ -1262,6 +1371,18 @@
         if (!n || !n.trim()) return;
         const t = prompt('Telefon instruktora (do wysyłki grafiku na WhatsApp):', i.telefon || '');
         zm = { imie_nazwisko: n.trim(), telefon: t === null ? i.telefon : (t.trim() || null) };
+        const u = ust();
+        const g = prompt(`Godziny pracy instruktora, np. 07:00-18:00.\nPuste = jak cała szkoła (${u.od}–${u.do}).`,
+          i.godz_od ? i.godz_od + '-' + i.godz_do : '');
+        if (g !== null) {
+          if (!g.trim()) { zm.godz_od = null; zm.godz_do = null; }
+          else {
+            const m = g.trim().match(/^(\d{1,2})(?::(\d{2}))?\s*[-–]\s*(\d{1,2})(?::(\d{2}))?$/);
+            const od = m && pad(+m[1]) + ':' + (m[2] || '00'), doo = m && pad(+m[3]) + ':' + (m[4] || '00');
+            if (!m || naMin(doo) <= naMin(od) || +m[1] > 23 || +m[3] > 24) { msg('m-instruktorzy', 'Nie rozpoznano godzin – wpisz np. 07:00-18:00.'); return; }
+            zm.godz_od = od; zm.godz_do = doo;
+          }
+        }
       } else {
         if (i.aktywny && !confirm(`Ukryć instruktora „${i.imie_nazwisko}” w grafiku? Jego jazdy zostaną zachowane.`)) return;
         zm = { aktywny: !i.aktywny };
@@ -1290,8 +1411,8 @@
     $('w-instr').value = w ? w.instruktor_id : gInstr;
     $('w-data').value = w ? w.dzien : gDzien;
     $('w-caly').checked = w ? !w.godz_od : false;
-    $('w-od').value = w && w.godz_od ? hm(w.godz_od) : ust().od;
-    $('w-do').value = w && w.godz_do ? hm(w.godz_do) : ust().do;
+    $('w-od').value = w && w.godz_od ? hm(w.godz_od) : ustI($('w-instr').value).od;
+    $('w-do').value = w && w.godz_do ? hm(w.godz_do) : ustI($('w-instr').value).do;
     $('w-uwagi').value = w ? (w.uwagi || '') : '';
     $('w-godziny').classList.toggle('hidden', $('w-caly').checked);
     $('w-usun').classList.toggle('hidden', !w);
