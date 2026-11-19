@@ -307,7 +307,8 @@
         </div>
         <div class="dz-akcje">
           <span><button id="g-dzis" class="link" type="button">Dziś</button>
-            <button id="g-widok" class="link hidden" type="button" style="margin-left:14px"></button></span>
+            <button id="g-widok" class="link hidden" type="button" style="margin-left:14px"></button>
+            <button id="g-siatka" class="link hidden" type="button" style="margin-left:14px"></button></span>
           <span class="licznik" id="g-suma"></span>
         </div>
         <div id="g-lista"><p class="hint">Ładowanie…</p></div>
@@ -590,7 +591,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.5';
+  const WERSJA = '1.6';
   // ======================
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -1097,6 +1098,7 @@
   let gWszJazdy = [], gWszWolne = [];
   let gWidok = (() => { try { return localStorage.getItem('g_widok') || 'kolumny'; } catch (_) { return 'kolumny'; } })();
   const szeroko = () => window.innerWidth >= 900;
+  let gSiatka = (() => { try { return localStorage.getItem('g_siatka') !== 'nie'; } catch (_) { return true; } })();
   const trybKolumn = () => profil && profil.rola === 'biuro' && szeroko() && gWidok === 'kolumny';
   let gWolne = [];
   let gKursanci = new Map();
@@ -1264,9 +1266,9 @@
       .concat(wolne.map(w => w.godz_od ? [naMin(w.godz_od), naMin(w.godz_do)] : [0, 1440]));
     const elementy = jazdy.map(j => ({ t: odMin(j.poczatek), j }))
       .concat(wolne.map(w => ({ t: w.godz_od ? naMin(w.godz_od) : -1, wi: w })));
-    if (edyt) wolneOkna(busy, idI).forEach(w => elementy.push({ t: w.od, w }));
+    if (edyt && gSiatka) wolneOkna(busy, idI).forEach(w => elementy.push({ t: w.od, w }));
     elementy.sort((a, b) => a.t - b.t);
-    if (!edyt) {   // u instruktora pokazujemy przerwy między jazdami
+    if (!edyt || !gSiatka) {   // bez siatki (instruktor albo „tylko jazdy”) pokazujemy przerwy między jazdami
       const jz = elementy.filter(e => e.j);
       jz.forEach((e, i) => { const n = jz[i + 1]; if (!n) return;
         const p = (new Date(n.j.poczatek) - new Date(e.j.koniec)) / 60000;
@@ -1331,10 +1333,17 @@
   }
 
   function pokazPrzelacznik() {
+    $('g-siatka').classList.toggle('hidden', !(profil && profil.rola === 'biuro'));
+    $('g-siatka').textContent = gSiatka ? '▤ tylko jazdy' : '▦ siatka godzin';
     const pokaz = profil && profil.rola === 'biuro' && szeroko();
     $('g-widok').classList.toggle('hidden', !pokaz);
     $('g-widok').textContent = gWidok === 'kolumny' ? '☰ jeden instruktor' : '▦ wszyscy instruktorzy';
   }
+  $('g-siatka').onclick = () => {
+    gSiatka = !gSiatka;
+    try { localStorage.setItem('g_siatka', gSiatka ? 'tak' : 'nie'); } catch (_) {}
+    pokazPrzelacznik(); rysujDzien();
+  };
   $('g-widok').onclick = () => {
     gWidok = gWidok === 'kolumny' ? 'jeden' : 'kolumny';
     try { localStorage.setItem('g_widok', gWidok); } catch (_) {}
