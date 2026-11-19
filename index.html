@@ -348,19 +348,6 @@
         <button id="g-wyczysc" type="button" class="link" style="margin-top:10px;font-size:13px;color:var(--r);background:none;border:none;padding:0;cursor:pointer;text-decoration:underline">🗑 Wyczyść dzień</button>
         <div id="m-grafik" class="msg"></div>
       </div>
-      <details id="g-ustawienia" class="card ust hidden">
-        <summary>⚙ Ustawienia grafiku</summary>
-        <div class="siatka">
-          <div><label for="u-od">Praca od</label><input type="time" id="u-od" step="900"></div>
-          <div><label for="u-do">Praca do</label><input type="time" id="u-do" step="900"></div>
-          <div class="cala"><label for="u-dl">Długość jazdy (minuty)</label><input type="number" id="u-dl" min="30" max="480" step="15"></div>
-        </div>
-        <label style="margin-top:16px">Godziny kursu wg kategorii</label>
-        <p class="hint">Puste pole = jak w rozporządzeniu (szara liczba). Wpisz, jeśli szkoła prowadzi kurs w innym wymiarze.</p>
-        <div class="katy" id="u-katy"></div>
-        <button id="u-zapisz" class="btn" type="button">Zapisz ustawienia</button>
-        <div id="m-ust" class="msg"></div>
-      </details>
     </div>
 
     <!-- Instruktor: wyszukiwarka i godziny -->
@@ -466,6 +453,19 @@
           </div>
           <div id="m-pin" class="msg"></div>
         </div>
+          <div id="g-ustawienia" class="card hidden">
+            <h2>🕘 Grafik i godziny kursu</h2>
+            <div class="siatka">
+              <div><label for="u-od">Praca od</label><input type="time" id="u-od" step="900"></div>
+              <div><label for="u-do">Praca do</label><input type="time" id="u-do" step="900"></div>
+              <div class="cala"><label for="u-dl">Długość jazdy (minuty)</label><input type="number" id="u-dl" min="30" max="480" step="15"></div>
+            </div>
+            <label style="margin-top:16px">Godziny kursu wg kategorii</label>
+            <p class="hint">Puste pole = jak w rozporządzeniu (szara liczba). Wpisz, jeśli szkoła prowadzi kurs w innym wymiarze.</p>
+            <div class="katy" id="u-katy"></div>
+            <button id="u-zapisz" class="btn" type="button">Zapisz ustawienia</button>
+            <div id="m-ust" class="msg"></div>
+          </div>
         <div class="card">
           <h2>🖼 Logo szkoły</h2>
           <p class="hint" id="lg-status">Brak logo.</p>
@@ -723,7 +723,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.12';
+  const WERSJA = '1.13';
   // ======================
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -920,7 +920,7 @@
   }
   $('t-grafik').onclick = () => { ustawZakladke('grafik'); ladujDzien(); };
   $('t-kursanci').onclick = () => { ustawZakladke('kursanci'); ladujKursantow(); };
-  $('t-osoby').onclick = () => { ustawZakladke('osoby'); ladujOsoby(); ladujInstruktorowLista(); ladujPin(); ladujKosz(); pokazKopie(); pokazLogoUst(); };
+  $('t-osoby').onclick = () => { ustawZakladke('osoby'); ladujOsoby(); ladujInstruktorowLista(); ladujPin(); ladujKosz(); pokazKopie(); pokazLogoUst(); pokazUstawienia(); };
   $('t-miesiac').onclick = () => { ustawZakladke('miesiac'); ladujMiesiac(); };
 
   // ----- Rejestr kursantów -----
