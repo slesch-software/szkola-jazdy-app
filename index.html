@@ -98,7 +98,7 @@
   .wolne.edyt{cursor:pointer}
   .wolne.edyt:hover{background:var(--wh)}
   .wolne .plus{margin-left:auto;font-weight:700}
-  .kat{display:inline-block;font-size:11px;font-weight:700;padding:1px 6px;border-radius:5px;background:#1d2329;color:#fff;vertical-align:1px;margin-left:4px}
+  .kat{display:inline-block;font-size:12px;font-weight:700;line-height:1.3;padding:0 6px;border:1.5px solid #1d2329;border-radius:5px;background:#fff;color:#1d2329!important;opacity:1;vertical-align:1px;margin-left:6px}
   .ust summary{font-weight:600;color:var(--t);font-size:15px;margin:0}
   .ust .btn{margin-top:14px}
   .ostrz{color:#a15c00}
@@ -295,10 +295,10 @@
     </div>
 
     <div id="p-biuro-tabs" class="tabs panel hidden">
-      <button id="t-grafik" class="on" type="button">Grafik</button>
-      <button id="t-kursanci" type="button">Kursanci</button>
-      <button id="t-miesiac" type="button">Miesiąc</button>
-      <button id="t-osoby" type="button">Osoby</button>
+      <button id="t-grafik" class="on" type="button">🚗 Grafik</button>
+      <button id="t-kursanci" type="button">👤 Kursanci</button>
+      <button id="t-miesiac" type="button">📅 Miesiąc</button>
+      <button id="t-osoby" type="button">⚙️ Ustawienia</button>
     </div>
 
     <!-- Grafik (biuro: edycja, instruktor: podgląd swoich jazd) -->
@@ -674,7 +674,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.9';
+  const WERSJA = '1.10';
   // ======================
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -1103,7 +1103,7 @@
     if (!edytowany) return;
     if (!(await wymagajPin('Usunięcie kursanta „' + nazwaK(edytowany) + '”'))) return;
     if (!confirm('Usunąć kursanta „' + edytowany.nazwisko + ' ' + edytowany.imie +
-                 '” z rejestru?\n\nTrafi do kosza na 30 dni (Osoby → Kosz). Jeśli kurs się skończył, lepiej zaznaczyć „Kurs zakończony”.')) return;
+                 '” z rejestru?\n\nTrafi do kosza na 30 dni (Ustawienia → Kosz). Jeśli kurs się skończył, lepiej zaznaczyć „Kurs zakończony”.')) return;
     const { error } = await sb.from('kursanci').delete().eq('id', edytowany.id);
     if (error) { msg('m-kursant', tlumacz(error)); return; }
     zamknijKursanta();
@@ -1270,7 +1270,7 @@
     pokazNaglowek();
     if (!gInstr) {
       $('g-lista').innerHTML = profil.rola === 'biuro'
-        ? '<p class="hint">Nie ma jeszcze instruktorów w grafiku. Dodaj ich w zakładce „Osoby” → „Instruktorzy w grafiku”.</p>'
+        ? '<p class="hint">Nie ma jeszcze instruktorów w grafiku. Dodaj ich w zakładce „Ustawienia” → „Instruktorzy w grafiku”.</p>'
         : '<p class="hint">Twoje konto nie jest jeszcze połączone z grafikiem. Poproś biuro, żeby sprawdziło zatwierdzenie.</p>';
       $('g-suma').textContent = '';
       return;
@@ -1442,7 +1442,7 @@
     resizeT = setTimeout(() => { if (szeroko() !== szerOstatnio) { szerOstatnio = szeroko(); if (profil) ladujDzien(); } }, 200);
   });
   $('g-dodaj').onclick = () => {
-    if (!gInstr) { msg('m-grafik', 'Najpierw dodaj instruktora w zakładce „Osoby”.'); return; }
+    if (!gInstr) { msg('m-grafik', 'Najpierw dodaj instruktora w zakładce „Ustawienia”.'); return; }
     const u = ustI(gInstr), p0 = new Date(gDzien + 'T00:00:00');
     let t = gJazdy.length ? Math.max(...gJazdy.map(j => Math.round((new Date(j.koniec) - p0) / 60000))) : naMin(u.od);
     t = Math.min(t, 23 * 60);
@@ -1587,7 +1587,7 @@
   $('j-usun').onclick = () => zajety($('j-usun'), async () => {
     if (!edytJazda) return;
     const k = gKursanci.get(edytJazda.kursant_id);
-    if (!confirm(`Usunąć jazdę ${godzina(edytJazda.poczatek)}–${godzina(edytJazda.koniec)}${k ? ' (' + nazwaK(k) + ')' : ''}?\n\nW razie pomyłki przywrócisz ją z kosza (Osoby → Kosz).`)) return;
+    if (!confirm(`Usunąć jazdę ${godzina(edytJazda.poczatek)}–${godzina(edytJazda.koniec)}${k ? ' (' + nazwaK(k) + ')' : ''}?\n\nW razie pomyłki przywrócisz ją z kosza (Ustawienia → Kosz).`)) return;
     const { error } = await sb.from('jazdy').delete().eq('id', edytJazda.id);
     if (error) { msg('m-jazda', tlumacz(error)); return; }
     zamknijJazde();
@@ -1618,7 +1618,7 @@
     rysujDzien();
   });
 
-  // ----- instruktorzy w grafiku (zakładka Osoby) -----
+  // ----- instruktorzy w grafiku (zakładka Ustawienia) -----
   async function ladujInstruktorowLista() {
     await ladujInstruktorow();
     msg('m-instruktorzy', '');
@@ -1688,7 +1688,7 @@
   function zamknijWolne() { $('modal-wolne').classList.add('hidden'); document.body.style.overflow = ''; edytWolne = null; }
   $('w-caly').onchange = () => $('w-godziny').classList.toggle('hidden', $('w-caly').checked);
   $('g-wolne').onclick = () => {
-    if (!gInstr) { msg('m-grafik', 'Najpierw dodaj instruktora w zakładce „Osoby”.'); return; }
+    if (!gInstr) { msg('m-grafik', 'Najpierw dodaj instruktora w zakładce „Ustawienia”.'); return; }
     otworzWolne(null);
   };
   $('w-anuluj').onclick = zamknijWolne;
@@ -1813,7 +1813,7 @@
     }
   }
   $('g-wa').onclick = () => zajety($('g-wa'), async () => {
-    if (!gInstr) { msg('m-grafik', 'Najpierw dodaj instruktora w zakładce „Osoby”.'); return; }
+    if (!gInstr) { msg('m-grafik', 'Najpierw dodaj instruktora w zakładce „Ustawienia”.'); return; }
     try {
       const [jeden, wszyscy] = await Promise.all([daneDnia(gDzien, gInstr), daneDnia(gDzien, null)]);
       waDane = { jeden, wszyscy };
@@ -2776,7 +2776,7 @@ function cellTime(v) {
   async function tokenGoogle() {
     if (gToken && Date.now() < gTokenDo - 60000) return gToken;
     const cid = profil.szkoly && profil.szkoly.google_client_id;
-    if (!cid) throw new Error('Najpierw wpisz identyfikator klienta Google w zakładce Osoby → Kopia zapasowa.');
+    if (!cid) throw new Error('Najpierw wpisz identyfikator klienta Google w zakładce Ustawienia → Kopia zapasowa.');
     if (!window.google || !google.accounts || !google.accounts.oauth2) await loadScript('https://accounts.google.com/gsi/client');
     return new Promise((res, rej) => {
       gKlient = google.accounts.oauth2.initTokenClient({
