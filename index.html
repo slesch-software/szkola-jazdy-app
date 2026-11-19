@@ -154,11 +154,12 @@
   #druk{display:none}
   @media print{
     body>*:not(#druk){display:none!important}
-    #druk{display:block;font-family:Arial,sans-serif;color:#000;font-size:12pt}
+    html,body{background:#fff!important}
+    #druk{display:block;font-family:Arial,sans-serif;color:#000;font-size:12pt;padding:0 4px}
     #druk h1{font-size:16pt;margin:0 0 2pt}
     #druk h2{font-size:13pt;margin:0 0 10pt;font-weight:400}
     #druk table{width:100%;border-collapse:collapse;margin-bottom:12pt}
-    #druk th,#druk td{border:1px solid #444;padding:4pt 6pt;text-align:left;vertical-align:top}
+    #druk th,#druk td{border:1px solid #444;padding:4pt 6pt;text-align:left;vertical-align:top;word-wrap:break-word}
     #druk th{background:#eee}
     #druk .num{text-align:right}
     #druk .stopka{font-size:9pt;color:#555;margin-top:8pt}
@@ -563,7 +564,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.0';
+  const WERSJA = '1.1';
   // ======================
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
