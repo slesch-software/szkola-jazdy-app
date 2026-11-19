@@ -564,7 +564,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.1';
+  const WERSJA = '1.2';
   // ======================
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -1234,8 +1234,16 @@
       .concat(wolne.map(w => ({ t: w.godz_od ? naMin(w.godz_od) : -1, wi: w })));
     if (edyt) wolneOkna(busy, idI).forEach(w => elementy.push({ t: w.od, w }));
     elementy.sort((a, b) => a.t - b.t);
+    if (!edyt) {   // u instruktora pokazujemy przerwy między jazdami
+      const jz = elementy.filter(e => e.j);
+      jz.forEach((e, i) => { const n = jz[i + 1]; if (!n) return;
+        const p = (new Date(n.j.poczatek) - new Date(e.j.koniec)) / 60000;
+        if (p >= 15) elementy.push({ t: odMin(e.j.koniec) + 0.5, p, od: godzina(e.j.koniec), do: godzina(n.j.poczatek) }); });
+      elementy.sort((a, b) => a.t - b.t);
+    }
     if (!elementy.length) return '<p class="hint">Brak jazd tego dnia.</p>';
     return elementy.map(e => {
+      if (e.p) return `<div class="przerwa">– przerwa ${fmtDur(e.p)} (${e.od}–${e.do}) –</div>`;
       if (e.wi) return `<div class="wolny-inst${edyt ? ' edyt' : ''}" data-wid="${e.wi.id}">
           <span class="godz">${e.wi.godz_od ? hm(e.wi.godz_od) + '–' + hm(e.wi.godz_do) : 'cały dzień'}</span>
           ⛔ wolne${e.wi.uwagi ? ' – ' + esc(e.wi.uwagi) : ''}</div>`;
@@ -1718,7 +1726,10 @@
   const stopkaDruku = () => `<div class="stopka">Wydrukowano: ${new Date().toLocaleString('pl-PL')} · ${esc((profil.szkoly && profil.szkoly.nazwa) || '')}</div>`;
   function htmlDnia(ins, dzien, d) {
     const s = sumaJazd(d.jazdy);
-    const wiersze = d.jazdy.map(j => {
+    const wiersze = d.jazdy.map((j, i) => {
+      const nast = d.jazdy[i + 1];
+      const prz = nast ? (new Date(nast.poczatek) - new Date(j.koniec)) / 60000 : 0;
+      const przerwa = prz >= 15 ? `<tr><td colspan="6" style="text-align:center;font-style:italic;color:#555;padding:2pt">– przerwa ${fmtDur(prz)} (${godzina(j.koniec)}–${godzina(nast.poczatek)}) –</td></tr>` : '';
       const k = gKursanci.get(j.kursant_id);
       let post = '';
       if (k && j.rodzaj !== 'inne') {
@@ -1729,7 +1740,7 @@
       return `<tr><td>${godzina(j.poczatek)}–${godzina(j.koniec)}</td>
         <td>${k ? esc(nazwaK(k)) : (j.rodzaj === 'inne' ? 'Inne' : '—')}${j.rodzaj === 'egzamin' ? ' <b>(EGZAMIN)</b>' : ''}</td>
         <td>${k ? esc(k.kategoria || '') : ''}</td><td>${k ? esc(k.telefon || '') : ''}</td>
-        <td>${post}</td><td>${esc(j.uwagi || '')}</td></tr>`;
+        <td>${post}</td><td>${esc(j.uwagi || '')}</td></tr>${przerwa}`;
     }).join('') || '<tr><td colspan="6">Brak zaplanowanych jazd.</td></tr>';
     const wolne = d.wolne.length ? `<p><b>Wolne:</b> ${d.wolne.map(w => (w.godz_od ? hm(w.godz_od) + '–' + hm(w.godz_do) : 'cały dzień') + (w.uwagi ? ' (' + esc(w.uwagi) + ')' : '')).join(', ')}</p>` : '';
     return `<div class="strona"><h1>${esc((profil.szkoly && profil.szkoly.nazwa) || '')} – grafik pracy</h1>
