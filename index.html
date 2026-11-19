@@ -69,6 +69,7 @@
   .check{display:flex;align-items:center;gap:10px;margin-top:16px;font-weight:600;font-size:14px}
   .check input{width:auto}
   .modal{position:fixed;inset:0;background:rgba(20,25,30,.45);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:16px;z-index:10}
+  #modal-pin{z-index:30}
   .sheet{background:#fff;border-radius:12px;padding:20px;width:100%;max-width:560px;margin:auto 0}
   .sheet h2{font-size:19px}
   .usun{width:100%;margin-top:10px;color:var(--r)}
@@ -419,6 +420,22 @@
           <button id="i-dodaj" class="btn2" type="button">+ Instruktor bez konta</button>
           <div id="m-instruktorzy" class="msg"></div>
         </div>
+        <div class="card">
+          <h2>🔒 PIN do ważnych operacji</h2>
+          <p class="hint" id="pin-status">Sprawdzam…</p>
+          <p class="hint" style="margin-top:6px">Gdy PIN jest włączony, program pyta o niego przy usuwaniu kursanta, usuwaniu osoby ze szkoły, wczytywaniu z Excela i przywracaniu kopii.</p>
+          <div class="akcje" style="margin-top:10px">
+            <button id="pin-ustaw" type="button">Włącz PIN</button>
+            <button id="pin-wylacz" type="button" class="hidden">Wyłącz PIN</button>
+          </div>
+          <div id="m-pin" class="msg"></div>
+        </div>
+        <div class="card">
+          <h2>🗑 Kosz (30 dni)</h2>
+          <p class="hint">Usunięte jazdy, kursanci, wolne i dokupione godziny. Po 30 dniach znikają na stałe.</p>
+          <div id="kosz-lista" style="margin-top:8px"><p class="hint">Ładowanie…</p></div>
+          <div id="m-kosz" class="msg"></div>
+        </div>
       </div>
     </div>
 
@@ -463,6 +480,26 @@
     <button id="wa-kopiuj" class="btn2" type="button">📋 Kopiuj tekst</button>
     <button id="wa-anuluj" class="btn2" type="button">Zamknij</button>
     <div id="m-wa" class="msg"></div>
+  </div>
+</div>
+
+<!-- Okno: PIN -->
+<div id="modal-pin" class="modal hidden">
+  <div class="sheet" style="max-width:380px">
+    <h2 id="mp-tytul">Podaj PIN</h2>
+    <p class="hint" id="mp-opis"></p>
+    <form id="f-pin">
+      <input id="mp-pin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" style="font-size:24px;letter-spacing:6px;text-align:center;margin-top:10px">
+      <div id="mp-nowy-box" class="hidden">
+        <label for="mp-nowy">Nowy PIN (4–8 cyfr)</label>
+        <input id="mp-nowy" type="password" inputmode="numeric" autocomplete="off" maxlength="8" style="font-size:24px;letter-spacing:6px;text-align:center">
+        <label for="mp-nowy2">Powtórz nowy PIN</label>
+        <input id="mp-nowy2" type="password" inputmode="numeric" autocomplete="off" maxlength="8" style="font-size:24px;letter-spacing:6px;text-align:center">
+      </div>
+      <button id="mp-ok" class="btn" type="submit">OK</button>
+      <button id="mp-anuluj" class="btn2" type="button">Anuluj</button>
+      <div id="m-mp" class="msg"></div>
+    </form>
   </div>
 </div>
 
@@ -591,7 +628,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.6';
+  const WERSJA = '1.7';
   // ======================
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -786,7 +823,7 @@
   }
   $('t-grafik').onclick = () => { ustawZakladke('grafik'); ladujDzien(); };
   $('t-kursanci').onclick = () => { ustawZakladke('kursanci'); ladujKursantow(); };
-  $('t-osoby').onclick = () => { ustawZakladke('osoby'); ladujOsoby(); ladujInstruktorowLista(); };
+  $('t-osoby').onclick = () => { ustawZakladke('osoby'); ladujOsoby(); ladujInstruktorowLista(); ladujPin(); ladujKosz(); };
   $('t-miesiac').onclick = () => { ustawZakladke('miesiac'); ladujMiesiac(); };
 
   // ----- Rejestr kursantów -----
@@ -1017,8 +1054,9 @@
 
   $('k-usun').onclick = () => zajety($('k-usun'), async () => {
     if (!edytowany) return;
+    if (!(await wymagajPin('Usunięcie kursanta „' + nazwaK(edytowany) + '”'))) return;
     if (!confirm('Usunąć kursanta „' + edytowany.nazwisko + ' ' + edytowany.imie +
-                 '” z rejestru na stałe?\n\nJeśli kurs się skończył, lepiej zaznaczyć „Kurs zakończony”.')) return;
+                 '” z rejestru?\n\nTrafi do kosza na 30 dni (Osoby → Kosz). Jeśli kurs się skończył, lepiej zaznaczyć „Kurs zakończony”.')) return;
     const { error } = await sb.from('kursanci').delete().eq('id', edytowany.id);
     if (error) { msg('m-kursant', tlumacz(error)); return; }
     zamknijKursanta();
@@ -1052,6 +1090,7 @@
     $('p-osoby').querySelectorAll('button[data-akcja]').forEach(b => b.onclick = () => zajety(b, async () => {
       if (b.dataset.akcja === 'usun' &&
           !confirm('Usunąć osobę „' + b.dataset.nazwa + '” ze szkoły? Jej jazdy w grafiku zostaną.')) return;
+      if (b.dataset.akcja === 'usun' && b.textContent.trim() === 'Usuń' && !(await wymagajPin('Usunięcie osoby „' + b.dataset.nazwa + '”'))) return;
       const fn = b.dataset.akcja === 'tak' ? 'zatwierdz_osobe' : 'usun_osobe';
       const { error } = await sb.rpc(fn, { p_id: b.dataset.id });
       if (error) { msg('m-osoby', tlumacz(error)); return; }
@@ -1129,7 +1168,7 @@
   }
   function widacGrafik() {
     return profil && !$('s-panel').classList.contains('hidden') && !$('tab-grafik').classList.contains('hidden') &&
-      ['modal-jazda', 'modal-kursant', 'modal-wolne', 'modal-wa', 'modal-druk'].every(id => $(id).classList.contains('hidden'));
+      ['modal-jazda', 'modal-kursant', 'modal-wolne', 'modal-wa', 'modal-druk', 'modal-pin'].every(id => $(id).classList.contains('hidden'));
   }
   document.addEventListener('visibilitychange', () => { if (!document.hidden && widacGrafik()) ladujDzien(true); });
 
@@ -1500,7 +1539,7 @@
   $('j-usun').onclick = () => zajety($('j-usun'), async () => {
     if (!edytJazda) return;
     const k = gKursanci.get(edytJazda.kursant_id);
-    if (!confirm(`Usunąć jazdę ${godzina(edytJazda.poczatek)}–${godzina(edytJazda.koniec)}${k ? ' (' + nazwaK(k) + ')' : ''}?`)) return;
+    if (!confirm(`Usunąć jazdę ${godzina(edytJazda.poczatek)}–${godzina(edytJazda.koniec)}${k ? ' (' + nazwaK(k) + ')' : ''}?\n\nW razie pomyłki przywrócisz ją z kosza (Osoby → Kosz).`)) return;
     const { error } = await sb.from('jazdy').delete().eq('id', edytJazda.id);
     if (error) { msg('m-jazda', tlumacz(error)); return; }
     zamknijJazde();
@@ -2351,7 +2390,8 @@ function cellTime(v) {
             (pomin ? `\nPominięto ${pomin} wierszy z błędną datą lub godziną.` : '') +
             (nowiI.length ? `\nNowi instruktorzy (${nowiI.length}): ${nowiI.join(', ')}` : '') +
             (nowiK.length ? `\nKursanci spoza rejestru zostaną dodani (${nowiK.length}).` : '') +
-            `\n\nUWAGA: dni z pliku ZASTĄPIĄ te same dni tych instruktorów w programie.`)) return;
+            `\n\nUWAGA: dni z pliku ZASTĄPIĄ te same dni tych instruktorów w programie (zastąpione jazdy trafią do kosza).`)) return;
+        if (!(await wymagajPin('Wczytanie grafiku z Excela'))) return;
         msg('m-miesiac', 'Wczytuję…', 'ok');
         // instruktorzy
         const instrPo = async nm => {
@@ -2415,6 +2455,102 @@ function cellTime(v) {
     });
     inp.click();
   };
+
+  // ===== PIN =====
+  let pinWlaczony = false;
+  async function ladujPin() {
+    const { data, error } = await sb.rpc('pin_wlaczony');
+    if (error) { $('pin-status').textContent = /pin_wlaczony/.test(error.message) ? 'Najpierw uruchom w Supabase plik krok8_kosz_pin.sql.' : tlumacz(error); return; }
+    pinWlaczony = !!data;
+    $('pin-status').innerHTML = pinWlaczony ? '<b>PIN jest włączony.</b>' : 'PIN jest <b>wyłączony</b> – ważne operacje wymagają tylko potwierdzenia.';
+    $('pin-ustaw').textContent = pinWlaczony ? 'Zmień PIN' : 'Włącz PIN';
+    $('pin-wylacz').classList.toggle('hidden', !pinWlaczony);
+  }
+  // okno PIN – zwraca { pin, nowy } albo null
+  function oknoPin({ tytul, opis, stary = true, nowy = false }) {
+    return new Promise(res => {
+      $('mp-tytul').textContent = tytul; $('mp-opis').textContent = opis || '';
+      $('mp-pin').value = ''; $('mp-nowy').value = ''; $('mp-nowy2').value = '';
+      $('mp-pin').classList.toggle('hidden', !stary);
+      $('mp-nowy-box').classList.toggle('hidden', !nowy);
+      msg('m-mp', '');
+      $('modal-pin').classList.remove('hidden');
+      setTimeout(() => (stary ? $('mp-pin') : $('mp-nowy')).focus(), 50);
+      const koniec = w => { $('modal-pin').classList.add('hidden'); $('f-pin').onsubmit = null; res(w); };
+      $('mp-anuluj').onclick = () => koniec(null);
+      $('f-pin').onsubmit = e => {
+        e.preventDefault();
+        if (nowy) {
+          const a = $('mp-nowy').value.trim(), b = $('mp-nowy2').value.trim();
+          if (!/^\d{4,8}$/.test(a)) { msg('m-mp', 'PIN to 4–8 cyfr.'); return; }
+          if (a !== b) { msg('m-mp', 'Powtórzony PIN się nie zgadza.'); return; }
+        }
+        koniec({ pin: $('mp-pin').value.trim(), nowy: $('mp-nowy').value.trim() });
+      };
+    });
+  }
+  async function wymagajPin(co) {
+    const { data, error } = await sb.rpc('pin_wlaczony');
+    if (error || !data) return true;   // PIN wyłączony (albo krok 8 jeszcze nie uruchomiony)
+    for (let proba = 0; proba < 3; proba++) {
+      const w = await oknoPin({ tytul: 'Podaj PIN', opis: co + (proba ? ' – zły PIN, spróbuj ponownie.' : '') });
+      if (!w) return false;
+      const r = await sb.rpc('sprawdz_pin', { p_pin: w.pin });
+      if (!r.error && r.data) return true;
+    }
+    alert('Trzy razy podano zły PIN.');
+    return false;
+  }
+  $('pin-ustaw').onclick = async () => {
+    const w = await oknoPin({ tytul: pinWlaczony ? 'Zmiana PIN-u' : 'Włączenie PIN-u',
+      opis: pinWlaczony ? 'Podaj obecny PIN i nowy.' : 'Ustal PIN dla wszystkich kont biura tej szkoły.', stary: pinWlaczony, nowy: true });
+    if (!w) return;
+    const { error } = await sb.rpc('ustaw_pin', { p_stary: w.pin || null, p_nowy: w.nowy });
+    if (error) { msg('m-pin', /ZLY_PIN/.test(error.message) ? 'Zły obecny PIN.' : /PIN_FORMAT/.test(error.message) ? 'PIN to 4–8 cyfr.' : tlumacz(error)); return; }
+    msg('m-pin', pinWlaczony ? 'PIN zmieniony.' : 'PIN włączony.', 'ok'); ladujPin();
+  };
+  $('pin-wylacz').onclick = async () => {
+    const w = await oknoPin({ tytul: 'Wyłączenie PIN-u', opis: 'Podaj obecny PIN, żeby go wyłączyć.' });
+    if (!w) return;
+    const { error } = await sb.rpc('ustaw_pin', { p_stary: w.pin, p_nowy: '' });
+    if (error) { msg('m-pin', /ZLY_PIN/.test(error.message) ? 'Zły PIN.' : tlumacz(error)); return; }
+    msg('m-pin', 'PIN wyłączony.', 'ok'); ladujPin();
+  };
+
+  // ===== KOSZ =====
+  async function ladujKosz() {
+    await sb.rpc('czysc_kosz');
+    const { data, error } = await sb.from('kosz').select('*').order('usunieto', { ascending: false }).limit(300);
+    if (error) { $('kosz-lista').innerHTML = `<p class="hint">${/kosz/.test(error.message) ? 'Najpierw uruchom w Supabase plik krok8_kosz_pin.sql.' : esc(tlumacz(error))}</p>`; return; }
+    msg('m-kosz', '');
+    const osoby = new Map(); (await sb.from('profile').select('id, imie_nazwisko')).data?.forEach(p => osoby.set(p.id, p.imie_nazwisko));
+    const nazwaI = id => (instruktorzy.find(i => i.id === id) || {}).imie_nazwisko || '—';
+    const opis = k => {
+      const d = k.dane;
+      if (k.tabela === 'jazdy') {
+        const kk = gKursanci.get(d.kursant_id);
+        return `🚗 <b>Jazda</b> ${dataKrotka(dzisStr(new Date(d.poczatek)))} ${godzina(d.poczatek)}–${godzina(d.koniec)} · ${esc(nazwaI(d.instruktor_id))}${kk ? ' · ' + esc(nazwaK(kk)) : ''}`;
+      }
+      if (k.tabela === 'kursanci') return `👤 <b>Kursant</b> ${esc((d.nazwisko || '') + ' ' + (d.imie || ''))}${d.kategoria ? ' · ' + esc(d.kategoria) : ''}${(d._jazdy || []).length ? ` · ${(d._jazdy || []).length} ${slowoJazd((d._jazdy || []).length)} wróci do niego` : ''}`;
+      if (k.tabela === 'wolne') return `⛔ <b>Wolne</b> ${esc(nazwaI(d.instruktor_id))} · ${dataKrotka(d.dzien)} ${d.godz_od ? hm(d.godz_od) + '–' + hm(d.godz_do) : 'cały dzień'}`;
+      if (k.tabela === 'dokupione') { const kk = gKursanci.get(d.kursant_id); return `➕ <b>Dokupione</b> ${godz(d.godziny)} h${kk ? ' · ' + esc(nazwaK(kk)) : ''}`; }
+      return esc(k.tabela);
+    };
+    $('kosz-lista').innerHTML = data.map(k => `<div class="row"><div class="who"><b style="font-weight:400">${opis(k)}</b>
+        <span>usunięto ${fmtData(k.usunieto)} ${godzina(k.usunieto)}${k.kto && osoby.get(k.kto) ? ' · ' + esc(osoby.get(k.kto)) : ''}</span></div>
+        <div class="acts"><button data-kosz="${k.id}" type="button">↩ Przywróć</button></div></div>`).join('')
+      || '<p class="hint">Kosz jest pusty.</p>';
+    $('kosz-lista').querySelectorAll('button[data-kosz]').forEach(b => b.onclick = () => zajety(b, async () => {
+      const { error } = await sb.rpc('przywroc_z_kosza', { p_id: b.dataset.kosz });
+      if (error) {
+        msg('m-kosz', /NAJPIERW_KURSANT/.test(error.message) ? 'Najpierw przywróć kursanta, potem jego dokupione godziny.'
+          : /duplicate|unique/i.test(error.message) ? 'Nie da się przywrócić – w programie jest już taki wpis (np. kursant z tym samym numerem PKK).' : tlumacz(error));
+        return;
+      }
+      await ladujKosz(); ladujKursantow(); ladujDzien(true);
+      msg('m-kosz', 'Przywrócono.', 'ok');
+    }));
+  }
 
   // ===== Skan PKK ze zdjęcia (przeniesione z rejestru PKK 1.5) =====
   const fmtPkk = p => (p || '').replace(/\D/g, '').replace(/(\d{5})(?=\d)/g, '$1 ');
