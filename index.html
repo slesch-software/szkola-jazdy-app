@@ -173,6 +173,8 @@
   table.mc tr.det a{color:var(--gl)}
   table.mc tr.razem td{font-weight:700;border-top:2px solid var(--t)}
   #druk{display:none}
+  .tabs .ik{font-size:22px;line-height:1;vertical-align:-3px;margin-right:8px}
+  @media(max-width:520px){.tabs .ik{display:block;margin:0 auto 3px;font-size:22px}}
   .top-l{display:flex;align-items:center;gap:12px;min-width:0}
   .logo-n{max-height:52px;max-width:140px;object-fit:contain;flex:none}
   .logo-l{display:block;max-height:90px;max-width:220px;object-fit:contain;margin:0 auto 10px}
@@ -311,10 +313,10 @@
     </div>
 
     <div id="p-biuro-tabs" class="tabs panel hidden">
-      <button id="t-grafik" class="on" type="button">🚗 Grafik</button>
-      <button id="t-kursanci" type="button">👤 Kursanci</button>
-      <button id="t-miesiac" type="button">📅 Miesiąc</button>
-      <button id="t-osoby" type="button">⚙️ Ustawienia</button>
+      <button id="t-grafik" class="on" type="button"><span class="ik">🚘</span>Grafik</button>
+      <button id="t-kursanci" type="button"><span class="ik">👤</span>Kursanci</button>
+      <button id="t-miesiac" type="button"><span class="ik">📅</span>Miesiąc</button>
+      <button id="t-osoby" type="button"><span class="ik">⚙️</span>Ustawienia</button>
     </div>
 
     <!-- Grafik (biuro: edycja, instruktor: podgląd swoich jazd) -->
@@ -723,7 +725,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.13';
+  const WERSJA = '1.14';
   // ======================
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
