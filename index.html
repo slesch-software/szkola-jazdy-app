@@ -529,9 +529,13 @@
         <div id="w-do-dnia-box"><label for="w-data2">Do dnia (urlop)</label><input type="date" id="w-data2"></div>
       </div>
       <label class="check"><input id="w-caly" type="checkbox"> Cały dzień</label>
-      <div class="siatka" id="w-godziny">
-        <div><label for="w-od">Od</label><input type="time" id="w-od" step="300"></div>
-        <div><label for="w-do">Do</label><input type="time" id="w-do" step="300"></div>
+      <div id="w-godziny">
+        <div class="siatka">
+          <div><label for="w-od">Od</label><input type="time" id="w-od" step="300"></div>
+          <div><label for="w-do">Do</label><input type="time" id="w-do" step="300"></div>
+        </div>
+        <div id="w-dodatkowe"></div>
+        <button id="w-kolejne" type="button" class="btn2" style="margin-top:8px">+ kolejne godziny tego samego dnia</button>
       </div>
       <label for="w-uwagi">Powód / uwagi</label><input id="w-uwagi" placeholder="np. urlop, lekarz" autocomplete="off">
       <button id="w-zapisz" class="btn" type="submit">Zapisz</button>
@@ -725,7 +729,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.14';
+  const WERSJA = '1.15';
   // ======================
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -1869,12 +1873,26 @@
     $('w-do').value = w && w.godz_do ? hm(w.godz_do) : ustI($('w-instr').value).do;
     $('w-uwagi').value = w ? (w.uwagi || '') : '';
     $('w-godziny').classList.toggle('hidden', $('w-caly').checked);
+    $('w-dodatkowe').innerHTML = '';
+    $('w-kolejne').classList.toggle('hidden', !!w);
     $('w-usun').classList.toggle('hidden', !w);
     msg('m-wolne', '');
     $('modal-wolne').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
   }
   function zamknijWolne() { $('modal-wolne').classList.add('hidden'); document.body.style.overflow = ''; edytWolne = null; }
+  $('w-kolejne').onclick = () => {
+    const wiersze = [...$('w-dodatkowe').querySelectorAll('.w-zakres')];
+    const ost = wiersze.length ? wiersze[wiersze.length - 1].querySelector('.w-do').value : $('w-do').value;
+    const od = ost || '12:00', doo = zMin(Math.min(naMin(od) + 60, 23 * 60 + 55));
+    const el = document.createElement('div');
+    el.className = 'siatka w-zakres'; el.style.marginTop = '8px';
+    el.innerHTML = `<div><label>Od</label><input type="time" class="w-od" step="300" value="${od}"></div>
+      <div><label>Do <button type="button" class="zamien w-usun-zakres" title="Usuń te godziny">✕ usuń</button></label><input type="time" class="w-do" step="300" value="${doo}"></div>`;
+    el.querySelector('.w-usun-zakres').onclick = () => el.remove();
+    $('w-dodatkowe').appendChild(el);
+    el.querySelector('.w-od').focus();
+  };
   $('w-caly').onchange = () => $('w-godziny').classList.toggle('hidden', $('w-caly').checked);
   $('g-wolne').onclick = () => {
     if (!gInstr) { msg('m-grafik', 'Najpierw dodaj instruktora w zakładce „Ustawienia”.'); return; }
@@ -1902,8 +1920,10 @@
         godz_od: caly ? null : $('w-od').value, godz_do: caly ? null : $('w-do').value,
         uwagi: $('w-uwagi').value.trim() || null
       };
-      if (!caly && (!d.godz_od || !d.godz_do || naMin(d.godz_do) <= naMin(d.godz_od))) {
-        msg('m-wolne', 'Godzina „do” musi być późniejsza niż „od”.'); return;
+      const zakresy = caly ? [{ od: null, do: null }] : [{ od: d.godz_od, do: d.godz_do },
+        ...(edytWolne ? [] : [...$('w-dodatkowe').querySelectorAll('.w-zakres')].map(r => ({ od: r.querySelector('.w-od').value, do: r.querySelector('.w-do').value })))];
+      if (!caly && zakresy.some(z => !z.od || !z.do || naMin(z.do) <= naMin(z.od))) {
+        msg('m-wolne', 'W każdym wierszu godzina „do” musi być późniejsza niż „od”.'); return;
       }
       // kilka dni (urlop)
       const d2 = !edytWolne && $('w-data2').value && $('w-data2').value > d.dzien ? $('w-data2').value : d.dzien;
@@ -1911,9 +1931,9 @@
       if (dni.length > 1 && !confirm(`Zapisać wolne na ${dni.length} dni (${fmtData(d.dzien)} – ${fmtData(d2)})?`)) return;
       // jazdy w czasie wolnego – ostrzeżenie
       const kol = [];
-      for (const dz of dni) {
-        const od = caly ? new Date(dz + 'T00:00:00') : new Date(dz + 'T' + d.godz_od + ':00');
-        const doo = caly ? new Date(dodajDni(dz, 1) + 'T00:00:00') : new Date(dz + 'T' + d.godz_do + ':00');
+      for (const dz of dni) for (const z of zakresy) {
+        const od = caly ? new Date(dz + 'T00:00:00') : new Date(dz + 'T' + z.od + ':00');
+        const doo = caly ? new Date(dodajDni(dz, 1) + 'T00:00:00') : new Date(dz + 'T' + z.do + ':00');
         const r = await sb.from('jazdy').select('poczatek, koniec').eq('instruktor_id', d.instruktor_id)
           .lt('poczatek', doo.toISOString()).gt('koniec', od.toISOString());
         (r.data || []).forEach(x => kol.push((dni.length > 1 ? pad(new Date(x.poczatek).getDate()) + '.' + pad(new Date(x.poczatek).getMonth() + 1) + ' ' : '') + godzina(x.poczatek) + '–' + godzina(x.koniec)));
@@ -1922,7 +1942,7 @@
           kol.join(', ') + '.\n\nZapisać wolne mimo to?')) return;
       const w = edytWolne
         ? await sb.from('wolne').update(d).eq('id', edytWolne.id)
-        : await sb.from('wolne').insert(dni.map(dz => ({ ...d, dzien: dz, szkola_id: profil.szkola_id })));
+        : await sb.from('wolne').insert(dni.flatMap(dz => zakresy.map(z => ({ ...d, dzien: dz, godz_od: z.od, godz_do: z.do, szkola_id: profil.szkola_id }))));
       if (w.error) {
         msg('m-wolne', /relation .*wolne|wolne.*does not exist|schema cache/i.test(w.error.message)
           ? 'Najpierw uruchom w Supabase plik krok5_wolne.sql.' : tlumacz(w.error));
