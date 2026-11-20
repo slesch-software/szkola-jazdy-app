@@ -994,7 +994,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.27';
+  const WERSJA = '1.28';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -1004,6 +1004,8 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.28', d: '20.11.2026', p: [
+      'Zapomniany PIN: dostawca programu może go zresetować na prośbę biura (z wpisem w historii zmian).'] },
     { v: '1.27', d: '20.11.2026', p: [
       '👤 „Moje konto” (przycisk na górze): każdy sam poprawia swoje imię, nazwisko i telefon oraz zmienia hasło.',
       'Kilka osób w biurze: nowa osoba dołącza kodem szkoły, a biuro zatwierdza ją jako biuro albo jako instruktora. Rolę można później zmienić.',
@@ -1275,14 +1277,17 @@
   async function ladujAdmin() {
     msg('m-admin', '');
     $('a-wroc').classList.toggle('hidden', !profil);
-    const [sz, kd] = await Promise.all([sb.rpc('lista_szkol'), sb.rpc('lista_kodow')]);
+    const [sz, kd, pn] = await Promise.all([sb.rpc('lista_szkol'), sb.rpc('lista_kodow'), sb.rpc('szkoly_z_pinem')]);
+    const zPinem = new Set(pn.error ? [] : (pn.data || []).map(r => typeof r === 'string' ? r : Object.values(r)[0]));
     if (sz.error) { $('a-szkoly').innerHTML = `<p class="msg err" style="display:block">${esc(tlumacz(sz.error))}</p>`; }
     else $('a-szkoly').innerHTML = sz.data.map(x => `<div class="a-szk${x.aktywna ? '' : ' zabl'}">
         <h3><span>${esc(x.nazwa)} ${x.aktywna ? '' : '<span class="pill" style="background:var(--r);color:#fff">zablokowana</span>'}</span>
-          <button type="button" data-blok="${x.id}" data-akt="${x.aktywna ? 1 : 0}" data-nazwa="${esc(x.nazwa)}">${x.aktywna ? '⛔ Zablokuj' : '✅ Odblokuj'}</button></h3>
+          <span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">${zPinem.has(x.id) ? `<button type="button" data-reset-pin="${x.id}" data-nazwa="${esc(x.nazwa)}">🔓 Zresetuj PIN</button>` : ''}
+          <button type="button" data-blok="${x.id}" data-akt="${x.aktywna ? 1 : 0}" data-nazwa="${esc(x.nazwa)}">${x.aktywna ? '⛔ Zablokuj' : '✅ Odblokuj'}</button></span></h3>
         <div class="dane">Biuro: ${esc(x.biuro || '—')}<br>
           Konta: ${x.osob} · instruktorzy: ${x.instruktorow} · kursanci: ${x.kursantow} · jazdy (30 dni): ${x.jazd_30dni}<br>
-          Ostatnie logowanie: ${fmtDT(x.ostatnie_logowanie)} · w programie od: ${fmtData(x.utworzono)} · kod szkoły: <b>${esc(x.kod_zaproszenia)}</b></div>
+          Ostatnie logowanie: ${fmtDT(x.ostatnie_logowanie)} · w programie od: ${fmtData(x.utworzono)} · kod szkoły: <b>${esc(x.kod_zaproszenia)}</b><br>
+          PIN: ${pn.error ? '?' : zPinem.has(x.id) ? '🔒 włączony' : 'wyłączony'}</div>
       </div>`).join('') || '<p class="hint">Brak szkół.</p>';
     $('a-szkoly').querySelectorAll('[data-blok]').forEach(b => b.onclick = () => zajety(b, async () => {
       const blokuj = b.dataset.akt === '1';
@@ -1292,6 +1297,13 @@
       const { error } = await sb.rpc('ustaw_aktywnosc_szkoly', { p_id: b.dataset.blok, p_aktywna: !blokuj });
       if (error) { msg('m-admin', tlumacz(error)); return; }
       ladujAdmin();
+    }));
+    $('a-szkoly').querySelectorAll('[data-reset-pin]').forEach(b => b.onclick = () => zajety(b, async () => {
+      if (!await pytaj(`Zresetować PIN szkoły „${b.dataset.nazwa}”?\n\nPIN zostanie wyłączony, a biuro ustawi sobie nowy w Ustawieniach. Zrób to tylko na prośbę biura tej szkoły – po sprawdzeniu, że to naprawdę ktoś z biura. W historii zmian szkoły pojawi się wpis o resecie.`, { tak: 'Zresetuj PIN' })) return;
+      const { error } = await sb.rpc('resetuj_pin_szkoly', { p_id: b.dataset.resetPin });
+      if (error) { msg('m-admin', /resetuj_pin_szkoly|historia/.test(error.message) ? 'Najpierw uruchom w Supabase pliki krok17 i krok18.' : tlumacz(error)); return; }
+      await ladujAdmin();
+      msg('m-admin', `PIN szkoły „${b.dataset.nazwa}” wyłączony. Przekaż biuru, żeby ustawiło nowy (Ustawienia → PIN).`, 'ok');
     }));
     if (kd.error) { $('a-kody').innerHTML = `<p class="msg err" style="display:block">${esc(tlumacz(kd.error))}</p>`; return; }
     $('a-kody').innerHTML = kd.data.map(k => `<div class="a-kod"><span><b>${esc(k.kod)}</b>${k.uwagi ? ' · ' + esc(k.uwagi) : ''}<br>
@@ -1824,7 +1836,8 @@
     jazdy: { dodanie: 'dodanie jazdy', zmiana: 'zmiana jazdy', usuniecie: 'usunięcie jazdy', potwierdzenie: 'potwierdzenie terminu' },
     kursanci: { dodanie: 'nowy kursant', zmiana: 'zmiana kursanta', usuniecie: 'usunięcie kursanta' },
     wolne: { dodanie: 'dodanie wolnego', zmiana: 'zmiana wolnego', usuniecie: 'usunięcie wolnego' },
-    dokupione: { dodanie: 'dokupione godziny', zmiana: 'zmiana dokupionych', usuniecie: 'usunięcie dokupionych' }
+    dokupione: { dodanie: 'dokupione godziny', zmiana: 'zmiana dokupionych', usuniecie: 'usunięcie dokupionych' },
+    szkola: { zmiana: 'reset PIN-u' }
   };
   const hNazwa = h => ((H_NAZWA[h.tabela] || {})[h.akcja] || h.akcja) .replace('potwierdzenie terminu', /^egzamin/.test(h.opis || '') ? 'potwierdzenie egzaminu' : 'potwierdzenie terminu');
   function hCzas(v) {
