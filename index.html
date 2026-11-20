@@ -772,7 +772,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.18';
+  const WERSJA = '1.19';
   // ======================
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -3526,6 +3526,12 @@ async function readBarcodes(img) {
     if (cz.length < 2) return { imie: '', nazwisko: cz[0] || '' };
     return { nazwisko: cz[0], imie: cz.slice(1).join(' ') };
   }
+  // na profilu PKK (i w starym rejestrze) jest „Imię Nazwisko” – ostatnie słowo to nazwisko
+  function rozdzielImieNazwisko(nazwa) {
+    const cz = String(nazwa || '').trim().split(/\s+/).filter(Boolean);
+    if (cz.length < 2) return { imie: '', nazwisko: cz[0] || '' };
+    return { imie: cz.slice(0, -1).join(' '), nazwisko: cz[cz.length - 1] };
+  }
   $('k-zamien').onclick = () => {
     const a = $('k-imie').value; $('k-imie').value = $('k-nazwisko').value; $('k-nazwisko').value = a;
   };
@@ -3599,7 +3605,7 @@ async function readBarcodes(img) {
 
       // wpisanie do formularza
       const first = r.pkks[0] || {};
-      const nm = rozdzielNazwe(r.name);
+      const nm = rozdzielImieNazwisko(r.name);
       const pola = [
         ['k-imie', nm.imie], ['k-nazwisko', nm.nazwisko], ['k-telefon', r.phone], ['k-pesel', r.pesel],
         ['k-email', r.email], ['k-pkk', first.pkk ? fmtPkk(first.pkk) : ''], ['k-kategoria', first.cat]
