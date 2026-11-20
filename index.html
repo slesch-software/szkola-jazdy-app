@@ -121,6 +121,15 @@
   .wst-baner .wr{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-top:1px solid #fde68a}
   .wst-baner .wr:first-of-type{margin-top:8px}
   .wst-baner button{padding:5px 10px;font-size:13px}
+  .wst-baner.wz{background:#eef6ff;border-color:#93c5fd}.wst-baner.wz .wr{border-color:#bfdbfe}
+  .wst-baner .wr .bt{display:flex;gap:6px;flex:none}
+  .uprawn{display:flex;flex-wrap:wrap;gap:4px 16px;width:100%;margin-top:-2px}
+  .uprawn label{display:flex;align-items:center;justify-content:flex-start;gap:8px;font-size:13.5px;font-weight:400;color:var(--m);cursor:pointer;margin:0;width:auto;text-align:left}
+  .uprawn input{width:auto;margin:0;flex:none}
+  #mw-karta .siatka{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  #mw-karta .siatka input{min-width:0;width:100%;max-width:100%;box-sizing:border-box}
+  .mw-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--b);font-size:14px}
+  .mw-row:first-child{border-top:none}
   .potw{background:var(--ok)!important;color:#fff!important;border-color:var(--ok)!important;margin-top:10px}
   .przel{display:flex;align-items:center;gap:10px;margin:12px 0 4px;font-size:15px;cursor:pointer;font-weight:500}
   .przel input{position:absolute;opacity:0;width:1px;height:1px}
@@ -484,6 +493,7 @@
         <button type="button" class="akt-x" id="akt-zamknij">Zamknij</button>
       </div>
       <div id="kopia-baner" class="zmiany hidden"></div>
+      <details id="wz-baner" class="wst-baner wz hidden" open></details>
       <details id="wst-baner" class="wst-baner hidden"></details>
       <div class="card">
         <div id="g-instr-pasek">
@@ -521,6 +531,24 @@
 
     <!-- Instruktor: wyszukiwarka i godziny -->
     <div id="p-instr-extra" class="hidden">
+      <div id="mw-karta" class="card hidden">
+        <h2 id="mw-tytul">⛔ Moje wolne</h2>
+        <p class="hint" id="mw-opis"></p>
+        <div class="siatka" style="margin-top:6px">
+          <div><label for="mw-od-dnia">Od dnia</label><input type="date" id="mw-od-dnia"></div>
+          <div><label for="mw-do-dnia">Do dnia (urlop)</label><input type="date" id="mw-do-dnia"></div>
+        </div>
+        <label class="check"><input id="mw-caly" type="checkbox" checked> Cały dzień</label>
+        <div class="siatka hidden" id="mw-godz">
+          <div><label for="mw-od">Od godz.</label><input type="time" id="mw-od" step="900" value="12:00"></div>
+          <div><label for="mw-do">Do godz.</label><input type="time" id="mw-do" step="900" value="14:00"></div>
+        </div>
+        <label for="mw-uwagi">Powód (widzi biuro)</label><input id="mw-uwagi" placeholder="np. lekarz, urlop" autocomplete="off">
+        <button id="mw-wyslij" class="btn" type="button">Zgłoś wolne</button>
+        <div id="m-mw" class="msg"></div>
+        <h3 style="font-size:15px;margin:18px 0 4px">Moje wolne od dziś</h3>
+        <div id="mw-lista"><p class="hint">Ładowanie…</p></div>
+      </div>
       <div class="card">
         <button id="i-powiad" class="btn2" type="button" style="margin:0 0 14px">🔔 Włącz powiadomienia o zmianach</button>
         <h2>🔎 Szukaj kursanta</h2>
@@ -1020,7 +1048,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.34';
+  const WERSJA = '1.35';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -1030,6 +1058,8 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.35', d: '20.11.2026', p: [
+      'Instruktor może zgłaszać swoje wolne (biuro zatwierdza na pasku 🔔 nad grafikiem) albo sam je wpisywać – biuro włącza to osobno każdemu instruktorowi (Ustawienia → Instruktorzy).'] },
     { v: '1.34', d: '20.11.2026', p: [
       'Wydruk dzienny: dwie puste linijki na końcu do ręcznego dopisania kursanta.'] },
     { v: '1.33', d: '20.11.2026', p: [
@@ -1174,6 +1204,10 @@
     [/KOD_JUZ_UZYTY/, 'Ten kod aktywacyjny został już wykorzystany. Poproś dostawcę programu o nowy.'],
     [/BRAK_NAZWY/, 'Wpisz nazwę szkoły.'],
     [/BRAK_IMIENIA/, 'Wpisz imię i nazwisko.'],
+    [/ZLE_DNI/, 'Sprawdź daty – „do dnia” nie może być przed „od dnia” (najwyżej 31 dni naraz).'],
+    [/DZIEN_MINAL/, 'Nie można zgłaszać ani zmieniać wolnego w dniach, które już minęły.'],
+    [/ZLE_GODZINY/, 'Sprawdź godziny – „do” musi być później niż „od”.'],
+    [/Could not find the function public\.(zglos_wolne|usun_moje_wolne)/, 'Biuro musi najpierw uruchomić w Supabase plik krok19_wolne_instruktora.sql.'],
     [/OSTATNIE_BIURO/, 'To jedyna osoba z biura – szkoła musi mieć co najmniej jedną osobę w biurze. Najpierw zatwierdź kogoś innego jako biuro.'],
     [/Could not find the function public\.(zmien_moje_dane|zatwierdz_osobe_jako|zmien_role|zmien_imie_osoby|wyczysc_historie)/, 'Najpierw uruchom w Supabase plik krok17_konta_historia.sql.'],
     [/Failed to fetch|NetworkError|Load failed/i, 'Brak połączenia z internetem albo serwer nie odpowiada.']
@@ -1441,7 +1475,7 @@
     }
     $('p-instr-extra').classList.toggle('hidden', biuro);
     await startGrafik();
-    if (!biuro) ladujMojeGodziny();
+    if (!biuro) { ladujMojeGodziny(); ladujMojeWolne(); }
   }
 
   // ----- Zakładki panelu biura -----
@@ -1851,6 +1885,76 @@
     if (ln && ln.getAttribute('href') !== plik) ln.setAttribute('href', plik);
   }
 
+  // ===== WOLNE ZGŁASZANE PRZEZ INSTRUKTORÓW =====
+  const opisWolnego = w => `${dataKrotka(w.dzien).replace(/\.\d{4}$/, '')} · ${w.godz_od ? hm(w.godz_od) + '–' + hm(w.godz_do) : 'cały dzień'}${w.uwagi ? ' · ' + esc(w.uwagi) : ''}`;
+  // biuro: pasek „🔔 zgłoszenia wolnego”
+  async function ladujZgloszenia() {
+    const el = $('wz-baner');
+    if (!profil || profil.rola !== 'biuro') { el.classList.add('hidden'); return; }
+    const { data, error } = await sb.from('wolne').select('*').eq('status', 'zgloszone').gte('dzien', dzisStr()).order('dzien').order('godz_od');
+    if (error || !data.length) { el.classList.add('hidden'); el.innerHTML = ''; return; }
+    const otw = el.classList.contains('hidden') ? true : el.open;
+    const nazwaI = id => (instruktorzy.find(i => i.id === id) || {}).imie_nazwisko || '—';
+    el.classList.remove('hidden');
+    el.innerHTML = `<summary>🔔 ${data.length} ${data.length === 1 ? 'zgłoszenie' : data.length < 5 ? 'zgłoszenia' : 'zgłoszeń'} wolnego od instruktorów</summary>` +
+      data.map(w => `<div class="wr"><span><b>${esc(nazwaI(w.instruktor_id))}</b> · ${opisWolnego(w)}</span>
+        <span class="bt"><button type="button" data-wz="ok" data-id="${w.id}">✓ Zatwierdź</button><button type="button" data-wz="nie" data-id="${w.id}">✖ Odrzuć</button></span></div>`).join('') +
+      (data.length > 1 ? `<div class="wr" style="justify-content:flex-end"><button type="button" data-wz="wszystkie">✓ Zatwierdź wszystkie</button></div>` : '');
+    el.open = otw;
+    const decyzja = async (ids, ok) => {
+      if (ok) {   // ostrzeżenie: instruktor ma jazdy w czasie wolnego
+        let ile = 0;
+        for (const w of data.filter(x => ids.includes(x.id))) {
+          const od = new Date(w.dzien + 'T' + (w.godz_od ? hm(w.godz_od) : '00:00') + ':00'), doo = w.godz_od ? new Date(w.dzien + 'T' + hm(w.godz_do) + ':00') : new Date(dodajDni(w.dzien, 1) + 'T00:00:00');
+          const r = await sb.from('jazdy').select('id').eq('instruktor_id', w.instruktor_id).lt('poczatek', doo.toISOString()).gt('koniec', od.toISOString());
+          ile += (r.data || []).length;
+        }
+        if (ile && !await pytaj(`Instruktor ma w tym czasie ${ile} ${slowoJazd(ile)} w grafiku.\nZatwierdzić wolne mimo to? (Jazdy zostaną – zaznaczą się na czerwono do przestawienia.)`, { tak: 'Zatwierdź mimo to' })) return;
+      } else if (!await pytaj(ids.length > 1 ? 'Odrzucić zgłoszenia?' : 'Odrzucić to zgłoszenie wolnego?\nInstruktor zobaczy u siebie, że zostało odrzucone.', { tak: 'Odrzuć', niebezp: true })) return;
+      const { error } = await sb.from('wolne').update({ status: ok ? 'ok' : 'odrzucone' }).in('id', ids);
+      if (error) { msg('m-grafik', tlumacz(error)); return; }
+      ladujZgloszenia(); ladujDzien(true);
+    };
+    el.querySelectorAll('button[data-wz]').forEach(b => b.onclick = () => zajety(b, () =>
+      b.dataset.wz === 'wszystkie' ? decyzja(data.map(w => w.id), true) : decyzja([b.dataset.id], b.dataset.wz === 'ok')));
+  }
+  // instruktor: karta „Moje wolne”
+  async function ladujMojeWolne() {
+    const ja_i = instruktorzy.find(i => i.user_id === ja.id);
+    const moze = ja_i && (ja_i.moze_zglaszac_wolne || ja_i.moze_dodawac_wolne);
+    $('mw-karta').classList.toggle('hidden', !moze);
+    if (!moze) return;
+    const sam = !!ja_i.moze_dodawac_wolne;
+    $('mw-tytul').textContent = sam ? '⛔ Moje wolne' : '⛔ Zgłoś wolne';
+    $('mw-opis').textContent = sam ? 'Wolne wpisuje się od razu do grafiku. Biuro widzi każdą zmianę.' : 'Zgłoszenie trafi do biura. Wolne pojawi się w grafiku, gdy biuro je zatwierdzi.';
+    $('mw-wyslij').textContent = sam ? 'Dodaj wolne' : 'Zgłoś wolne';
+    if (!$('mw-od-dnia').value) $('mw-od-dnia').value = dodajDni(dzisStr(), 1);
+    $('mw-od-dnia').min = $('mw-do-dnia').min = dzisStr();
+    const { data, error } = await sb.from('wolne').select('*').eq('instruktor_id', ja_i.id).gte('dzien', dzisStr()).order('dzien').order('godz_od');
+    if (error) { $('mw-lista').innerHTML = `<p class="hint">${esc(tlumacz(error))}</p>`; return; }
+    const ST = { ok: '<span class="pill">✅ w grafiku</span>', zgloszone: '<span class="pill wait">⏳ czeka na biuro</span>', odrzucone: '<span class="pill" style="background:#fdecea;color:#b42318">✖ odrzucone</span>' };
+    $('mw-lista').innerHTML = data.map(w => {
+      const st = w.status || 'ok', usun = st !== 'ok' || sam;
+      return `<div class="mw-row"><span>${opisWolnego(w)} ${ST[st] || ''}</span>${usun ? `<button type="button" data-mw="${w.id}" style="padding:5px 10px;font-size:13px">${st === 'zgloszone' ? 'Wycofaj' : 'Usuń'}</button>` : ''}</div>`;
+    }).join('') || '<p class="hint">Brak wpisanego wolnego.</p>';
+    $('mw-lista').querySelectorAll('button[data-mw]').forEach(b => b.onclick = () => zajety(b, async () => {
+      if (!await pytaj(b.textContent === 'Wycofaj' ? 'Wycofać to zgłoszenie?' : 'Usunąć ten wpis?', { tak: b.textContent === 'Wycofaj' ? 'Wycofaj' : 'Usuń' })) return;
+      const { error } = await sb.rpc('usun_moje_wolne', { p_id: b.dataset.mw });
+      if (error) { msg('m-mw', tlumacz(error)); return; }
+      msg('m-mw', ''); ladujMojeWolne(); ladujDzien(true);
+    }));
+  }
+  $('mw-caly').onchange = () => $('mw-godz').classList.toggle('hidden', $('mw-caly').checked);
+  $('mw-wyslij').onclick = () => zajety($('mw-wyslij'), async () => {
+    const od = $('mw-od-dnia').value, doo = $('mw-do-dnia').value || od, caly = $('mw-caly').checked;
+    if (!od) { msg('m-mw', 'Wybierz dzień.'); return; }
+    const { data, error } = await sb.rpc('zglos_wolne', { p_dzien_od: od, p_dzien_do: doo, p_od: caly ? null : $('mw-od').value, p_do: caly ? null : $('mw-do').value, p_uwagi: $('mw-uwagi').value.trim() });
+    if (error) { msg('m-mw', tlumacz(error)); return; }
+    msg('m-mw', data === 'ok' ? 'Wolne wpisane do grafiku.' : 'Zgłoszenie wysłane do biura. Status zobaczysz poniżej.', 'ok');
+    $('mw-uwagi').value = ''; $('mw-do-dnia').value = '';
+    ladujMojeWolne(); ladujDzien(true);
+  });
+
   // ===== NAZWA SZKOŁY =====
   $('u-nazwa-zapisz').onclick = () => zajety($('u-nazwa-zapisz'), async () => {
     const n = $('u-nazwa').value.trim().replace(/\s+/g, ' ');
@@ -1901,7 +2005,7 @@
   const H_NAZWA = {
     jazdy: { dodanie: 'dodanie jazdy', zmiana: 'zmiana jazdy', usuniecie: 'usunięcie jazdy', potwierdzenie: 'potwierdzenie terminu' },
     kursanci: { dodanie: 'nowy kursant', zmiana: 'zmiana kursanta', usuniecie: 'usunięcie kursanta' },
-    wolne: { dodanie: 'dodanie wolnego', zmiana: 'zmiana wolnego', usuniecie: 'usunięcie wolnego' },
+    wolne: { dodanie: 'dodanie wolnego', zmiana: 'zmiana wolnego', usuniecie: 'usunięcie wolnego', potwierdzenie: 'zatwierdzenie wolnego' },
     dokupione: { dodanie: 'dokupione godziny', zmiana: 'zmiana dokupionych', usuniecie: 'usunięcie dokupionych' },
     szkola: { zmiana: 'reset PIN-u' }
   };
@@ -1998,6 +2102,7 @@
   const naMin = t => { const [h, m] = String(t).split(':').map(Number); return h * 60 + m; };
   const zMin = m => pad(Math.floor(m / 60)) + ':' + pad(m % 60);
   const hm = t => String(t || '').slice(0, 5);
+  const wolneOk = a => (a || []).filter(w => !w.status || w.status === 'ok');   // zgłoszone i odrzucone nie blokują grafiku
   const isoZ = (dzien, t) => new Date(dzien + 'T' + t + ':00').toISOString();
   const minutyJazdy = j => Math.max(0, (new Date(j.koniec) - new Date(j.poczatek)) / 60000);
   // czy jazda wlicza się kursantowi do godzin kursu
@@ -2193,7 +2298,7 @@
       if (!cicho) msg('m-grafik', '');
       await ladujWysylki();
       rysujDzien();
-      ladujWstepne();
+      ladujWstepne(); ladujZgloszenia();
       return;
     }
     const od = new Date(gDzien + 'T00:00:00'), doo = new Date(dodajDni(gDzien, 1) + 'T00:00:00');
@@ -2203,7 +2308,7 @@
     if (!cicho) msg('m-grafik', '');
     gJazdy = data;
     const w = await sb.from('wolne').select('*').eq('instruktor_id', gInstr).eq('dzien', gDzien).order('godz_od');
-    gWolne = w.error ? [] : w.data;
+    gWolne = w.error ? [] : wolneOk(w.data);
     const ids = [...new Set(data.map(j => j.kursant_id).filter(Boolean))];
     if (ids.some(id => !gKursanci.has(id))) await ladujKursantowDoGrafiku();
     gPostep = new Map();
@@ -2213,7 +2318,7 @@
     }
     await ladujWysylki();
     rysujDzien();
-    ladujWstepne();
+    ladujWstepne(); ladujZgloszenia();
   }
 
   async function ladujWstepne() {
@@ -2640,8 +2745,19 @@
         <div class="who"><b>${esc(i.imie_nazwisko)} ${i.aktywny ? '' : '<span class="pill szary">ukryty</span>'}</b>
           <span>${i.user_id ? 'ma konto w programie' : 'bez konta'}${i.telefon ? ' · 📞 ' + esc(i.telefon) : ''}${i.godz_od ? ' · 🕘 ' + esc(i.godz_od) + '–' + esc(i.godz_do) : ''}</span></div>
         <div class="acts"><button data-a="nazwa" data-id="${i.id}">Zmień</button>
-          <button data-a="ukryj" data-id="${i.id}">${i.aktywny ? 'Ukryj' : 'Przywróć'}</button></div></div>`).join('')
+          <button data-a="ukryj" data-id="${i.id}">${i.aktywny ? 'Ukryj' : 'Przywróć'}</button></div>
+        ${i.user_id && 'moze_zglaszac_wolne' in i ? `<div class="uprawn">
+          <label><input type="checkbox" data-upr="moze_zglaszac_wolne" data-id="${i.id}"${i.moze_zglaszac_wolne ? ' checked' : ''}> może zgłaszać wolne (biuro zatwierdza)</label>
+          <label><input type="checkbox" data-upr="moze_dodawac_wolne" data-id="${i.id}"${i.moze_dodawac_wolne ? ' checked' : ''}> może sam wpisywać wolne</label></div>` : ''}</div>`).join('')
       || '<p class="hint">Brak instruktorów.</p>';
+    $('p-instruktorzy').querySelectorAll('input[data-upr]').forEach(c => c.onchange = async () => {
+      const { error } = await sb.from('instruktorzy').update({ [c.dataset.upr]: c.checked }).eq('id', c.dataset.id);
+      if (error) { c.checked = !c.checked; msg('m-instruktorzy', tlumacz(error)); return; }
+      const i = instruktorzy.find(x => x.id === c.dataset.id); if (i) i[c.dataset.upr] = c.checked;
+      msg('m-instruktorzy', `${i ? i.imie_nazwisko : 'Instruktor'}: ${c.checked ? 'włączono' : 'wyłączono'} – ${c.dataset.upr === 'moze_dodawac_wolne' ? 'samodzielne wpisywanie wolnego' : 'zgłaszanie wolnego'}.`, 'ok');
+    });
+    if (instruktorzy.some(i => i.user_id) && !instruktorzy.some(i => 'moze_zglaszac_wolne' in i))
+      $('p-instruktorzy').insertAdjacentHTML('beforeend', '<p class="hint" style="margin-top:8px">Żeby instruktorzy mogli zgłaszać wolne, uruchom w Supabase plik krok19_wolne_instruktora.sql.</p>');
     $('p-instruktorzy').querySelectorAll('button[data-a]').forEach(b => b.onclick = () => zajety(b, async () => {
       const i = instruktorzy.find(x => x.id === b.dataset.id);
       let zm;
@@ -2800,7 +2916,7 @@
       const r = await sb.rpc('jazdy_kursantow', { p_ids: ids });
       if (!r.error) r.data.forEach(x => { if (!post.has(x.kursant_id)) post.set(x.kursant_id, []); post.get(x.kursant_id).push(x); });
     }
-    return { jazdy: a.data, wolne: b.error ? [] : b.data, post };
+    return { jazdy: a.data, wolne: b.error ? [] : wolneOk(b.data), post };
   }
   function linieInstr(jazdy, wolne) {
     const L = [];
@@ -3118,9 +3234,9 @@
       .gte('dzien', mcMiesiac + '-01').lt('dzien', dodajMies(mcMiesiac, 1) + '-01').order('dzien').order('godz_od');
     if (error) { $('mc-wolne').innerHTML = '<p class="hint">Brak danych o wolnych.</p>'; return; }
     const nazwaI = id => (instruktorzy.find(i => i.id === id) || {}).imie_nazwisko || '—';
-    $('mc-wolne').innerHTML = data.map(w => `<div class="wolny-inst edyt" data-wid="${w.id}">
+    $('mc-wolne').innerHTML = data.filter(w => w.status !== 'odrzucone').map(w => `<div class="wolny-inst edyt" data-wid="${w.id}">
         <span class="godz">${dataKrotka(w.dzien).replace(/\.\d{4}$/, '')}</span>
-        <span><b>${esc(nazwaI(w.instruktor_id))}</b> · ${w.godz_od ? hm(w.godz_od) + '–' + hm(w.godz_do) : 'cały dzień'}${w.uwagi ? ' – ' + esc(w.uwagi) : ''}</span></div>`).join('')
+        <span><b>${esc(nazwaI(w.instruktor_id))}</b> · ${w.godz_od ? hm(w.godz_od) + '–' + hm(w.godz_do) : 'cały dzień'}${w.uwagi ? ' – ' + esc(w.uwagi) : ''}${w.status === 'zgloszone' ? ' <span class="pill wait">⏳ zgłoszone</span>' : ''}</span></div>`).join('')
       || '<p class="hint">Nikt nie ma wpisanego wolnego w tym miesiącu.</p>';
     $('mc-wolne').querySelectorAll('[data-wid]').forEach(el => el.onclick = () => {
       const w = data.find(x => x.id === el.dataset.wid);
@@ -3535,7 +3651,7 @@ function cellTime(v) {
       .forEach(x => p.push([nazwaMies(x.ym), nazwaI(x.id), x.dni.size, x.n, Math.round(x.min / 60 * 100) / 100]));
     const ins = [['Instruktor', 'Telefon', 'Pracuje od', 'Pracuje do'], ...instruktorzy.map(i => [i.imie_nazwisko, i.telefon || '', i.godz_od || '', i.godz_do || ''])];
     const off = [['Instruktor', 'Data', 'Dzień', 'Od', 'Do', 'Powód']];
-    (w.error ? [] : w.data).forEach(x => off.push([nazwaI(x.instruktor_id), x.dzien, DNI[parseD(x.dzien).getDay()],
+    (w.error ? [] : wolneOk(w.data)).forEach(x => off.push([nazwaI(x.instruktor_id), x.dzien, DNI[parseD(x.dzien).getDay()],
       x.godz_od ? hm(x.godz_od) : '00:00', x.godz_do ? hm(x.godz_do) : '23:59', x.uwagi || '']));
     pobierzPlik(nazwaPliku, buildXlsx([
       { name: 'Grafik', rows: g, widths: [24, 12, 13, 10, 10, 28, 28, 9, 10, 10] },
