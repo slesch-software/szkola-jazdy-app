@@ -1067,7 +1067,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.37';
+  const WERSJA = '1.38';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -1077,6 +1077,8 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.38', d: '20.11.2026', p: [
+      '„Wyloguj” wylogowuje tylko z tego komputera lub telefonu – na innych urządzeniach konto zostaje zalogowane.'] },
     { v: '1.37', d: '20.11.2026', p: [
       'Lista kursantów: filtr po kategorii (np. tylko CE).'] },
     { v: '1.36', d: '20.11.2026', p: [
@@ -1320,7 +1322,7 @@
   };
 
   document.querySelectorAll('.wyloguj').forEach(b => b.onclick = async () => {
-    await sb.auth.signOut();
+    await sb.auth.signOut({ scope: 'local' });   // wylogowanie tylko z tego urządzenia
     profil = null; ja = null;
     pokaz('s-login');
   });
