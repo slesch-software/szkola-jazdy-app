@@ -308,6 +308,11 @@
   .a-szk h3{margin:0 0 4px;font-size:16px;display:flex;justify-content:space-between;gap:8px;align-items:center}
   .a-szk .dane{font-size:13.5px;color:var(--m);line-height:1.55}
   .a-szk button{padding:6px 12px;font-size:13px}
+  .a-abo{margin-top:10px;padding-top:10px;border-top:1px dashed var(--b);font-size:14px}
+  .a-abo-btn{display:flex;flex-wrap:wrap;gap:6px}
+  .abo-baner{border-radius:12px;padding:10px 14px;margin:0 0 12px;font-size:14.5px;background:#fff4e0;border:1px solid #f5c26b;color:#7a4500}
+  .abo-baner.pilne{background:#fdecea;border-color:#f5c2c0;color:#8a1c12}
+  .abo-baner a{color:inherit;font-weight:700}
   .a-kod{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--b);font-size:14px}
   .a-kod b{font-family:monospace;font-size:15px;letter-spacing:1px}
   #modal-pytaj{z-index:40}
@@ -624,6 +629,7 @@
     <!-- Grafik (biuro: edycja, instruktor: podgląd swoich jazd) -->
     <div id="tab-grafik">
       <div id="g-zmiany" class="zmiany hidden"></div>
+      <div id="abo-baner" class="abo-baner hidden"></div>
       <div id="akt-baner" class="akt-baner hidden">
         <span>✨ Program został zaktualizowany do wersji <b id="akt-wer"></b>.</span>
         <button type="button" class="akt-zob" id="akt-zobacz">Zobacz, co nowego</button>
@@ -1184,7 +1190,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.47';
+  const WERSJA = '1.48';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -1194,6 +1200,8 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.48', d: '20.11.2026', p: [
+      'Informacja o kończącym się okresie próbnym lub abonamencie (7 dni wcześniej) z kontaktem do dostawcy programu.'] },
     { v: '1.47', d: '20.11.2026', p: [
       'Kopia na Dysk Google: widać, na które konto Google idą kopie, i można je zmienić przyciskiem „Zmień konto Google”.'] },
     { v: '1.45', d: '20.11.2026', p: [
@@ -1313,6 +1321,19 @@
   async function zajety(btn, fn) {
     btn.disabled = true;
     try { await fn(); } finally { btn.disabled = false; }
+  }
+
+  // ----- pasek abonamentu (tylko biuro): 7 dni przed końcem i w karencji -----
+  function banerAbonamentu() {
+    const el = $('abo-baner'), sz = profil && profil.szkoly, st = stanAbonamentu(sz);
+    const pokaz = profil && profil.rola === 'biuro' && (st.typ === 'karencja' || ((st.typ === 'ok' || st.typ === 'proba') && st.dni <= 7));
+    el.classList.toggle('hidden', !pokaz);
+    if (!pokaz) return;
+    el.classList.toggle('pilne', st.typ === 'karencja');
+    const kontakt = `<a href="mailto:${PROGRAM.email}">${PROGRAM.email}</a>${PROGRAM.telefon ? `, tel. <a href="tel:${PROGRAM.telefon.replace(/\s/g, '')}">${PROGRAM.telefon}</a>` : ''}`;
+    el.innerHTML = st.typ === 'karencja'
+      ? `⚠️ <b>Okres korzystania z programu minął ${fmtData(sz.oplacone_do)}.</b> Program będzie działał jeszcze ${st.zostalo} ${dniSlowo(st.zostalo)}, potem dostęp zostanie wstrzymany (dane zostają). Kontakt: ${kontakt}`
+      : `⏳ <b>${st.typ === 'proba' ? 'Okres próbny' : 'Abonament'} kończy się ${st.dni === 0 ? 'dziś' : `za ${st.dni} ${dniSlowo(st.dni)}`}</b> (${fmtData(sz.oplacone_do)}). W sprawie przedłużenia: ${kontakt}`;
   }
 
   // ----- Strona startowa: dla nowych odwiedzających; kto już się logował (albo ma aplikację na ekranie) – od razu logowanie -----
@@ -1447,6 +1468,27 @@
   document.querySelectorAll('.do-admin').forEach(b => b.onclick = () => { pokaz('s-admin'); ladujAdmin(); });
   $('a-wroc').onclick = () => odswiez();
   const fmtDT = t => t ? `${fmtData(t)} ${godzina(t)}` : '—';
+  // ----- abonament: stan szkoły (bez limitu / próbne / opłacone / karencja 7 dni / zablokowane) -----
+  const KARENCJA = 7;
+  function stanAbonamentu(sz) {
+    if (!sz || sz.bez_limitu === undefined) return { typ: 'brak' };          // krok 21 jeszcze nie uruchomiony
+    if (sz.bez_limitu || !sz.oplacone_do) return { typ: 'bez' };
+    const dni = Math.round((parseD(sz.oplacone_do) - parseD(dzisStr())) / 86400000);
+    if (dni >= 0) return { typ: sz.proba ? 'proba' : 'ok', dni };
+    if (dni >= -KARENCJA) return { typ: 'karencja', dni, zostalo: KARENCJA + dni };
+    return { typ: 'stop', dni };
+  }
+  const dniSlowo = n => n === 1 ? 'dzień' : 'dni';
+  function opisAbonamentu(st, sz) {
+    if (st.typ === 'bez') return '♾️ bez limitu';
+    if (st.typ === 'proba') return `🧪 próbne – zostało ${st.dni} ${dniSlowo(st.dni)} (do ${fmtData(sz.oplacone_do)})`;
+    if (st.typ === 'ok') return `✅ opłacone do ${fmtData(sz.oplacone_do)}${st.dni <= 7 ? ` – zostało ${st.dni} ${dniSlowo(st.dni)}` : ''}`;
+    if (st.typ === 'karencja') return `⚠️ po terminie (${fmtData(sz.oplacone_do)}) – blokada za ${st.zostalo} ${dniSlowo(st.zostalo)}`;
+    if (st.typ === 'stop') return `⛔ zablokowane – termin minął ${fmtData(sz.oplacone_do)}`;
+    return '';
+  }
+  const dodajMiesiace = (dz, n) => { const d = parseD(dz); const dzien = d.getDate(); d.setDate(1); d.setMonth(d.getMonth() + n);
+    d.setDate(Math.min(dzien, new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate())); return dzisStr(d); };
   async function ladujAdmin() {
     msg('m-admin', '');
     $('a-wroc').classList.toggle('hidden', !profil);
@@ -1461,6 +1503,15 @@
           Konta: ${x.osob} · instruktorzy: ${x.instruktorow} · kursanci: ${x.kursantow} · jazdy (30 dni): ${x.jazd_30dni}<br>
           Ostatnie logowanie: ${fmtDT(x.ostatnie_logowanie)} · w programie od: ${fmtData(x.utworzono)} · kod szkoły: <b>${esc(x.kod_zaproszenia)}</b><br>
           PIN: ${pn.error ? '?' : zPinem.has(x.id) ? '🔒 włączony' : 'wyłączony'}</div>
+        ${'bez_limitu' in x ? `<div class="a-abo">
+          <div class="a-abo-stan">Abonament: <b>${esc(opisAbonamentu(stanAbonamentu(x), x))}</b></div>
+          <label class="przel" style="margin:6px 0"><input type="checkbox" data-abo-bez="${x.id}"${x.bez_limitu ? ' checked' : ''}><span class="suw"></span> Bez limitu</label>
+          ${x.bez_limitu ? '' : `<div class="a-abo-btn">
+            <button type="button" data-abo="${x.id}" data-ile="1">+1 miesiąc</button>
+            <button type="button" data-abo="${x.id}" data-ile="12">+12 miesięcy</button>
+            <button type="button" data-abo="${x.id}" data-ile="data">Ustaw datę</button>
+            ${x.proba ? '' : `<button type="button" data-abo="${x.id}" data-ile="proba">Daj 30 dni próbnych</button>`}</div>`}
+        </div>` : ''}
       </div>`).join('') || '<p class="hint">Brak szkół.</p>';
     $('a-szkoly').querySelectorAll('[data-blok]').forEach(b => b.onclick = () => zajety(b, async () => {
       const blokuj = b.dataset.akt === '1';
@@ -1470,6 +1521,38 @@
       const { error } = await sb.rpc('ustaw_aktywnosc_szkoly', { p_id: b.dataset.blok, p_aktywna: !blokuj });
       if (error) { msg('m-admin', tlumacz(error)); return; }
       ladujAdmin();
+    }));
+    const szkolaAbo = id => (sz.data || []).find(x => x.id === id);
+    const zapiszAbo = async (x, zmiana) => {
+      const n = { oplacone_do: x.oplacone_do, bez_limitu: x.bez_limitu, proba: x.proba, ...zmiana };
+      const { error } = await sb.rpc('ustaw_abonament', { p_id: x.id, p_oplacone_do: n.oplacone_do, p_bez_limitu: n.bez_limitu, p_proba: n.proba });
+      if (error) { msg('m-admin', /ustaw_abonament/.test(error.message) ? 'Najpierw uruchom w Supabase plik krok21_abonament.sql.' : tlumacz(error)); return false; }
+      await ladujAdmin();
+      msg('m-admin', `„${x.nazwa}”: ${opisAbonamentu(stanAbonamentu(n), n)}.`, 'ok');
+      return true;
+    };
+    $('a-szkoly').querySelectorAll('[data-abo-bez]').forEach(c => c.onchange = async () => {
+      const x = szkolaAbo(c.dataset.aboBez);
+      if (!c.checked && !x.oplacone_do) {   // wyłączenie „bez limitu” – od razu 30 dni, żeby szkoła nie została zablokowana
+        if (!await zapiszAbo(x, { bez_limitu: false, oplacone_do: dodajMiesiace(dzisStr(), 1), proba: false })) c.checked = true;
+        return;
+      }
+      if (!await zapiszAbo(x, { bez_limitu: c.checked })) c.checked = !c.checked;
+    });
+    $('a-szkoly').querySelectorAll('[data-abo]').forEach(b => b.onclick = () => zajety(b, async () => {
+      const x = szkolaAbo(b.dataset.abo), ile = b.dataset.ile;
+      const od = x.oplacone_do && x.oplacone_do >= dzisStr() && !x.proba ? x.oplacone_do : dzisStr();   // przedłużenie od końca opłaconego okresu
+      if (ile === 'proba') { await zapiszAbo(x, { oplacone_do: dodajDni(dzisStr(), 30), proba: true }); return; }
+      if (ile === 'data') {
+        const t = await zapytajTekst('Opłacone do', 'Wpisz datę, np. 31.12.2026', x.oplacone_do ? fmtData(x.oplacone_do) : '');
+        if (!t) return;
+        const m = t.trim().match(/^(\d{1,2})[.\-/](\d{1,2})[.\-/](\d{4})$/) || t.trim().match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+        if (!m) { msg('m-admin', 'Nie rozpoznano daty – wpisz np. 31.12.2026.'); return; }
+        const dz = m[1].length === 4 ? `${m[1]}-${pad(+m[2])}-${pad(+m[3])}` : `${m[3]}-${pad(+m[2])}-${pad(+m[1])}`;
+        await zapiszAbo(x, { oplacone_do: dz, proba: false });
+        return;
+      }
+      await zapiszAbo(x, { oplacone_do: dodajMiesiace(od, +ile), proba: false });
     }));
     $('a-szkoly').querySelectorAll('[data-reset-pin]').forEach(b => b.onclick = () => zajety(b, async () => {
       if (!await pytaj(`Zresetować PIN szkoły „${b.dataset.nazwa}”?\n\nPIN zostanie wyłączony, a biuro ustawi sobie nowy w Ustawieniach. Zrób to tylko na prośbę biura tej szkoły – po sprawdzeniu, że to naprawdę ktoś z biura. W historii zmian szkoły pojawi się wpis o resecie.`, { tak: 'Zresetuj PIN' })) return;
@@ -1544,6 +1627,16 @@
       pokaz('s-czeka');
       return;
     }
+    {
+      const st = stanAbonamentu(profil.szkoly);
+      if (st.typ === 'stop' && !jestWlascicielem) {
+        $('czeka-tytul').textContent = 'Dostęp wstrzymany';
+        $('czeka-tekst').textContent = `Okres korzystania z programu dla szkoły „${profil.szkoly.nazwa}” zakończył się ${fmtData(profil.szkoly.oplacone_do)}. ` +
+          `Dane szkoły są bezpieczne i wrócą od razu po przedłużeniu. Kontakt: ${PROGRAM.email}${PROGRAM.telefon ? ', tel. ' + PROGRAM.telefon : ''}.`;
+        pokaz('s-czeka');
+        return;
+      }
+    }
     if (!profil.zatwierdzony) {
       $('czeka-tytul').textContent = 'Czekasz na zatwierdzenie';
       $('czeka-tekst').textContent = 'Twoje zgłoszenie trafiło do biura szkoły „' +
@@ -1567,6 +1660,7 @@
     $('g-ustawienia').classList.toggle('hidden', !biuro);
     pokaz('s-panel');
     banerAktualizacji();
+    banerAbonamentu();
     if (biuro) {
       $('p-kod').textContent = (profil.szkoly && profil.szkoly.kod_zaproszenia) || '';
       ustawZakladke(zakladka);
