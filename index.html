@@ -76,8 +76,8 @@
   .dzien{display:flex;align-items:center;gap:8px;margin-top:4px}
   .dzien>button{font-size:22px;line-height:1;padding:8px 14px}
   .dz-opis{flex:1;text-align:center;margin:0;cursor:pointer;position:relative}
-  .dz-opis b{display:block;font-size:18px}
-  .dz-opis span{font-size:13px;color:var(--m);font-weight:400}
+  .dz-opis b{display:block;font-size:22px}
+  .dz-opis span{font-size:16px;color:#4b5563;font-weight:500}
   .dz-opis input{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer}
   .dz-akcje{display:flex;justify-content:space-between;align-items:center;margin:6px 0 10px}
   .dz-akcje .link{margin:0}
@@ -238,11 +238,11 @@
   #mq-tak{background:var(--g);border:1px solid var(--g);color:var(--ga)}
   #mq-tak.niebezp{background:var(--r);border-color:var(--r);color:#fff}
   .szybkie{display:flex;gap:6px;justify-content:center;margin:10px 0 12px}
-  .szybkie button{padding:6px 16px;font-size:14px;border-radius:99px;border:1px solid var(--b);background:#fff;cursor:pointer;color:var(--t);line-height:1.2}
-  .szybkie button small{color:var(--m);margin-left:5px}
+  .szybkie button{padding:9px 20px;font-size:16px;font-weight:700;border-radius:99px;border:1px solid var(--b);background:#fff;cursor:pointer;color:var(--t);line-height:1.2}
+  .szybkie button small{color:#4b5563;margin-left:6px;font-size:14.5px;font-weight:500}
   .szybkie button.on{background:var(--g);color:var(--ga);border-color:var(--g);font-weight:600}
   .szybkie button.on small{color:var(--ga)}
-  @media(max-width:520px){.szybkie button{padding:6px 12px}.szybkie button small{display:none}}
+  @media(max-width:520px){.szybkie button{padding:8px 14px;font-size:15px}.szybkie button small{display:none}.dz-opis b{font-size:19px}.dz-opis span{font-size:14px}}
   #p-biuro-tabs button{font-weight:700;font-size:16px;letter-spacing:.1px}
   @media(max-width:520px){#p-biuro-tabs button{font-size:13.5px;padding-left:2px;padding-right:2px}}
   .tabs .ik{font-size:22px;line-height:1;vertical-align:-3px;margin-right:8px}
@@ -910,7 +910,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.24';
+  const WERSJA = '1.25';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -920,6 +920,8 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.25', d: '20.11.2026', p: [
+      'Większe i czytelniejsze przyciski Dziś / Jutro / Pojutrze oraz data dnia w grafiku.'] },
     { v: '1.24', d: '20.11.2026', p: [
       'Nowe okienko „Co nowego” i „O programie” (na dole strony) – z kontaktem i przyciskiem „Zgłoś problem / pomysł”.',
       'Po aktualizacji programu pojawia się pasek z informacją, co się zmieniło.'] },
