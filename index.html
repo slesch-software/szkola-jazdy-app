@@ -193,6 +193,13 @@
   table.mc tr.det a{color:var(--gl)}
   table.mc tr.razem td{font-weight:700;border-top:2px solid var(--t)}
   #druk{display:none}
+  .a-szk{border:1px solid var(--b);border-radius:12px;padding:12px 14px;margin-top:10px;background:#fff}
+  .a-szk.zabl{background:#fdf2f2;border-color:#f5c2c0}
+  .a-szk h3{margin:0 0 4px;font-size:16px;display:flex;justify-content:space-between;gap:8px;align-items:center}
+  .a-szk .dane{font-size:13.5px;color:var(--m);line-height:1.55}
+  .a-szk button{padding:6px 12px;font-size:13px}
+  .a-kod{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--b);font-size:14px}
+  .a-kod b{font-family:monospace;font-size:15px;letter-spacing:1px}
   #modal-pytaj{z-index:40}
   #modal-pytaj .sheet{max-width:440px}
   #mq-tekst{white-space:pre-line;font-size:16px;line-height:1.45;margin:4px 0 18px}
@@ -308,17 +315,32 @@
 
   <!-- Dołączenie do szkoły kodem -->
   <div id="s-kod" class="hidden">
-    <h1>Dołącz do swojej szkoły</h1>
-    <p class="sub">Kod szkoły otrzymasz od biura.</p>
+    <h1>Witaj w programie</h1>
+    <p class="sub">Dołącz do swojej szkoły albo załóż nową.</p>
     <div class="card">
+      <div class="tabs" style="margin-bottom:14px">
+        <button id="kt-dolacz" class="on" type="button">Dołączam do szkoły</button>
+        <button id="kt-nowa" type="button">Zakładam nową szkołę</button>
+      </div>
       <form id="f-kod">
         <label for="i-kod-imie">Imię i nazwisko</label>
-        <input id="i-kod-imie" required>
-        <label for="i-kod">Kod szkoły</label>
-        <input id="i-kod" required autocapitalize="characters" autocomplete="off">
-        <button class="btn" type="submit">Dołącz</button>
+        <input id="i-kod-imie" required autocomplete="name">
+        <div id="kod-dolacz">
+          <label for="i-kod">Kod szkoły</label>
+          <input id="i-kod" autocapitalize="characters" autocomplete="off">
+          <p class="hint">Kod szkoły otrzymasz od biura swojej szkoły.</p>
+        </div>
+        <div id="kod-nowa" class="hidden">
+          <label for="i-szkola-nazwa">Nazwa szkoły jazdy</label>
+          <input id="i-szkola-nazwa" autocomplete="organization" placeholder="np. OSK Kowalski">
+          <label for="i-kod-akt">Kod aktywacyjny</label>
+          <input id="i-kod-akt" autocapitalize="characters" autocomplete="off" placeholder="SZK-…">
+          <p class="hint">Kod aktywacyjny otrzymasz od dostawcy programu. Po założeniu szkoły zostaniesz jej biurem.</p>
+        </div>
+        <button id="kod-przycisk" class="btn" type="submit">Dołącz</button>
       </form>
       <div id="m-kod" class="msg"></div>
+      <button class="btn2 do-admin hidden" type="button">👑 Panel właściciela programu</button>
       <button class="btn2 wyloguj" type="button">Wyloguj</button>
     </div>
   </div>
@@ -329,7 +351,44 @@
     <div class="card">
       <p id="czeka-tekst" style="margin-top:0"></p>
       <button id="b-odswiez" class="btn" type="button">Sprawdź ponownie</button>
+      <button class="btn2 do-admin hidden" type="button">👑 Panel właściciela programu</button>
       <button class="btn2 wyloguj" type="button">Wyloguj</button>
+    </div>
+  </div>
+
+  <!-- Panel właściciela programu -->
+  <div id="s-admin" class="hidden">
+    <div class="top">
+      <div><h1>👑 Panel właściciela programu</h1><p class="sub" style="margin:0">Szkoły korzystające z programu</p></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+        <button id="a-wroc" type="button">← Wróć do programu</button>
+        <button class="wyloguj" type="button">Wyloguj</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>➕ Nowa szkoła – kod aktywacyjny</h2>
+      <p class="hint">Wygeneruj kod i przekaż go szkole. Kod działa jeden raz – po założeniu szkoły traci ważność.</p>
+      <label for="a-uwagi">Dla kogo (notatka, widzisz ją tylko Ty)</label>
+      <input id="a-uwagi" placeholder="np. OSK Kowalski, Zamość – tel. 600…" autocomplete="off">
+      <button id="a-generuj" class="btn" type="button">Wygeneruj kod</button>
+      <div id="a-nowy" class="hidden" style="margin-top:14px;padding:14px;border:2px dashed var(--gy);border-radius:12px;background:var(--wb)">
+        <div style="font-size:13px;color:var(--m)">Kod aktywacyjny:</div>
+        <div id="a-nowy-kod" style="font-size:28px;font-weight:800;letter-spacing:2px;margin:4px 0 10px"></div>
+        <textarea id="a-nowy-tekst" rows="6" style="width:100%;font-size:14px" readonly></textarea>
+        <div class="akcje" style="margin-top:8px">
+          <button id="a-kopiuj" type="button">📋 Kopiuj wiadomość</button>
+          <button id="a-wyslij" type="button">📤 Wyślij (SMS / WhatsApp / e-mail)</button>
+        </div>
+      </div>
+      <div id="m-admin" class="msg"></div>
+    </div>
+    <div class="card">
+      <h2>🏫 Szkoły</h2>
+      <div id="a-szkoly"><p class="hint">Ładowanie…</p></div>
+    </div>
+    <div class="card">
+      <h2>🔑 Kody aktywacyjne</h2>
+      <div id="a-kody"><p class="hint">Ładowanie…</p></div>
     </div>
   </div>
 
@@ -343,7 +402,10 @@
           <p class="sub" id="p-ja" style="margin:0"></p>
         </div>
       </div>
-      <button class="wyloguj" type="button">Wyloguj</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+        <button class="do-admin hidden" type="button" title="Panel właściciela programu">👑 Szkoły</button>
+        <button class="wyloguj" type="button">Wyloguj</button>
+      </div>
     </div>
 
     <div id="p-biuro-tabs" class="tabs panel hidden">
@@ -792,13 +854,13 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.20';
+  const WERSJA = '1.21';
   // ======================
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   const ADRES = location.origin + location.pathname;
   const $ = id => document.getElementById(id);
-  const EKRANY = ['s-ladowanie', 's-login', 's-haslo', 's-kod', 's-czeka', 's-panel'];
+  const EKRANY = ['s-ladowanie', 's-login', 's-haslo', 's-kod', 's-czeka', 's-panel', 's-admin'];
 
   let tryb = 'login';
   let ja = null;
@@ -827,6 +889,9 @@
     [/Unable to validate email address|invalid format/i, 'Nieprawidłowy adres e-mail.'],
     [/New password should be different/i, 'Nowe hasło musi być inne niż poprzednie.'],
     [/Auth session missing|JWT expired|invalid JWT/i, 'Sesja wygasła – zaloguj się ponownie.'],
+    [/ZLY_KOD_AKTYWACYJNY/, 'Nie ma takiego kodu aktywacyjnego – sprawdź, czy jest wpisany dokładnie.'],
+    [/KOD_JUZ_UZYTY/, 'Ten kod aktywacyjny został już wykorzystany. Poproś dostawcę programu o nowy.'],
+    [/BRAK_NAZWY/, 'Wpisz nazwę szkoły.'],
     [/Failed to fetch|NetworkError|Load failed/i, 'Brak połączenia z internetem albo serwer nie odpowiada.']
   ];
   function tlumacz(e) {
@@ -919,17 +984,101 @@
     pokaz('s-login');
   });
 
-  // ----- Dołączenie kodem -----
+  // ----- Dołączenie kodem / założenie nowej szkoły -----
+  let kodTryb = 'dolacz';
+  function ustawKodTryb(t) {
+    kodTryb = t;
+    $('kt-dolacz').classList.toggle('on', t === 'dolacz');
+    $('kt-nowa').classList.toggle('on', t === 'nowa');
+    $('kod-dolacz').classList.toggle('hidden', t !== 'dolacz');
+    $('kod-nowa').classList.toggle('hidden', t !== 'nowa');
+    $('kod-przycisk').textContent = t === 'dolacz' ? 'Dołącz' : 'Załóż szkołę';
+    msg('m-kod', '');
+  }
+  $('kt-dolacz').onclick = () => ustawKodTryb('dolacz');
+  $('kt-nowa').onclick = () => ustawKodTryb('nowa');
   $('f-kod').onsubmit = e => {
     e.preventDefault();
-    zajety($('f-kod').querySelector('button'), async () => {
+    zajety($('kod-przycisk'), async () => {
       msg('m-kod', '');
-      const { error } = await sb.rpc('dolacz_do_szkoly', {
-        p_kod: $('i-kod').value, p_imie_nazwisko: $('i-kod-imie').value
-      });
-      if (error) { msg('m-kod', tlumacz(error)); return; }
+      const imie = $('i-kod-imie').value.trim();
+      if (!imie) { msg('m-kod', 'Wpisz imię i nazwisko.'); return; }
+      let error;
+      if (kodTryb === 'dolacz') {
+        if (!$('i-kod').value.trim()) { msg('m-kod', 'Wpisz kod szkoły.'); return; }
+        ({ error } = await sb.rpc('dolacz_do_szkoly', { p_kod: $('i-kod').value, p_imie_nazwisko: imie }));
+      } else {
+        const nazwa = $('i-szkola-nazwa').value.trim(), kod = $('i-kod-akt').value.trim();
+        if (!nazwa) { msg('m-kod', 'Wpisz nazwę szkoły.'); return; }
+        if (!kod) { msg('m-kod', 'Wpisz kod aktywacyjny.'); return; }
+        if (!await pytaj(`Założyć szkołę „${nazwa}”?\n\nZostaniesz jej biurem. Nazwę możesz później zmienić.`, { tak: 'Załóż szkołę' })) return;
+        ({ error } = await sb.rpc('zaloz_szkole', { p_kod: kod, p_nazwa: nazwa, p_imie_nazwisko: imie }));
+      }
+      if (error) { msg('m-kod', /zaloz_szkole/.test(error.message || '') ? 'Zakładanie szkół nie jest jeszcze włączone (brak kroku 15 w bazie).' : tlumacz(error)); return; }
       odswiez();
     });
+  };
+
+  // ----- Panel właściciela programu -----
+  let jestWlascicielem = false;
+  async function sprawdzWlasciciela() {
+    const { data, error } = await sb.rpc('czy_wlasciciel');
+    jestWlascicielem = !error && data === true;
+    document.querySelectorAll('.do-admin').forEach(b => b.classList.toggle('hidden', !jestWlascicielem));
+  }
+  document.querySelectorAll('.do-admin').forEach(b => b.onclick = () => { pokaz('s-admin'); ladujAdmin(); });
+  $('a-wroc').onclick = () => odswiez();
+  const fmtDT = t => t ? `${fmtData(t)} ${godzina(t)}` : '—';
+  async function ladujAdmin() {
+    msg('m-admin', '');
+    $('a-wroc').classList.toggle('hidden', !profil);
+    const [sz, kd] = await Promise.all([sb.rpc('lista_szkol'), sb.rpc('lista_kodow')]);
+    if (sz.error) { $('a-szkoly').innerHTML = `<p class="msg err" style="display:block">${esc(tlumacz(sz.error))}</p>`; }
+    else $('a-szkoly').innerHTML = sz.data.map(x => `<div class="a-szk${x.aktywna ? '' : ' zabl'}">
+        <h3><span>${esc(x.nazwa)} ${x.aktywna ? '' : '<span class="pill" style="background:var(--r);color:#fff">zablokowana</span>'}</span>
+          <button type="button" data-blok="${x.id}" data-akt="${x.aktywna ? 1 : 0}" data-nazwa="${esc(x.nazwa)}">${x.aktywna ? '⛔ Zablokuj' : '✅ Odblokuj'}</button></h3>
+        <div class="dane">Biuro: ${esc(x.biuro || '—')}<br>
+          Konta: ${x.osob} · instruktorzy: ${x.instruktorow} · kursanci: ${x.kursantow} · jazdy (30 dni): ${x.jazd_30dni}<br>
+          Ostatnie logowanie: ${fmtDT(x.ostatnie_logowanie)} · w programie od: ${fmtData(x.utworzono)} · kod szkoły: <b>${esc(x.kod_zaproszenia)}</b></div>
+      </div>`).join('') || '<p class="hint">Brak szkół.</p>';
+    $('a-szkoly').querySelectorAll('[data-blok]').forEach(b => b.onclick = () => zajety(b, async () => {
+      const blokuj = b.dataset.akt === '1';
+      if (!await pytaj(blokuj
+        ? `Zablokować szkołę „${b.dataset.nazwa}”?\n\nJej biuro i instruktorzy nie zobaczą żadnych danych, dopóki jej nie odblokujesz. Dane nie zostaną usunięte.`
+        : `Odblokować szkołę „${b.dataset.nazwa}”?`, { tak: blokuj ? 'Zablokuj' : 'Odblokuj', niebezp: blokuj })) return;
+      const { error } = await sb.rpc('ustaw_aktywnosc_szkoly', { p_id: b.dataset.blok, p_aktywna: !blokuj });
+      if (error) { msg('m-admin', tlumacz(error)); return; }
+      ladujAdmin();
+    }));
+    if (kd.error) { $('a-kody').innerHTML = `<p class="msg err" style="display:block">${esc(tlumacz(kd.error))}</p>`; return; }
+    $('a-kody').innerHTML = kd.data.map(k => `<div class="a-kod"><span><b>${esc(k.kod)}</b>${k.uwagi ? ' · ' + esc(k.uwagi) : ''}<br>
+        <small class="hint">${k.uzyto ? `✅ użyty ${fmtDT(k.uzyto)} – ${esc(k.szkola || '')}` : `czeka na użycie · utworzony ${fmtDT(k.utworzono)}`}</small></span>
+        ${k.uzyto ? '' : `<button type="button" data-usun-kod="${esc(k.kod)}" style="padding:5px 10px;font-size:13px">Usuń</button>`}</div>`).join('')
+      || '<p class="hint">Nie wygenerowano jeszcze żadnego kodu.</p>';
+    $('a-kody').querySelectorAll('[data-usun-kod]').forEach(b => b.onclick = () => zajety(b, async () => {
+      if (!await pytaj(`Usunąć kod ${b.dataset.usunKod}?\n\nNie będzie można nim założyć szkoły.`)) return;
+      const { error } = await sb.rpc('usun_kod', { p_kod: b.dataset.usunKod });
+      if (error) { msg('m-admin', tlumacz(error)); return; }
+      ladujAdmin();
+    }));
+  }
+  $('a-generuj').onclick = () => zajety($('a-generuj'), async () => {
+    const { data, error } = await sb.rpc('wygeneruj_kod', { p_uwagi: $('a-uwagi').value });
+    if (error) { msg('m-admin', tlumacz(error)); return; }
+    $('a-nowy').classList.remove('hidden');
+    $('a-nowy-kod').textContent = data;
+    $('a-nowy-tekst').value = `Dzień dobry,\n\nprzesyłam dostęp do programu dla szkół jazdy.\n\n1. Wejdź na: ${ADRES}\n2. Kliknij „Nowe konto” i załóż konto (e-mail biura szkoły).\n3. Wybierz „Zakładam nową szkołę”, wpisz nazwę szkoły i kod aktywacyjny: ${data}\n\nKod działa jeden raz. Instruktorów dodasz później kodem szkoły z zakładki Ustawienia.\n\nPozdrawiam\nSlesch`;
+    $('a-uwagi').value = '';
+    ladujAdmin();
+  });
+  $('a-kopiuj').onclick = async () => {
+    try { await navigator.clipboard.writeText($('a-nowy-tekst').value); msg('m-admin', 'Skopiowano – wklej w SMS, WhatsApp albo e-mail.', 'ok'); }
+    catch (_) { $('a-nowy-tekst').select(); msg('m-admin', 'Zaznaczyłem tekst – naciśnij Ctrl+C.', 'ok'); }
+  };
+  $('a-wyslij').onclick = async () => {
+    const t = $('a-nowy-tekst').value;
+    if (navigator.share) { try { await navigator.share({ title: 'Dostęp do programu', text: t }); return; } catch (_) { return; } }
+    location.href = 'mailto:?subject=' + encodeURIComponent('Dostęp do programu dla szkół jazdy') + '&body=' + encodeURIComponent(t);
   };
   $('b-odswiez').onclick = () => zajety($('b-odswiez'), () => odswiez());
 
@@ -952,10 +1101,17 @@
       return;
     }
     profil = data;
+    await sprawdzWlasciciela();
 
     if (!profil) {
       $('i-kod-imie').value = (ja.user_metadata && ja.user_metadata.imie_nazwisko) || '';
       pokaz('s-kod');
+      return;
+    }
+    if (profil.szkoly && profil.szkoly.aktywna === false) {
+      $('czeka-tytul').textContent = 'Dostęp wstrzymany';
+      $('czeka-tekst').textContent = `Dostęp do programu dla szkoły „${profil.szkoly.nazwa}” jest chwilowo wstrzymany. Dane szkoły są bezpieczne. W sprawie odblokowania skontaktuj się z dostawcą programu.`;
+      pokaz('s-czeka');
       return;
     }
     if (!profil.zatwierdzony) {
