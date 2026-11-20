@@ -147,6 +147,21 @@
   .kbar{height:6px;border-radius:4px;background:#e5e7eb;overflow:hidden;display:flex;margin:5px 0 2px;max-width:260px}
   .kbar i{display:block;height:100%}
   .k-kr{display:none}
+  .link-box{margin-top:10px;padding:12px;border:1px solid var(--b);border-radius:10px;background:#f8fafc;font-size:14px}
+  .link-box .url{font-family:ui-monospace,Consolas,monospace;font-size:12px;word-break:break-all;background:#fff;border:1px solid var(--b);border-radius:6px;padding:6px 8px;margin:6px 0 10px}
+  .link-box .akcje{grid-template-columns:1fr 1fr}
+  .link-box a.btn2{display:block;border:1px solid var(--b);border-radius:8px;padding:10px 8px;background:#fff;color:var(--t);font-size:15px}
+  .kv-karta{background:#fff;border:1px solid var(--b);border-radius:14px;padding:16px;margin-bottom:12px}
+  .kv-karta h2{font-size:17px;margin:0 0 10px}
+  .kv-duze{font-size:28px;font-weight:700;line-height:1.1}
+  .kv-jazda{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--b)}
+  .kv-jazda:first-of-type{border-top:none}
+  .kv-data{flex:none;width:62px;text-align:center;border-radius:10px;background:var(--g);color:var(--ga);padding:6px 0;line-height:1.15}
+  .kv-data b{display:block;font-size:20px}.kv-data small{font-size:12px;text-transform:uppercase}
+  .kv-jazda.egz .kv-data{background:#b42318;color:#fff}
+  .kv-jazda.wst .kv-data{background:#fff4e0;color:#8a4b00;border:2px dashed #d97706}
+  .kv-jazda .op{font-size:15px;line-height:1.45}
+  .kv-jazda .op small{color:var(--m);font-size:13px}
   .k-filtry #k-csv{margin-left:auto;white-space:nowrap}
   .k-filtry select,.k-filtry button{padding:9px 10px;font-size:15px}
   #k-lista .k-dl b{display:inline;font-weight:600}
@@ -432,6 +447,13 @@
   </div>
 
   <!-- Oczekiwanie / komunikat -->
+  <!-- Podgląd kursanta (osobisty link, bez logowania) -->
+  <div id="s-kursant" class="hidden">
+    <div class="top-l" style="margin-bottom:14px"><img id="kv-logo" class="logo-n hidden" alt="">
+      <div><h1 id="kv-szkola" style="font-size:20px"></h1><p class="sub" id="kv-kto" style="margin:0"></p></div></div>
+    <div id="kv-tresc"><p class="hint">Ładowanie…</p></div>
+  </div>
+
   <div id="s-czeka" class="hidden">
     <h1 id="czeka-tytul">Czekasz na zatwierdzenie</h1>
     <div class="card">
@@ -1049,6 +1071,8 @@
       <button id="k-zapisz" class="btn" type="submit">Zapisz</button>
       <button id="k-anuluj" class="btn2" type="button">Anuluj</button>
       <button id="k-karta" class="btn2 hidden" type="button">🖨 Karta kursanta</button>
+      <button id="k-link" class="btn2 hidden" type="button">🔗 Link dla kursanta – podgląd jego jazd</button>
+      <div id="k-link-box" class="link-box hidden"></div>
       <button id="k-usun" class="usun hidden" type="button">Usuń kursanta</button>
       <div id="m-kursant" class="msg"></div>
     </form>
@@ -1067,7 +1091,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.38';
+  const WERSJA = '1.39';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -1077,6 +1101,8 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.39', d: '20.11.2026', p: [
+      '🔗 Osobisty link dla kursanta (w karcie kursanta): kursant bez logowania widzi swoje jazdy, godziny kursu i egzamin. Wysyłka SMS-em lub WhatsAppem.'] },
     { v: '1.38', d: '20.11.2026', p: [
       '„Wyloguj” wylogowuje tylko z tego komputera lub telefonu – na innych urządzeniach konto zostaje zalogowane.'] },
     { v: '1.37', d: '20.11.2026', p: [
@@ -1153,7 +1179,8 @@
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   const ADRES = location.origin + location.pathname;
   const $ = id => document.getElementById(id);
-  const EKRANY = ['s-ladowanie', 's-login', 's-haslo', 's-kod', 's-czeka', 's-panel', 's-admin'];
+  const EKRANY = ['s-ladowanie', 's-login', 's-haslo', 's-kod', 's-czeka', 's-panel', 's-admin', 's-kursant'];
+  const KURSANT_TOKEN = new URLSearchParams(location.search).get('k');   // osobisty link kursanta
 
   let tryb = 'login';
   let ja = null;
@@ -1437,6 +1464,7 @@
 
   // ----- Główna logika -----
   async function odswiez(session) {
+    if (KURSANT_TOKEN) { pokazKursanta(); return; }
     if (odzyskiwanieHasla) { pokaz('s-haslo'); return; }
     if (session === undefined) session = (await sb.auth.getSession()).data.session;
     if (!session) { ja = null; profil = null; ustawTryb(tryb); pokaz('s-login'); return; }
@@ -1680,6 +1708,7 @@
     resetSkanu();
     $('k-usun').classList.toggle('hidden', !k);
     $('k-karta').classList.toggle('hidden', !k);
+    $('k-link').classList.toggle('hidden', !k); $('k-link-box').classList.add('hidden'); $('k-link-box').innerHTML = '';
     msg('m-kursant', '');
     $('modal-kursant').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
@@ -1996,6 +2025,79 @@
     $('mw-uwagi').value = ''; $('mw-do-dnia').value = '';
     ladujMojeWolne(); ladujDzien(true);
   });
+
+  // ===== LINK DLA KURSANTA (biuro) =====
+  async function pokazLinkKursanta(nowy) {
+    const k = edytowany; if (!k) return;
+    const { data, error } = await sb.rpc('link_kursanta', { p_id: k.id, p_nowy: !!nowy });
+    const box = $('k-link-box'); box.classList.remove('hidden');
+    if (error) { box.innerHTML = `<p class="hint">${/link_kursanta/.test(error.message) ? 'Najpierw uruchom w Supabase plik krok20_link_kursanta.sql.' : esc(tlumacz(error))}</p>`; return; }
+    const url = ADRES + '?k=' + data, szk = (profil.szkoly && profil.szkoly.nazwa) || 'szkoła jazdy';
+    const txt = `Dzień dobry! Tu ${szk}. Pod tym linkiem sprawdzisz swoje jazdy i godziny kursu: ${url}`;
+    box.innerHTML = `<b>Osobisty link: ${esc(k.imie)} ${esc(k.nazwisko)}</b>
+      <p class="hint" style="margin-top:2px">Kursant widzi tylko swoje jazdy, godziny kursu i egzamin – bez logowania. Nie wysyłaj go nikomu innemu.</p>
+      <div class="url">${esc(url)}</div>
+      <div class="akcje">
+        ${k.telefon ? `<a class="btn2" style="margin:0;text-align:center;text-decoration:none" href="sms:${telLink(k.telefon)}?body=${encodeURIComponent(txt)}">📱 Wyślij SMS</a>
+        <a class="btn2" style="margin:0;text-align:center;text-decoration:none" target="_blank" href="https://wa.me/${waNumer(k.telefon)}?text=${encodeURIComponent(txt)}">💬 WhatsApp</a>` : ''}
+        <button type="button" id="kl-kopiuj" style="margin:0">📋 Kopiuj link</button>
+        <a class="btn2" style="margin:0;text-align:center;text-decoration:none" target="_blank" href="${esc(url)}">👁 Zobacz, co widzi</a>
+        <button type="button" id="kl-nowy" style="margin:0">♻️ Nowy link</button>
+        <button type="button" id="kl-wylacz" style="margin:0;color:var(--r)">✖ Wyłącz link</button>
+      </div>${nowy ? '<p class="hint" style="margin-top:8px">✅ Utworzono nowy link – poprzedni już nie działa.</p>' : ''}`;
+    $('kl-kopiuj').onclick = async () => { try { await navigator.clipboard.writeText(url); $('kl-kopiuj').textContent = '✅ Skopiowano'; } catch (_) { prompt('Skopiuj link:', url); } };
+    $('kl-nowy').onclick = async () => { if (await pytaj('Utworzyć nowy link?\nPoprzedni link przestanie działać (np. gdy trafił do kogoś obcego).', { tak: 'Nowy link' })) pokazLinkKursanta(true); };
+    $('kl-wylacz').onclick = async () => {
+      if (!await pytaj('Wyłączyć link tego kursanta?\nKursant nie zobaczy już swoich jazd, dopóki nie wyślesz mu nowego linku.', { tak: 'Wyłącz', niebezp: true })) return;
+      const { error } = await sb.rpc('usun_link_kursanta', { p_id: k.id });
+      box.innerHTML = error ? esc(tlumacz(error)) : '<p class="hint">Link wyłączony.</p>';
+    };
+  }
+  $('k-link').onclick = () => zajety($('k-link'), () => pokazLinkKursanta(false));
+
+  // ===== PODGLĄD KURSANTA (osobisty link) =====
+  async function pokazKursanta() {
+    pokaz('s-kursant');
+    const ml = document.querySelector('link[rel="manifest"]'); if (ml) ml.remove();   // „Dodaj do ekranu” zapamięta ten link
+    const { data: d, error } = await sb.rpc('kursant_widok', { p_token: KURSANT_TOKEN });
+    if (error || !d) {
+      $('kv-szkola').textContent = 'Moje jazdy';
+      $('kv-tresc').innerHTML = `<div class="kv-karta"><h2>Ten link jest nieaktualny</h2><p class="hint">${error && /Failed to fetch|NetworkError|Load failed/i.test(error.message) ? 'Brak połączenia z internetem – spróbuj za chwilę.' : 'Poproś szkołę jazdy o nowy link.'}</p></div>`;
+      return;
+    }
+    document.title = 'Moje jazdy – ' + d.szkola;
+    const ap = document.querySelector('meta[name="apple-mobile-web-app-title"]'); if (ap) ap.content = 'Moje jazdy';
+    $('kv-szkola').textContent = d.szkola;
+    $('kv-kto').textContent = `${d.imie} ${d.nazwisko}${d.kategoria ? ' · kategoria ' + d.kategoria : ''}`;
+    if (d.logo) { $('kv-logo').src = d.logo; $('kv-logo').classList.remove('hidden'); }
+    const teraz = new Date(), J = d.jazdy || [];
+    const licz = j => j.rodzaj !== 'inne' && !j.nie_liczy;
+    const odb = J.filter(j => licz(j) && new Date(j.koniec) <= teraz).reduce((a, j) => a + minutyJazdy(j), 0);
+    const plan = J.filter(j => licz(j) && new Date(j.koniec) > teraz).reduce((a, j) => a + minutyJazdy(j), 0);
+    let baza = null;
+    if (d.godziny_kurs !== null && d.godziny_kurs !== undefined && d.godziny_kurs !== '') baza = Number(d.godziny_kurs);
+    else if (!/uzup/i.test(d.typ_kursu || '')) { const h = ({ ...GODZ_KAT, ...(d.godziny_kategorii || {}) })[katGlowna(d.kategoria)]; baza = h ? Number(h) : null; }
+    const wym = baza === null ? null : baza + Number(d.godziny_dokupione || 0);
+    const proc = wym ? Math.min(100, odb / (wym * 60) * 100) : 0, procP = wym ? Math.max(0, Math.min(100 - proc, plan / (wym * 60) * 100)) : 0;
+    const przyszle = J.filter(j => new Date(j.koniec) > teraz), byle = J.filter(j => new Date(j.koniec) <= teraz).reverse().slice(0, 5);
+    const egz = przyszle.find(j => j.rodzaj === 'egzamin');
+    const zaIle = dt => { const r = Math.round((parseD(dzisStr(dt)) - parseD(dzisStr())) / 86400000); return r === 0 ? 'dziś' : r === 1 ? 'jutro' : r === 2 ? 'pojutrze' : `za ${r} dni`; };
+    const wiersz = j => { const dt = new Date(j.poczatek), e = j.rodzaj === 'egzamin', w = j.potwierdzona === false;
+      return `<div class="kv-jazda${e ? ' egz' : ''}${w ? ' wst' : ''}"><div class="kv-data"><small>${['nd','pn','wt','śr','cz','pt','sb'][dt.getDay()]}</small><b>${dt.getDate()}</b><small>${['sty','lut','mar','kwi','maj','cze','lip','sie','wrz','paź','lis','gru'][dt.getMonth()]}</small></div>
+        <div class="op"><b>${e ? '🎓 Egzamin, godz. ' + (j.godz_egzaminu ? hm(j.godz_egzaminu) : godzina(j.poczatek)) : (j.rodzaj === 'inne' ? 'Zajęcia' : 'Jazda') + ' ' + godzina(j.poczatek) + '–' + godzina(j.koniec)}</b><br>
+        <small>${j.instruktor ? 'instruktor: ' + esc(j.instruktor) + ' · ' : ''}${zaIle(dt)}${w ? ' · <b>termin wstępny – do potwierdzenia</b>' : ''}</small></div></div>`; };
+    $('kv-tresc').innerHTML = `
+      <div class="kv-karta"><h2>Moje godziny</h2>
+        <div class="kv-duze">${fmtH(odb)}${wym ? ' <span style="font-size:18px;color:var(--m)">z ' + godz(wym) + ' h</span>' : ' h'}</div>
+        ${wym ? `<div class="kbar" style="height:10px;max-width:none;margin:10px 0 6px"><i class="d" style="width:${proc}%"></i><i class="p" style="width:${procP}%"></i></div>` : ''}
+        <p class="hint">${plan ? `+ ${fmtH(plan)} h zaplanowane` : 'Brak zaplanowanych jazd.'}${wym && odb + plan < wym * 60 ? ` · do końca kursu brakuje ${fmtH(wym * 60 - odb - plan)} h` : ''}</p></div>
+      ${egz ? `<div class="kv-karta" style="border-color:#f5c2c0;background:#fdf2f2"><h2>🎓 Egzamin</h2><b>${DNI[new Date(egz.poczatek).getDay()]} ${fmtData(egz.poczatek)}${egz.godz_egzaminu ? ', godz. ' + hm(egz.godz_egzaminu) : ''}</b> <span class="hint">(${zaIle(new Date(egz.poczatek))})</span>${egz.potwierdzona === false ? '<p class="hint" style="margin-top:4px">Termin wstępny – szkoła potwierdzi go, gdy będzie oficjalny.</p>' : ''}</div>` : ''}
+      <div class="kv-karta"><h2>Najbliższe jazdy</h2>${przyszle.map(wiersz).join('') || '<p class="hint">Nie masz teraz zaplanowanych jazd. W sprawie terminów skontaktuj się ze szkołą.</p>'}</div>
+      ${byle.length ? `<details class="kv-karta"><summary style="cursor:pointer;font-weight:600">Ostatnie jazdy</summary>${byle.map(wiersz).join('')}</details>` : ''}
+      <button type="button" class="btn2" id="kv-odswiez">↻ Odśwież</button>
+      <p class="hint" style="margin-top:12px;text-align:center">Zmiany terminów ustalaj ze szkołą jazdy. Tę stronę możesz dodać do ekranu głównego telefonu (menu przeglądarki → „Dodaj do ekranu głównego”).</p>`;
+    $('kv-odswiez').onclick = () => zajety($('kv-odswiez'), pokazKursanta);
+  }
 
   // ===== NAZWA SZKOŁY =====
   $('u-nazwa-zapisz').onclick = () => zajety($('u-nazwa-zapisz'), async () => {
