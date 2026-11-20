@@ -153,7 +153,7 @@
   @media(max-width:600px){
     .k-filtry{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
     .k-filtry select,.k-filtry button{width:100%;min-width:0;padding:9px 8px;font-size:14px;height:auto;margin:0}
-    .k-filtry #k-csv{margin-left:0}
+    .k-filtry #k-csv{margin-left:0;grid-column:1/-1}
     #k-lista .k-dl{display:none}
     #k-lista .k-kr{display:block}
     #k-lista .k-l{display:block;font-size:14px;color:var(--m);line-height:1.45}
@@ -601,6 +601,7 @@
               <option value="wszyscy">Wszyscy</option>
             </select>
             <select id="k-instr"><option value="">każdy prowadzący</option></select>
+            <select id="k-kat"><option value="">każda kategoria</option></select>
             <select id="k-sort">
               <option value="nazwisko">sortuj: nazwisko</option>
               <option value="zostalo">sortuj: najmniej zostało</option>
@@ -1066,7 +1067,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.36';
+  const WERSJA = '1.37';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -1076,6 +1077,8 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.37', d: '20.11.2026', p: [
+      'Lista kursantów: filtr po kategorii (np. tylko CE).'] },
     { v: '1.36', d: '20.11.2026', p: [
       'Lista kursantów na telefonie: zwarte karty (kategoria w ramce, prowadzący, godziny, pasek i najbliższa jazda) i filtry mieszczące się na ekranie.'] },
     { v: '1.35', d: '20.11.2026', p: [
@@ -1561,6 +1564,12 @@
       instruktorzy.filter(i => i.aktywny).map(i => `<option value="${i.id}">prowadzi: ${esc(i.imie_nazwisko)}</option>`).join('') +
       '<option value="-">bez prowadzącego</option>';
     el.value = [...el.options].some(o => o.value === v) ? v : '';
+    const ek = $('k-kat'), vk = ek.value, KOL = Object.keys(GODZ_KAT);
+    const katy = [...new Set(kursanci.map(k => String(k.kategoria || '').trim().toUpperCase()).filter(Boolean))]
+      .sort((a, b) => ((KOL.indexOf(a) + 1) || 99) - ((KOL.indexOf(b) + 1) || 99) || a.localeCompare(b));
+    ek.innerHTML = '<option value="">każda kategoria</option>' + katy.map(k => `<option value="${esc(k)}">kategoria ${esc(k)}</option>`).join('') +
+      (kursanci.some(k => !String(k.kategoria || '').trim()) ? '<option value="-">bez kategorii</option>' : '');
+    ek.value = [...ek.options].some(o => o.value === vk) ? vk : '';
   }
   function pokazKursantow() {
     wypelnijFiltrInstr();
@@ -1576,6 +1585,8 @@
       if (filtr === 'zakonczeni' && k.aktywny) return false;
       const fi = $('k-instr').value;
       if (fi === '-' ? k.instruktor_id : (fi && k.instruktor_id !== fi)) return false;
+      const fk = $('k-kat').value, kk = String(k.kategoria || '').trim().toUpperCase();
+      if (fk === '-' ? kk : (fk && kk !== fk)) return false;
       if (!fraza) return true;
       const tekst = bezOgonkow([k.imie, k.nazwisko, k.nazwisko + ' ' + k.imie, k.email, k.kategoria].join(' '));
       if (tekst.includes(fraza)) return true;
@@ -1636,6 +1647,7 @@
   $('k-szukaj').oninput = pokazKursantow;
   $('k-filtr').onchange = pokazKursantow;
   $('k-instr').onchange = pokazKursantow;
+  $('k-kat').onchange = pokazKursantow;
   $('k-sort').onchange = () => { try { localStorage.setItem('k_sort', $('k-sort').value); } catch (_) {} pokazKursantow(); };
   try { const v = localStorage.getItem('k_sort'); if (v) $('k-sort').value = v; } catch (_) {}
 
@@ -3288,7 +3300,9 @@
   const fmtData = v => { if (!v) return ''; const d = new Date(v); return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`; };
   $('k-csv').onclick = () => {
     const filtr = $('k-filtr').value;
-    const lista = kursanci.filter(k => filtr === 'wszyscy' || (filtr === 'aktywni' ? k.aktywny : !k.aktywny));
+    const fk = $('k-kat').value;
+    const lista = kursanci.filter(k => filtr === 'wszyscy' || (filtr === 'aktywni' ? k.aktywny : !k.aktywny))
+      .filter(k => { const kk = String(k.kategoria || '').trim().toUpperCase(); return fk === '-' ? !kk : (!fk || kk === fk); });
     const q = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
     const naglowek = ['Data zapisu', 'Nazwisko', 'Imię', 'Telefon', 'E-mail', 'Numer PKK', 'Kategoria', 'Rodzaj kursu',
       'Posiadane kategorie', 'Nr prawa jazdy', 'Godziny kursu', 'Dokupione godziny', 'Odbyte godziny', 'Zaplanowane godziny', 'Status', 'Uwagi'];
