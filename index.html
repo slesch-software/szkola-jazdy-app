@@ -1094,7 +1094,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.41';
+  const WERSJA = '1.42';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -1104,6 +1104,8 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.42', d: '20.11.2026', p: [
+      'Przycisk „📩 Zaproś” przy instruktorze bez konta (Ustawienia → Instruktorzy w grafiku) – gotowa wiadomość SMS / WhatsApp z adresem, imieniem i nazwiskiem oraz kodem szkoły.'] },
     { v: '1.41', d: '20.11.2026', p: [
       'Polityka prywatności programu (link „Prywatność” na dole strony).'] },
     { v: '1.40', d: '20.11.2026', p: [
@@ -2896,7 +2898,7 @@
     $('p-instruktorzy').innerHTML = instruktorzy.map(i => `<div class="row">
         <div class="who"><b>${esc(i.imie_nazwisko)} ${i.aktywny ? '' : '<span class="pill szary">ukryty</span>'}</b>
           <span>${i.user_id ? 'ma konto w programie' : 'bez konta'}${i.telefon ? ' · 📞 ' + esc(i.telefon) : ''}${i.godz_od ? ' · 🕘 ' + esc(i.godz_od) + '–' + esc(i.godz_do) : ''}</span></div>
-        <div class="acts"><button data-a="nazwa" data-id="${i.id}">Zmień</button>
+        <div class="acts">${!i.user_id && i.aktywny ? `<button data-a="zapros" data-id="${i.id}">📩 Zaproś</button>` : ''}<button data-a="nazwa" data-id="${i.id}">Zmień</button>
           <button data-a="ukryj" data-id="${i.id}">${i.aktywny ? 'Ukryj' : 'Przywróć'}</button></div>
         ${i.user_id && 'moze_zglaszac_wolne' in i ? `<div class="uprawn">
           <label><input type="checkbox" data-upr="moze_zglaszac_wolne" data-id="${i.id}"${i.moze_zglaszac_wolne ? ' checked' : ''}> może zgłaszać wolne (biuro zatwierdza)</label>
@@ -2912,6 +2914,7 @@
       $('p-instruktorzy').insertAdjacentHTML('beforeend', '<p class="hint" style="margin-top:8px">Żeby instruktorzy mogli zgłaszać wolne, uruchom w Supabase plik krok19_wolne_instruktora.sql.</p>');
     $('p-instruktorzy').querySelectorAll('button[data-a]').forEach(b => b.onclick = () => zajety(b, async () => {
       const i = instruktorzy.find(x => x.id === b.dataset.id);
+      if (b.dataset.a === 'zapros') { pokazZaproszenie(i, b.closest('.row')); return; }
       let zm;
       if (b.dataset.a === 'nazwa') {
         const n = prompt('Imię i nazwisko instruktora:', i.imie_nazwisko);
@@ -2938,6 +2941,29 @@
       if (error) { msg('m-instruktorzy', tlumacz(error)); return; }
       await ladujInstruktorowLista(); wypelnijInstr();
     }));
+  }
+  // zaproszenie instruktora: gotowa wiadomość z adresem, dokładnym imieniem i nazwiskiem oraz kodem szkoły
+  function pokazZaproszenie(i, wiersz) {
+    document.querySelectorAll('.zapro-box').forEach(x => x.remove());
+    const kod = (profil.szkoly && profil.szkoly.kod_zaproszenia) || '';
+    const adres = location.host || 'grafikosk.pl';
+    const txt = `Cześć! Grafik jazd jest teraz w nowym programie: https://${adres}\n` +
+      `1. Wejdź na stronę i wybierz „Nowe konto” – wpisz swój e-mail i hasło.\n` +
+      `2. Imię i nazwisko wpisz DOKŁADNIE tak: ${i.imie_nazwisko}\n` +
+      `3. Kod szkoły: ${kod}\n` +
+      `4. Gdy biuro Cię zatwierdzi, zaloguj się i dodaj stronę do ekranu głównego telefonu (menu przeglądarki → „Dodaj do ekranu głównego”) – pojawi się ikonka „Mój grafik jazd”.`;
+    const box = document.createElement('div'); box.className = 'link-box zapro-box'; box.style.width = '100%';
+    box.innerHTML = `<b>Zaproszenie: ${esc(i.imie_nazwisko)}</b>
+      <div class="url" style="white-space:pre-wrap;word-break:normal;overflow-wrap:anywhere;font-family:inherit;font-size:13px">${esc(txt)}</div>
+      <div class="akcje">
+        ${i.telefon ? `<a class="btn2" style="margin:0;text-align:center;text-decoration:none" href="sms:${telLink(i.telefon)}?body=${encodeURIComponent(txt)}">📱 SMS</a>
+        <a class="btn2" style="margin:0;text-align:center;text-decoration:none" target="_blank" href="https://wa.me/${waNumer(i.telefon)}?text=${encodeURIComponent(txt)}">💬 WhatsApp</a>` : ''}
+        <button type="button" class="zp-kopiuj" style="margin:0">📋 Kopiuj tekst</button>
+        <button type="button" class="zp-zamknij" style="margin:0">Zamknij</button>
+      </div>${i.telefon ? '' : '<p class="hint" style="margin-top:8px">Brak telefonu instruktora – skopiuj tekst albo dopisz telefon przyciskiem „Zmień”.</p>'}`;
+    wiersz.after(box);
+    box.querySelector('.zp-kopiuj').onclick = async e => { try { await navigator.clipboard.writeText(txt); e.target.textContent = '✅ Skopiowano'; } catch (_) { prompt('Skopiuj tekst:', txt); } };
+    box.querySelector('.zp-zamknij').onclick = () => box.remove();
   }
   $('i-dodaj').onclick = () => zajety($('i-dodaj'), async () => {
     const n = prompt('Imię i nazwisko instruktora:');
