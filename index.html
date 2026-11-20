@@ -146,6 +146,24 @@
   .ostrz a{color:inherit;margin-left:6px}
   .kbar{height:6px;border-radius:4px;background:#e5e7eb;overflow:hidden;display:flex;margin:5px 0 2px;max-width:260px}
   .kbar i{display:block;height:100%}
+  .k-kr{display:none}
+  .k-filtry #k-csv{margin-left:auto;white-space:nowrap}
+  .k-filtry select,.k-filtry button{padding:9px 10px;font-size:15px}
+  #k-lista .k-dl b{display:inline;font-weight:600}
+  @media(max-width:600px){
+    .k-filtry{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+    .k-filtry select,.k-filtry button{width:100%;min-width:0;padding:9px 8px;font-size:14px;height:auto;margin:0}
+    .k-filtry #k-csv{margin-left:0}
+    #k-lista .k-dl{display:none}
+    #k-lista .k-kr{display:block}
+    #k-lista .k-l{display:block;font-size:14px;color:var(--m);line-height:1.45}
+    #k-lista .k-l b{color:var(--t);font-weight:600;display:inline}
+    #k-lista .k-pas{display:flex;align-items:center;gap:10px}
+    #k-lista .k-pas .kbar{flex:1 1 40%;margin:0;max-width:none}
+    #k-lista .k-pas > span{flex:none;font-size:13px}
+    #k-lista .row.kursant{padding:10px 0}
+    #k-lista .who{flex-basis:100%}
+  }
   .kbar i.d{background:var(--ok)} .kbar i.p{background:var(--gy)}
   .kolejka{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}
   .kolejka td{padding:7px 4px;border-top:1px solid var(--b);vertical-align:middle}
@@ -574,7 +592,7 @@
             <input id="k-szukaj" type="search" placeholder="Szukaj: nazwisko, telefon, PKK…" autocomplete="off">
             <button id="k-dodaj" class="dodaj" type="button">+ Dodaj</button>
           </div>
-          <div class="pasek">
+          <div class="pasek k-filtry">
             <select id="k-filtr">
               <option value="aktywni">W trakcie kursu</option>
               <option value="bez">Bez zaplanowanej jazdy</option>
@@ -589,7 +607,7 @@
               <option value="najblizsza">sortuj: najbliższa jazda</option>
               <option value="zapis">sortuj: data zapisu</option>
             </select>
-            <button id="k-csv" type="button" style="margin-left:auto">⬇ Excel (CSV)</button>
+            <button id="k-csv" type="button">⬇ Excel (CSV)</button>
           </div>
           <p class="licznik" id="k-licznik"></p>
           <div id="k-lista"><p class="hint">Ładowanie…</p></div>
@@ -1048,7 +1066,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.35';
+  const WERSJA = '1.36';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -1058,6 +1076,8 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.36', d: '20.11.2026', p: [
+      'Lista kursantów na telefonie: zwarte karty (kategoria w ramce, prowadzący, godziny, pasek i najbliższa jazda) i filtry mieszczące się na ekranie.'] },
     { v: '1.35', d: '20.11.2026', p: [
       'Instruktor może zgłaszać swoje wolne (biuro zatwierdza na pasku 🔔 nad grafikiem) albo sam je wpisywać – biuro włącza to osobno każdemu instruktorowi (Ustawienia → Instruktorzy).'] },
     { v: '1.34', d: '20.11.2026', p: [
@@ -1594,9 +1614,17 @@
       const prow = k.instruktor_id ? instruktorzy.find(i => i.id === k.instruktor_id) : null;
       const tel = k.telefon
         ? `<a class="tel" href="tel:${esc(String(k.telefon).replace(/[^\d+]/g, ''))}">${esc(k.telefon)}</a>` : '';
+      const opis2 = [k.typ_kursu, k.pkk ? 'PKK ' + fmtPkk(k.pkk) : ''].filter(Boolean).join(' · ');
+      const prowKr = prow ? String(prow.imie_nazwisko).trim().split(/\s+/).slice(-1)[0] : '';
+      const godzKr = `${fmtH(p.zrob)}${wym ? ' z ' + godz(wym) : ''} h` + (p.plan ? ` (+${fmtH(p.plan)} zaplan.)` : '');
+      const dk = d => ['nd', 'pn', 'wt', 'śr', 'cz', 'pt', 'sb'][d.getDay()];
+      const nastKr = (nd ? `${dk(nd)} ${pad(nd.getDate())}.${pad(nd.getMonth() + 1)} ${godzina(p.nast)}` : (k.aktywny ? 'brak jazdy' : '')) +
+        (ed ? ` · 🎓 ${dk(ed)} ${pad(ed.getDate())}.${pad(ed.getMonth() + 1)}` : '');
       return `<div class="row kursant" data-id="${k.id}">
-        <div class="who"><b>${esc(k.nazwisko)} ${esc(k.imie)} ${zak}</b>${wyr ? `<span class="wyr">${esc(wyr)}</span>` : ''}
-          <span>${prow ? '👤 prowadzi: <b>' + esc(prow.imie_nazwisko) + '</b><br>' : ''}${esc(opis)}${opis ? '<br>' : ''}${esc(godziny)}${pasek}${esc(nast)}</span>${st ? `<span class="ostrz ${st.cls}">${esc(st.t)}</span>` : ''}</div>
+        <div class="who"><b>${esc(k.nazwisko)} ${esc(k.imie)}${k.kategoria ? `<span class="kat">${esc(k.kategoria)}</span>` : ''} ${zak}</b>${wyr ? `<span class="wyr">${esc(wyr)}</span>` : ''}
+          <span class="k-dl">${prow ? '👤 prowadzi: <b>' + esc(prow.imie_nazwisko) + '</b><br>' : ''}${esc(opis2)}${opis2 ? '<br>' : ''}${esc(godziny)}${pasek}${esc(nast)}</span>
+          <span class="k-kr"><span class="k-l">${prow ? '👤 <b>' + esc(prowKr) + '</b> · ' : ''}${esc(godzKr)}</span>
+            <span class="k-l k-pas">${pasek}<span>${esc(nastKr)}</span></span></span>${st ? `<span class="ostrz ${st.cls}">${esc(st.t)}</span>` : ''}</div>
         <div class="acts">${tel}</div></div>`;
     }).join('') || '<p class="hint">Nikt nie pasuje do wyszukiwania.</p>';
 
