@@ -806,6 +806,8 @@
     <button type="button" class="stopka-link" id="f-nowosci">wersja <span id="wersja"></span> · co nowego</button>
     <span class="stopka-kropka">·</span>
     <button type="button" class="stopka-link" id="f-o">O programie</button>
+    <span class="stopka-kropka">·</span>
+    <a class="stopka-link" href="prywatnosc.html" target="_blank" rel="noopener">Prywatność</a>
   </footer>
 
 <div id="modal-info" class="modal hidden" role="dialog" aria-modal="true">
@@ -1092,7 +1094,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.40';
+  const WERSJA = '1.41';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -1102,6 +1104,8 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.41', d: '20.11.2026', p: [
+      'Polityka prywatności programu (link „Prywatność” na dole strony).'] },
     { v: '1.40', d: '20.11.2026', p: [
       'Program działa pod adresem grafikosk.pl.',
       'Kopia na Dysk Google działa od razu – bez wpisywania identyfikatora Google (Ustawienia → Kopia zapasowa → „Wyślij kopię na Dysk Google teraz”).'] },
