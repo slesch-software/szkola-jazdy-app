@@ -232,6 +232,21 @@
   .a-kod{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--b);font-size:14px}
   .a-kod b{font-family:monospace;font-size:15px;letter-spacing:1px}
   #modal-pytaj{z-index:40}
+  #modal-tekst{z-index:35}
+  .konto-btn{white-space:nowrap}
+  .j-hist{margin-top:14px;padding:10px 12px;border-radius:8px;background:#f4f6f8;font-size:13px;color:var(--m);line-height:1.55}
+  .j-hist b{color:var(--t);font-weight:600}
+  .j-hist .lnk{background:none;border:none;padding:0;margin-top:4px;color:var(--gl);text-decoration:underline;font-size:13px;cursor:pointer}
+  .h-filtry{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:12px 0}
+  .h-filtry select,.h-filtry input{padding:9px 10px;font-size:14px}
+  .hrow{display:flex;gap:10px;padding:9px 0;border-top:1px solid var(--b);font-size:14px;line-height:1.4}
+  .hrow:first-child{border-top:none}
+  .hczas{flex:none;width:86px;color:var(--m);font-size:12.5px;padding-top:1px}
+  .hrow b{font-weight:600}
+  .hakc{display:inline-block;font-size:12px;padding:1px 7px;border-radius:99px;margin-left:4px;background:#eef0f2;color:#475569;font-weight:600}
+  .hakc.dodanie{background:#e7f6ec;color:#1b7a3d}.hakc.zmiana{background:#fff4e0;color:#a15c00}
+  .hakc.usuniecie{background:#fdecea;color:#b42318}.hakc.potwierdzenie{background:#e6f0fb;color:#1d4f91}
+  .hopis{color:var(--m);font-size:13px;word-break:break-word}
   #modal-pytaj .sheet{max-width:440px}
   #mq-tekst{white-space:pre-line;font-size:16px;line-height:1.45;margin:4px 0 18px}
   #mq-przyciski{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
@@ -437,6 +452,7 @@
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
         <button class="do-admin hidden" type="button" title="Panel właściciela programu">👑 Szkoły</button>
+        <button class="konto-btn" type="button" title="Moje konto: imię, telefon, hasło">👤 Konto</button>
         <button class="wyloguj" type="button">Wyloguj</button>
       </div>
     </div>
@@ -569,9 +585,9 @@
       <!-- Zakładka: osoby -->
       <div id="tab-osoby" class="hidden">
         <div class="card" data-zw="kod">
-          <h2>Kod dla instruktorów</h2>
+          <h2>Kod do dołączenia</h2>
           <div class="kod" id="p-kod"></div>
-          <p class="hint">Instruktor zakłada konto, wpisuje ten kod, a Ty zatwierdzasz go poniżej.</p>
+          <p class="hint">Nowa osoba (instruktor albo pracownik biura) zakłada konto <b>na swój e-mail</b>, wpisuje ten kod, a Ty zatwierdzasz ją poniżej – jako instruktora albo jako biuro.</p>
         </div>
         <div class="card" data-zw="osoby">
           <h2>Osoby w szkole</h2>
@@ -652,6 +668,32 @@
             <button id="kd-teraz" type="button" style="grid-column:1/-1">☁️ Wyślij kopię na Dysk Google teraz</button>
           </div>
           <div id="m-kopia" class="msg"></div>
+        </div>
+        <div class="card" data-zw="hist">
+          <h2>🕓 Historia zmian</h2>
+          <label class="przel" style="margin-top:4px"><input id="u-hist" type="checkbox"><span class="suw"></span> Zapisuj, kto co zmienił</label>
+          <p class="hint" id="h-opis">Program zapisuje, kto dodał, zmienił lub usunął jazdę, kursanta, wolne i dokupione godziny. Wpisy starsze niż 30 dni usuwają się same. Historię widzi tylko biuro.</p>
+          <div class="h-filtry">
+            <select id="h-osoba"><option value="">każda osoba</option></select>
+            <select id="h-akcja">
+              <option value="">każda zmiana</option>
+              <option value="dodanie">➕ dodanie</option>
+              <option value="zmiana">✏️ zmiana</option>
+              <option value="usuniecie">🗑 usunięcie</option>
+              <option value="potwierdzenie">✅ potwierdzenie</option>
+            </select>
+            <select id="h-tabela">
+              <option value="">wszystko</option>
+              <option value="jazdy">jazdy i egzaminy</option>
+              <option value="kursanci">kursanci</option>
+              <option value="wolne">wolne</option>
+              <option value="dokupione">dokupione godziny</option>
+            </select>
+            <input id="h-szukaj" placeholder="szukaj (np. nazwisko)…" autocomplete="off">
+          </div>
+          <div id="h-lista"><p class="hint">Ładowanie…</p></div>
+          <button id="h-wyczysc" class="usun" type="button">Wyczyść historię</button>
+          <div id="m-hist" class="msg"></div>
         </div>
         <div class="card" data-zw="kosz">
           <h2>🗑 Kosz (30 dni)</h2>
@@ -773,6 +815,45 @@
   </div>
 </div>
 
+<!-- Okno: moje konto -->
+<div id="modal-konto" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="sheet" style="max-width:460px">
+    <h2 style="margin-top:0">👤 Moje konto</h2>
+    <p class="hint" id="mk-kto"></p>
+    <form id="f-konto">
+      <label for="mk-imie">Imię i nazwisko</label>
+      <input id="mk-imie" required autocomplete="name">
+      <label for="mk-tel">Telefon</label>
+      <input id="mk-tel" type="tel" autocomplete="tel" placeholder="np. 600 100 200">
+      <p class="hint" style="margin-top:6px">Tak będziesz podpisany w programie i w historii zmian.</p>
+      <button class="btn" type="submit">Zapisz moje dane</button>
+    </form>
+    <h3 style="font-size:16px;margin:22px 0 2px">🔑 Zmiana hasła</h3>
+    <form id="f-konto-haslo">
+      <label for="mk-h1">Nowe hasło</label>
+      <input id="mk-h1" type="password" autocomplete="new-password" minlength="6" required>
+      <label for="mk-h2">Powtórz nowe hasło</label>
+      <input id="mk-h2" type="password" autocomplete="new-password" minlength="6" required>
+      <button class="btn2" type="submit">Zmień hasło</button>
+    </form>
+    <div id="m-konto" class="msg"></div>
+    <button id="mk-zamknij" class="btn2" type="button">Zamknij</button>
+  </div>
+</div>
+
+<!-- Okno: wpisz tekst -->
+<div id="modal-tekst" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="sheet" style="max-width:420px">
+    <h2 id="mt-tytul" style="margin-top:0"></h2>
+    <p class="hint" id="mt-opis"></p>
+    <form id="f-tekst">
+      <input id="mt-pole" autocomplete="off" required style="margin-top:8px">
+      <button class="btn" type="submit">Zapisz</button>
+      <button id="mt-anuluj" class="btn2" type="button">Anuluj</button>
+    </form>
+  </div>
+</div>
+
 <!-- Okno: co drukować -->
 <div id="modal-druk" class="modal hidden">
   <div class="sheet">
@@ -821,6 +902,7 @@
       <button id="j-zapisz" class="btn" type="submit">Zapisz</button>
       <button id="j-anuluj" class="btn2" type="button">Anuluj</button>
       <button id="j-usun" class="usun hidden" type="button">Usuń jazdę</button>
+      <div id="j-hist" class="j-hist hidden"></div>
       <div id="m-jazda" class="msg"></div>
     </form>
   </div>
@@ -912,7 +994,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.26';
+  const WERSJA = '1.27';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -922,6 +1004,12 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.27', d: '20.11.2026', p: [
+      '👤 „Moje konto” (przycisk na górze): każdy sam poprawia swoje imię, nazwisko i telefon oraz zmienia hasło.',
+      'Kilka osób w biurze: nowa osoba dołącza kodem szkoły, a biuro zatwierdza ją jako biuro albo jako instruktora. Rolę można później zmienić.',
+      'Biuro może poprawić imię i nazwisko innej osoby (✏️ na liście osób).',
+      '🕓 Historia zmian (Ustawienia): kto dodał, zmienił lub usunął jazdę, kursanta, wolne, dokupione godziny – z ostatnich 30 dni. Można ją wyłączyć.',
+      'W okienku jazdy widać, kto ją dodał i kto ostatnio zmienił.'] },
     { v: '1.26', d: '20.11.2026', p: [
       'Większe i czytelniejsze przyciski Dziś / Jutro / Pojutrze, strzałki ‹ › oraz data dnia w grafiku.'] },
     { v: '1.24', d: '20.11.2026', p: [
@@ -1044,6 +1132,9 @@
     [/ZLY_KOD_AKTYWACYJNY/, 'Nie ma takiego kodu aktywacyjnego – sprawdź, czy jest wpisany dokładnie.'],
     [/KOD_JUZ_UZYTY/, 'Ten kod aktywacyjny został już wykorzystany. Poproś dostawcę programu o nowy.'],
     [/BRAK_NAZWY/, 'Wpisz nazwę szkoły.'],
+    [/BRAK_IMIENIA/, 'Wpisz imię i nazwisko.'],
+    [/OSTATNIE_BIURO/, 'To jedyna osoba z biura – szkoła musi mieć co najmniej jedną osobę w biurze. Najpierw zatwierdź kogoś innego jako biuro.'],
+    [/Could not find the function public\.(zmien_moje_dane|zatwierdz_osobe_jako|zmien_role|zmien_imie_osoby|wyczysc_historie)/, 'Najpierw uruchom w Supabase plik krok17_konta_historia.sql.'],
     [/Failed to fetch|NetworkError|Load failed/i, 'Brak połączenia z internetem albo serwer nie odpowiada.']
   ];
   function tlumacz(e) {
@@ -1243,7 +1334,7 @@
 
     ja = session.user;
     const { data, error } = await sb.from('profile')
-      .select('id, rola, imie_nazwisko, zatwierdzony, szkola_id, szkoly(*)')
+      .select('id, rola, imie_nazwisko, telefon, zatwierdzony, szkola_id, szkoly(*)')
       .eq('id', ja.id).maybeSingle();
 
     if (error) {
@@ -1276,7 +1367,7 @@
 
     $('p-szkola').textContent = (profil.szkoly && profil.szkoly.nazwa) || '';
     ustawLogo();
-    $('p-ja').textContent = profil.imie_nazwisko + ' · ' + (profil.rola === 'biuro' ? 'Biuro' : 'Instruktor');
+    pokazJa();
     const biuro = profil.rola === 'biuro';
     $('p-biuro-tabs').classList.toggle('hidden', !biuro);
     $('p-biuro').classList.toggle('hidden', !biuro);
@@ -1312,7 +1403,7 @@
   }
   $('t-grafik').onclick = () => { ustawZakladke('grafik'); ladujDzien(); };
   $('t-kursanci').onclick = () => { ustawZakladke('kursanci'); ladujKursantow(); };
-  $('t-osoby').onclick = () => { ustawZakladke('osoby'); ladujOsoby(); ladujInstruktorowLista(); ladujPin(); ladujKosz(); pokazKopie(); pokazLogoUst(); pokazUstawienia(); };
+  $('t-osoby').onclick = () => { ustawZakladke('osoby'); ladujOsoby(); ladujInstruktorowLista(); ladujPin(); ladujKosz(); ladujHistorie(); pokazKopie(); pokazLogoUst(); pokazUstawienia(); };
   $('t-miesiac').onclick = () => { ustawZakladke('miesiac'); ladujMiesiac(); };
 
   // ----- Rejestr kursantów -----
@@ -1619,7 +1710,7 @@
   async function ladujOsoby() {
     msg('m-osoby', '');
     const { data, error } = await sb.from('profile')
-      .select('id, rola, imie_nazwisko, email, zatwierdzony, utworzono')
+      .select('id, rola, imie_nazwisko, email, telefon, zatwierdzony, utworzono')
       .eq('szkola_id', profil.szkola_id)
       .order('zatwierdzony').order('utworzono');
     if (error) { msg('m-osoby', tlumacz(error)); return; }
@@ -1627,28 +1718,188 @@
     $('p-osoby').innerHTML = data.map(o => {
       const rola = o.rola === 'biuro' ? 'Biuro' : 'Instruktor';
       const status = o.zatwierdzony ? '' : '<span class="pill wait">czeka</span>';
+      const ty = o.id === ja.id ? ' <span class="pill szary">to Ty</span>' : '';
+      const n = esc(o.imie_nazwisko);
       let akcje = '';
       if (!o.zatwierdzony) {
-        akcje = `<button class="tak" data-akcja="tak" data-id="${o.id}">Zatwierdź</button>
-                 <button class="nie" data-akcja="usun" data-id="${o.id}" data-nazwa="${esc(o.imie_nazwisko)}">Odrzuć</button>`;
-      } else if (o.id !== ja.id) {
-        akcje = `<button class="nie" data-akcja="usun" data-id="${o.id}" data-nazwa="${esc(o.imie_nazwisko)}">Usuń</button>`;
+        akcje = `<button class="tak" data-akcja="instruktor" data-id="${o.id}" data-nazwa="${n}" type="button">✓ Jako instruktor</button>
+                 <button class="tak" data-akcja="biuro" data-id="${o.id}" data-nazwa="${n}" type="button">✓ Jako biuro</button>
+                 <button class="nie" data-akcja="usun" data-id="${o.id}" data-nazwa="${n}" type="button">Odrzuć</button>`;
+      } else {
+        akcje = `<button data-akcja="imie" data-id="${o.id}" data-nazwa="${n}" type="button" title="Popraw imię i nazwisko">✏️</button>
+                 <button data-akcja="rola" data-id="${o.id}" data-nazwa="${n}" data-rola="${o.rola}" type="button">${o.rola === 'biuro' ? '→ instruktor' : '→ biuro'}</button>` +
+          (o.id !== ja.id ? `<button class="nie" data-akcja="usun" data-id="${o.id}" data-nazwa="${n}" type="button">Usuń</button>` : '');
       }
       return `<div class="row">
-        <div class="who"><b>${esc(o.imie_nazwisko)} <span class="pill">${rola}</span>${status}</b>
-          <span>${esc(o.email || '')}</span></div>
-        <div class="acts">${akcje}</div></div>`;
+        <div class="who"><b>${n} <span class="pill">${rola}</span>${status}${ty}</b>
+          <span>${esc(o.email || '')}${o.telefon ? ' · tel. ' + esc(o.telefon) : ''}</span></div>
+        <div class="acts" style="flex-wrap:wrap;justify-content:flex-end;flex-shrink:1;max-width:100%">${akcje}</div></div>`;
     }).join('') || '<p class="hint">Brak osób.</p>';
 
     $('p-osoby').querySelectorAll('button[data-akcja]').forEach(b => b.onclick = () => zajety(b, async () => {
-      if (b.dataset.akcja === 'usun' &&
-          !await pytaj('Usunąć osobę „' + b.dataset.nazwa + '” ze szkoły? Jej jazdy w grafiku zostaną.')) return;
-      if (b.dataset.akcja === 'usun' && b.textContent.trim() === 'Usuń' && !(await wymagajPin('Usunięcie osoby „' + b.dataset.nazwa + '”'))) return;
-      const fn = b.dataset.akcja === 'tak' ? 'zatwierdz_osobe' : 'usun_osobe';
-      const { error } = await sb.rpc(fn, { p_id: b.dataset.id });
+      const a = b.dataset.akcja, id = b.dataset.id, nazwa = b.dataset.nazwa;
+      let error;
+      if (a === 'usun') {
+        if (!await pytaj('Usunąć osobę „' + nazwa + '” ze szkoły? Jej jazdy w grafiku zostaną.')) return;
+        if (b.textContent.trim() === 'Usuń' && !(await wymagajPin('Usunięcie osoby „' + nazwa + '”'))) return;
+        ({ error } = await sb.rpc('usun_osobe', { p_id: id }));
+      } else if (a === 'instruktor' || a === 'biuro') {
+        if (a === 'biuro' && !await pytaj(`Zatwierdzić „${nazwa}” jako biuro?\nOsoba z biura widzi i zmienia wszystko: kursantów (z PESEL), grafik wszystkich instruktorów i ustawienia.`, { tak: 'Zatwierdź jako biuro' })) return;
+        ({ error } = await sb.rpc('zatwierdz_osobe_jako', { p_id: id, p_rola: a }));
+        if (error && /zatwierdz_osobe_jako/.test(error.message) && a === 'instruktor') ({ error } = await sb.rpc('zatwierdz_osobe', { p_id: id }));
+      } else if (a === 'imie') {
+        const nowe = await zapytajTekst('Popraw imię i nazwisko', 'Tak ta osoba będzie widoczna w programie.', b.dataset.nazwa.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'"));
+        if (!nowe) return;
+        ({ error } = await sb.rpc('zmien_imie_osoby', { p_id: id, p_imie_nazwisko: nowe }));
+        if (!error && id === ja.id) { profil.imie_nazwisko = nowe; pokazJa(); }
+      } else if (a === 'rola') {
+        const na = b.dataset.rola === 'biuro' ? 'instruktor' : 'biuro';
+        const ja_ = id === ja.id;
+        const tekst = na === 'biuro'
+          ? `Zmienić „${nazwa}” na biuro?\nBędzie widzieć i zmieniać wszystko w programie.`
+          : `Zmienić „${nazwa}” na instruktora?\n${ja_ ? 'Stracisz dostęp do ustawień, rejestru kursantów i grafiku innych instruktorów.' : 'Ta osoba będzie widzieć tylko swój grafik.'}`;
+        if (!await pytaj(tekst, { tak: na === 'biuro' ? 'Zmień na biuro' : 'Zmień na instruktora', niebezp: ja_ })) return;
+        if (!(await wymagajPin('Zmiana roli osoby „' + nazwa + '”'))) return;
+        ({ error } = await sb.rpc('zmien_role', { p_id: id, p_rola: na }));
+        if (!error && ja_) { await odswiez(); return; }
+      }
       if (error) { msg('m-osoby', tlumacz(error)); return; }
       ladujOsoby();
+      if (a !== 'usun') ladujInstruktorowLista && ladujInstruktorowLista();
     }));
+  }
+
+  // ===== OKIENKO: WPISZ TEKST =====
+  function zapytajTekst(tytul, opis, wartosc) {
+    $('mt-tytul').textContent = tytul; $('mt-opis').textContent = opis || '';
+    $('mt-pole').value = wartosc || '';
+    const m = $('modal-tekst'); m.classList.remove('hidden');
+    setTimeout(() => { $('mt-pole').focus(); $('mt-pole').select(); }, 30);
+    return new Promise(res => {
+      const koniec = w => { m.classList.add('hidden'); res(w); };
+      $('f-tekst').onsubmit = e => { e.preventDefault(); const v = $('mt-pole').value.trim(); if (v) koniec(v); };
+      $('mt-anuluj').onclick = () => koniec(null);
+      m.onclick = e => { if (e.target === m) koniec(null); };
+    });
+  }
+
+  // ===== MOJE KONTO =====
+  function pokazJa() {
+    $('p-ja').textContent = profil.imie_nazwisko + ' · ' + (profil.rola === 'biuro' ? 'Biuro' : 'Instruktor');
+  }
+  function otworzKonto() {
+    if (!profil) return;
+    $('mk-kto').textContent = `${(ja && ja.email) || ''} · ${profil.rola === 'biuro' ? 'Biuro' : 'Instruktor'}${profil.szkoly ? ' · ' + profil.szkoly.nazwa : ''}`;
+    $('mk-imie').value = profil.imie_nazwisko || '';
+    $('mk-tel').value = profil.telefon || '';
+    $('mk-h1').value = ''; $('mk-h2').value = '';
+    msg('m-konto', '');
+    $('modal-konto').classList.remove('hidden');
+  }
+  const zamknijKonto = () => $('modal-konto').classList.add('hidden');
+  document.querySelectorAll('.konto-btn').forEach(b => b.onclick = otworzKonto);
+  $('mk-zamknij').onclick = zamknijKonto;
+  $('modal-konto').onclick = e => { if (e.target.id === 'modal-konto') zamknijKonto(); };
+  $('f-konto').onsubmit = e => { e.preventDefault(); zajety(e.submitter || $('f-konto').querySelector('button'), async () => {
+    const imie = $('mk-imie').value.trim().replace(/\s+/g, ' '), tel = $('mk-tel').value.trim();
+    const { error } = await sb.rpc('zmien_moje_dane', { p_imie_nazwisko: imie, p_telefon: tel });
+    if (error) { msg('m-konto', tlumacz(error)); return; }
+    profil.imie_nazwisko = imie; profil.telefon = tel || null; pokazJa();
+    const moj = (instruktorzy || []).find(i => i.user_id === ja.id); if (moj) { moj.imie_nazwisko = imie; moj.telefon = tel || null; }
+    msg('m-konto', 'Zapisano.', 'ok');
+    if (profil.rola === 'biuro') ladujOsoby();
+  }); };
+  $('f-konto-haslo').onsubmit = e => { e.preventDefault(); zajety(e.submitter || $('f-konto-haslo').querySelector('button'), async () => {
+    const h1 = $('mk-h1').value, h2 = $('mk-h2').value;
+    if (h1 !== h2) { msg('m-konto', 'Hasła nie są takie same.'); return; }
+    if (h1.length < 6) { msg('m-konto', 'Hasło musi mieć co najmniej 6 znaków.'); return; }
+    const { error } = await sb.auth.updateUser({ password: h1 });
+    if (error) { msg('m-konto', tlumacz(error)); return; }
+    $('mk-h1').value = ''; $('mk-h2').value = '';
+    msg('m-konto', 'Hasło zmienione. Następnym razem zaloguj się nowym hasłem.', 'ok');
+  }); };
+
+  // ===== HISTORIA ZMIAN =====
+  const H_NAZWA = {
+    jazdy: { dodanie: 'dodanie jazdy', zmiana: 'zmiana jazdy', usuniecie: 'usunięcie jazdy', potwierdzenie: 'potwierdzenie terminu' },
+    kursanci: { dodanie: 'nowy kursant', zmiana: 'zmiana kursanta', usuniecie: 'usunięcie kursanta' },
+    wolne: { dodanie: 'dodanie wolnego', zmiana: 'zmiana wolnego', usuniecie: 'usunięcie wolnego' },
+    dokupione: { dodanie: 'dokupione godziny', zmiana: 'zmiana dokupionych', usuniecie: 'usunięcie dokupionych' }
+  };
+  const hNazwa = h => ((H_NAZWA[h.tabela] || {})[h.akcja] || h.akcja) .replace('potwierdzenie terminu', /^egzamin/.test(h.opis || '') ? 'potwierdzenie egzaminu' : 'potwierdzenie terminu');
+  function hCzas(v) {
+    const d = dzisStr(new Date(v)), g = godzina(v);
+    if (d === dzisStr()) return 'dziś ' + g;
+    if (d === dodajDni(dzisStr(), -1)) return 'wczoraj ' + g;
+    const x = new Date(v); return `${pad(x.getDate())}.${pad(x.getMonth() + 1)} ${g}`;
+  }
+  let hDane = [];
+  async function ladujHistorie() {
+    if (!profil || profil.rola !== 'biuro') return;
+    const wl = profil.szkoly && profil.szkoly.historia_wl;
+    $('u-hist').checked = wl !== false;
+    if (wl === undefined) {
+      $('h-lista').innerHTML = '<p class="hint">Najpierw uruchom w Supabase plik krok17_konta_historia.sql.</p>';
+      zwInfo('hist', ''); return;
+    }
+    const { data, error } = await sb.from('historia').select('*').order('kiedy', { ascending: false }).limit(1000);
+    if (error) { $('h-lista').innerHTML = `<p class="hint">${esc(tlumacz(error))}</p>`; return; }
+    hDane = data || [];
+    const osoby = [...new Set(hDane.map(h => h.kto_nazwa).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pl'));
+    const w = $('h-osoba').value;
+    $('h-osoba').innerHTML = '<option value="">każda osoba</option>' + osoby.map(o => `<option>${esc(o)}</option>`).join('');
+    if (osoby.includes(w)) $('h-osoba').value = w;
+    rysujHistorie();
+  }
+  function rysujHistorie() {
+    const os = $('h-osoba').value, ak = $('h-akcja').value, tb = $('h-tabela').value;
+    const sz = $('h-szukaj').value.trim().toLowerCase();
+    const lista = hDane.filter(h => (!os || h.kto_nazwa === os) && (!ak || h.akcja === ak) && (!tb || h.tabela === tb) &&
+      (!sz || ((h.opis || '') + ' ' + (h.kto_nazwa || '')).toLowerCase().includes(sz)));
+    const IK = { dodanie: '➕', zmiana: '✏️', usuniecie: '🗑', potwierdzenie: '✅' };
+    $('h-lista').innerHTML = lista.slice(0, 300).map(h => `<div class="hrow"><div class="hczas">${hCzas(h.kiedy)}</div>
+      <div><b>${esc(h.kto_nazwa || '—')}</b> <span class="hakc ${h.akcja}">${IK[h.akcja] || ''} ${esc(hNazwa(h))}</span><br>
+      <span class="hopis">${esc(h.opis || '')}</span></div></div>`).join('')
+      + (lista.length > 300 ? `<p class="hint" style="margin-top:8px">Pokazano 300 z ${lista.length} – zawęź filtrem.</p>` : '')
+      || `<p class="hint">${hDane.length ? 'Nic nie pasuje do filtrów.' : (profil.szkoly.historia_wl === false ? 'Zapisywanie historii jest wyłączone.' : 'Brak zmian z ostatnich 30 dni.')}</p>`;
+    zwInfo('hist', profil.szkoly.historia_wl === false ? 'wyłączona' : (hDane.length ? hDane.length + ' wpisów' : 'włączona'));
+  }
+  ['h-osoba', 'h-akcja', 'h-tabela'].forEach(id => $(id).onchange = rysujHistorie);
+  $('h-szukaj').oninput = rysujHistorie;
+  $('u-hist').onchange = async () => {
+    const v = $('u-hist').checked;
+    if (!v && !await pytaj('Wyłączyć zapisywanie historii zmian?\nOd teraz program nie będzie zapisywał, kto co dodał, zmienił lub usunął. Dotychczasowe wpisy zostaną (do 30 dni).', { tak: 'Wyłącz' })) { $('u-hist').checked = true; return; }
+    const { error } = await sb.from('szkoly').update({ historia_wl: v }).eq('id', profil.szkola_id);
+    if (error) { $('u-hist').checked = !v; msg('m-hist', /historia_wl/.test(error.message) ? 'Najpierw uruchom w Supabase plik krok17_konta_historia.sql.' : tlumacz(error)); return; }
+    profil.szkoly.historia_wl = v;
+    msg('m-hist', v ? 'Historia zmian włączona.' : 'Historia zmian wyłączona.', 'ok');
+    rysujHistorie();
+  };
+  $('h-wyczysc').onclick = () => zajety($('h-wyczysc'), async () => {
+    if (!await pytaj('Usunąć całą historię zmian?\nNie da się jej przywrócić. Jazdy, kursanci i inne dane zostają bez zmian.', { tak: 'Wyczyść historię', niebezp: true })) return;
+    if (!(await wymagajPin('Wyczyszczenie historii zmian'))) return;
+    const { error } = await sb.rpc('wyczysc_historie');
+    if (error) { msg('m-hist', tlumacz(error)); return; }
+    msg('m-hist', 'Historia wyczyszczona.', 'ok'); ladujHistorie();
+  });
+
+  // stopka w okienku jazdy: kto dodał / kto ostatnio zmienił
+  function stopkaJazdy(j) {
+    const el = $('j-hist');
+    const pokaz = !!(j && profil && profil.rola === 'biuro' && (j.dodal || j.zmienil));
+    el.classList.toggle('hidden', !pokaz);
+    if (!pokaz) { el.innerHTML = ''; return; }
+    const kiedy = v => `${fmtData(v).slice(0, 5)} ${godzina(v)}`;
+    el.innerHTML = (j.dodal ? `🕓 Dodano: <b>${esc(j.dodal)}</b> · ${kiedy(j.utworzono)}` : '') +
+      (j.zmienil ? `${j.dodal ? '<br>' : ''}✏️ Ostatnio zmieniono: <b>${esc(j.zmienil)}</b> · ${kiedy(j.zmienil_kiedy || j.zmieniono)}${j.zmiana ? `<br><span>(${esc(j.zmiana)})</span>` : ''}` : '') +
+      `<br><button type="button" class="lnk" id="j-hist-wiecej">pokaż wszystkie zmiany tej jazdy</button><div id="j-hist-lista"></div>`;
+    $('j-hist-wiecej').onclick = async () => {
+      const { data, error } = await sb.from('historia').select('*').eq('rekord_id', j.id).order('kiedy', { ascending: false });
+      $('j-hist-wiecej').remove();
+      $('j-hist-lista').innerHTML = error ? esc(tlumacz(error)) : (data || []).map(h =>
+        `<div style="margin-top:6px">${hCzas(h.kiedy)} · <b>${esc(h.kto_nazwa || '—')}</b> · ${esc(hNazwa(h))}${h.opis && h.opis.includes(' — ') ? ': ' + esc(h.opis.split(' — ').slice(1).join(' — ')) : ''}</div>`).join('')
+        || '<div style="margin-top:6px">Brak wpisów z ostatnich 30 dni.</div>';
+    };
   }
 
   // ===== GRAFIK JAZD =====
@@ -1777,7 +2028,7 @@
   }
   function widacGrafik() {
     return profil && !$('s-panel').classList.contains('hidden') && !$('tab-grafik').classList.contains('hidden') &&
-      ['modal-jazda', 'modal-kursant', 'modal-wolne', 'modal-wa', 'modal-druk', 'modal-pin'].every(id => $(id).classList.contains('hidden'));
+      ['modal-jazda', 'modal-kursant', 'modal-wolne', 'modal-wa', 'modal-druk', 'modal-pin', 'modal-konto', 'modal-tekst'].every(id => $(id).classList.contains('hidden'));
   }
   document.addEventListener('visibilitychange', () => { if (!document.hidden && widacGrafik()) ladujDzien(true); });
 
@@ -2163,6 +2414,7 @@
     $('j-potwierdz').classList.toggle('hidden', !(j && wstepna(j)));
     $('j-usun').classList.toggle('hidden', !j);
     $('j-kursant-info').textContent = '';
+    stopkaJazdy(j);
     msg('m-jazda', '');
     $('modal-jazda').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
