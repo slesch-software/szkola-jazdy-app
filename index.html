@@ -147,6 +147,40 @@
   .kbar{height:6px;border-radius:4px;background:#e5e7eb;overflow:hidden;display:flex;margin:5px 0 2px;max-width:260px}
   .kbar i{display:block;height:100%}
   .k-kr{display:none}
+  /* strona startowa */
+  #s-start{max-width:1100px;margin:0 auto}
+  #s-start section{margin:44px 0}
+  .ls-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .ls-marka{font-weight:800;font-size:20px;display:flex;align-items:center;gap:8px}
+  .ls-ikona{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:10px;background:var(--g);font-size:20px}
+  .ls-zaloguj{padding:9px 16px;font-weight:600}
+  .ls-hero{display:grid;grid-template-columns:1fr;gap:24px;align-items:center;margin-top:28px!important}
+  .ls-hero h1{font-size:32px;line-height:1.15;margin:0 0 12px}
+  .ls-hero p{font-size:17px;line-height:1.55;color:#3b444c;margin:0 0 18px}
+  .ls-hero-img{width:100%;border-radius:14px;border:1px solid var(--b);box-shadow:0 10px 30px rgba(20,25,30,.12)}
+  .ls-cta{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+  .ls-btn{display:inline-block;background:var(--g);color:var(--ga);font-weight:700;padding:13px 20px;border-radius:10px;text-decoration:none}
+  .ls-btn2{padding:12px 18px;font-weight:600;border-radius:10px}
+  .ls-male{font-size:14px;color:var(--m);margin:6px 0 0}
+  .ls-h2{font-size:24px;margin:0 0 16px;text-align:center}
+  .ls-siatka{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+  .ls-kafel{background:#fff;border:1px solid var(--b);border-radius:12px;padding:16px}
+  .ls-kafel b{font-size:16px}.ls-kafel p{margin:6px 0 0;font-size:14.5px;color:#4a545d;line-height:1.5}
+  .ls-telefony{display:flex;gap:16px;overflow-x:auto;justify-content:center;padding-bottom:6px}
+  .ls-telefony figure{margin:0;flex:0 0 220px;text-align:center}
+  .ls-telefony img{width:100%;border-radius:18px;border:6px solid #1d2329;box-shadow:0 8px 24px rgba(20,25,30,.15)}
+  .ls-telefony figcaption{font-size:14px;color:var(--m);margin-top:8px}
+  .ls-ceny{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:10px}
+  .ls-cena{background:#fff;border:1px solid var(--b);border-radius:14px;padding:20px;text-align:center;display:flex;flex-direction:column;gap:4px}
+  .ls-cena span{color:var(--m);font-size:14px}
+  .ls-cena.ls-wyr{border:2px solid var(--gy)}
+  .ls-kwota{font-size:30px;font-weight:800;margin-top:8px}.ls-kwota small{font-size:14px;font-weight:500;color:var(--m)}
+  .ls-faq{max-width:760px;margin:0 auto}
+  .ls-faq details{background:#fff;border:1px solid var(--b);border-radius:10px;padding:12px 16px;margin-bottom:8px}
+  .ls-faq summary{cursor:pointer;font-weight:600}.ls-faq p{margin:8px 0 0;color:#4a545d;line-height:1.5}
+  .ls-kontakt{text-align:center}.ls-kontakt a{color:var(--gl)}
+  .ls-wstecz{background:none;border:none;padding:0 0 14px;color:var(--gl);font:inherit;font-size:14px;cursor:pointer;text-decoration:underline}
+  @media(min-width:900px){.ls-hero{grid-template-columns:1fr 1.25fr}.ls-hero h1{font-size:40px}}
   .link-box{margin-top:10px;padding:12px;border:1px solid var(--b);border-radius:10px;background:#f8fafc;font-size:14px}
   .link-box .url{font-family:ui-monospace,Consolas,monospace;font-size:12px;word-break:break-all;background:#fff;border:1px solid var(--b);border-radius:6px;padding:6px 8px;margin:6px 0 10px}
   .link-box .akcje{grid-template-columns:1fr 1fr}
@@ -370,7 +404,72 @@
   <div id="s-ladowanie"><p class="sub">Ładowanie…</p></div>
 
   <!-- Logowanie / rejestracja -->
+  <!-- Strona startowa (dla niezalogowanych) -->
+  <div id="s-start" class="hidden">
+    <div class="ls-top">
+      <div class="ls-marka"><span class="ls-ikona">🚘</span> Grafik OSK</div>
+      <button type="button" class="ls-zaloguj" data-do-logowania>Zaloguj się</button>
+    </div>
+    <section class="ls-hero">
+      <div class="ls-hero-txt">
+        <h1>Grafik jazd i rejestr kursantów dla szkoły jazdy</h1>
+        <p>Jeden program dla biura, instruktorów i kursantów. Działa w przeglądarce – na komputerze w biurze i na telefonie instruktora. Bez instalowania, bez papierowych grafików i wiecznego dzwonienia.</p>
+        <div class="ls-cta">
+          <a class="ls-btn" id="ls-proba" href="#">Wypróbuj 30 dni za darmo</a>
+          <button type="button" class="ls-btn2" data-do-logowania>Mam konto – zaloguj</button>
+        </div>
+        <p class="ls-male">Pomoc we wdrożeniu i przeniesieniu danych (np. z Excela) w cenie.</p>
+      </div>
+      <img class="ls-hero-img" src="img/grafik-biuro.jpg" alt="Grafik jazd w biurze – kolumny instruktorów" loading="lazy">
+    </section>
+
+    <section>
+      <h2 class="ls-h2">Co potrafi program</h2>
+      <div class="ls-siatka">
+        <div class="ls-kafel"><b>🚗 Grafik jazd</b><p>Dzień, tydzień i kolumny wszystkich instruktorów. Wolne okienka, kolizje na czerwono, egzamin z godziną w WORD, termin „do potwierdzenia”.</p></div>
+        <div class="ls-kafel"><b>👤 Rejestr kursantów</b><p>Skan profilu PKK aparatem telefonu, godziny kursu wg kategorii, dokupione godziny, pasek postępu, instruktor prowadzący.</p></div>
+        <div class="ls-kafel"><b>📱 Instruktor w telefonie</b><p>Aplikacja „Mój grafik jazd”: swoje jazdy, telefony kursantów, godziny w miesiącu, zgłaszanie wolnego.</p></div>
+        <div class="ls-kafel"><b>🔗 Kursant widzi swoje jazdy</b><p>Osobisty link bez logowania: najbliższe jazdy, wyjeżdżone godziny, termin egzaminu.</p></div>
+        <div class="ls-kafel"><b>💬 WhatsApp i SMS</b><p>Grafik dnia do instruktorów jednym kliknięciem, przypomnienia o jeździe dla kursantów.</p></div>
+        <div class="ls-kafel"><b>🖨 Wydruki i Excel</b><p>Grafik dnia i tygodnia do druku, karta kursanta, zestawienie godzin instruktorów, eksport do Excela.</p></div>
+        <div class="ls-kafel"><b>🔒 Bezpieczeństwo</b><p>Codzienna kopia na Dysk Google, kosz 30 dni, PIN, historia zmian. Instruktor nie widzi PESEL ani PKK.</p></div>
+        <div class="ls-kafel"><b>👥 Cały zespół</b><p>Kilka osób w biurze, każdy instruktor na swoim koncie. Dane szkoły na serwerach w UE.</p></div>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="ls-h2">Tak to wygląda na telefonie</h2>
+      <div class="ls-telefony">
+        <figure><img src="img/grafik-instruktor.jpg" alt="Grafik instruktora na telefonie" loading="lazy"><figcaption>Instruktor – „Mój grafik jazd”</figcaption></figure>
+        <figure><img src="img/kursanci.jpg" alt="Lista kursantów na telefonie" loading="lazy"><figcaption>Biuro – kursanci i postęp</figcaption></figure>
+        <figure><img src="img/kursant.jpg" alt="Widok kursanta" loading="lazy"><figcaption>Kursant – jego jazdy</figcaption></figure>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="ls-h2">Najczęstsze pytania</h2>
+      <div class="ls-faq">
+        <details><summary>Czy trzeba coś instalować?</summary><p>Nie. Program działa w przeglądarce. Na telefonie można go dodać do ekranu głównego – wtedy otwiera się jak aplikacja.</p></details>
+        <details><summary>Czy mogę przenieść dane z obecnego grafiku?</summary><p>Tak. Grafik i kursantów można wczytać z Excela, a przy wdrożeniu pomagamy przenieść dane z dotychczasowego programu.</p></details>
+        <details><summary>Gdzie są przechowywane dane?</summary><p>Na serwerach w Unii Europejskiej (Frankfurt). Każda szkoła widzi tylko swoje dane, a codzienna kopia trafia na Dysk Google szkoły. Szczegóły w <a href="prywatnosc.html" target="_blank" rel="noopener">polityce prywatności</a>.</p></details>
+        <details><summary>Czy kilka osób może pracować naraz?</summary><p>Tak – biuro na kilku komputerach i wszyscy instruktorzy na telefonach. Zmiany widać u wszystkich na bieżąco.</p></details>
+        <details><summary>Ile kosztuje program?</summary><p>Cena zależy od liczby instruktorów w szkole. Napisz albo zadzwoń – przygotujemy ofertę. Pierwsze 30 dni są bezpłatne.</p></details>
+        <details><summary>Jak zacząć?</summary><p>Napisz do nas – dostaniesz kod aktywacyjny. Zakładasz konto, wpisujesz kod i nazwę szkoły, a potem zapraszasz instruktorów jednym przyciskiem.</p></details>
+      </div>
+    </section>
+
+    <section class="ls-kontakt">
+      <h2 class="ls-h2">Kontakt</h2>
+      <p>Slesch – Beniamin Dziura · <a id="ls-mail" href="#"></a><span id="ls-tel"></span></p>
+      <div class="ls-cta" style="justify-content:center">
+        <a class="ls-btn" id="ls-proba2" href="#">Poproś o dostęp próbny</a>
+        <button type="button" class="ls-btn2" data-do-rejestracji>Mam kod aktywacyjny</button>
+      </div>
+    </section>
+  </div>
+
   <div id="s-login" class="hidden">
+    <button type="button" class="ls-wstecz" id="l-o-programie">‹ Czym jest Grafik OSK?</button>
     <img id="l-logo" class="logo-l hidden" alt="">
     <h1>Program dla szkół jazdy</h1>
     <p class="sub">Grafik jazd, kursanci, instruktorzy</p>
@@ -1079,104 +1178,28 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.43';
+  const WERSJA = '1.45';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
     autor: 'Slesch – Beniamin Dziura',
-    email: 'slesch.software@gmail.com',
-    telefon: ''          // <- wpisz numer, np. '600 123 456'
+    email: 'sleschgsm@wp.pl',
+    telefon: '+48 504 789 595'
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
-    { v: '1.43', d: '20.11.2026', p: [
-      'Usunięto jednorazowe „Przenieś dane ze starych programów” (dane już przeniesione).'] },
-    { v: '1.42', d: '20.11.2026', p: [
-      'Przycisk „📩 Zaproś” przy instruktorze bez konta (Ustawienia → Instruktorzy w grafiku) – gotowa wiadomość SMS / WhatsApp z adresem, imieniem i nazwiskiem oraz kodem szkoły.'] },
-    { v: '1.41', d: '20.11.2026', p: [
-      'Polityka prywatności programu (link „Prywatność” na dole strony).'] },
-    { v: '1.40', d: '20.11.2026', p: [
-      'Program działa pod adresem grafikosk.pl.',
-      'Kopia na Dysk Google działa od razu – bez wpisywania identyfikatora Google (Ustawienia → Kopia zapasowa → „Wyślij kopię na Dysk Google teraz”).'] },
-    { v: '1.39', d: '20.11.2026', p: [
-      '🔗 Osobisty link dla kursanta (w karcie kursanta): kursant bez logowania widzi swoje jazdy, godziny kursu i egzamin. Wysyłka SMS-em lub WhatsAppem.'] },
-    { v: '1.38', d: '20.11.2026', p: [
-      '„Wyloguj” wylogowuje tylko z tego komputera lub telefonu – na innych urządzeniach konto zostaje zalogowane.'] },
-    { v: '1.37', d: '20.11.2026', p: [
-      'Lista kursantów: filtr po kategorii (np. tylko CE).'] },
-    { v: '1.36', d: '20.11.2026', p: [
-      'Lista kursantów na telefonie: zwarte karty (kategoria w ramce, prowadzący, godziny, pasek i najbliższa jazda) i filtry mieszczące się na ekranie.'] },
-    { v: '1.35', d: '20.11.2026', p: [
-      'Instruktor może zgłaszać swoje wolne (biuro zatwierdza na pasku 🔔 nad grafikiem) albo sam je wpisywać – biuro włącza to osobno każdemu instruktorowi (Ustawienia → Instruktorzy).'] },
-    { v: '1.34', d: '20.11.2026', p: [
-      'Wydruk dzienny: dwie puste linijki na końcu do ręcznego dopisania kursanta.'] },
-    { v: '1.33', d: '20.11.2026', p: [
-      'Zmiana nazwy szkoły w Ustawieniach.',
-      'Na telefonie logo i nazwa szkoły jedno pod drugim – nazwa nie łamie się już na kilka linijek.'] },
-    { v: '1.32', d: '20.11.2026', p: [
-      'Poprawka nazwy „Mój grafik jazd” przy instalacji na Androidzie.'] },
-    { v: '1.31', d: '20.11.2026', p: [
-      'Program dodany do ekranu telefonu przez instruktora nazywa się „Mój grafik jazd” (z nazwą szkoły).'] },
-    { v: '1.30', d: '20.11.2026', p: [
-      'Poprawka przenoszenia danych (błąd „utworzono” przy zapisie kursantów).'] },
-    { v: '1.29', d: '20.11.2026', p: [
-      '📥 Przeniesienie danych ze starego grafiku i rejestru PKK (Ustawienia) – z podsumowaniem przed zapisem.'] },
-    { v: '1.28', d: '20.11.2026', p: [
-      'Zapomniany PIN: dostawca programu może go zresetować na prośbę biura (z wpisem w historii zmian).'] },
-    { v: '1.27', d: '20.11.2026', p: [
-      '👤 „Moje konto” (przycisk na górze): każdy sam poprawia swoje imię, nazwisko i telefon oraz zmienia hasło.',
-      'Kilka osób w biurze: nowa osoba dołącza kodem szkoły, a biuro zatwierdza ją jako biuro albo jako instruktora. Rolę można później zmienić.',
-      'Biuro może poprawić imię i nazwisko innej osoby (✏️ na liście osób).',
-      '🕓 Historia zmian (Ustawienia): kto dodał, zmienił lub usunął jazdę, kursanta, wolne, dokupione godziny – z ostatnich 30 dni. Można ją wyłączyć.',
-      'W okienku jazdy widać, kto ją dodał i kto ostatnio zmienił.'] },
-    { v: '1.26', d: '20.11.2026', p: [
-      'Większe i czytelniejsze przyciski Dziś / Jutro / Pojutrze, strzałki ‹ › oraz data dnia w grafiku.'] },
-    { v: '1.24', d: '20.11.2026', p: [
-      'Nowe okienko „Co nowego” i „O programie” (na dole strony) – z kontaktem i przyciskiem „Zgłoś problem / pomysł”.',
-      'Po aktualizacji programu pojawia się pasek z informacją, co się zmieniło.'] },
-    { v: '1.23', d: '20.11.2026', p: [
-      'Pogrubione napisy na zakładkach Grafik, Kursanci, Miesiąc, Ustawienia.',
-      'Ustawienia podzielone na zwijane sekcje z podglądem najważniejszych informacji.'] },
-    { v: '1.21', d: '20.11.2026', p: [
-      'Zakładanie nowej szkoły kodem aktywacyjnym („Zakładam nową szkołę” przy rejestracji).'] },
-    { v: '1.20', d: '20.11.2026', p: [
-      'Pytania o potwierdzenie w okienku programu zamiast okna przeglądarki.',
-      'Ustawienie „Pytaj przed usunięciem jazdy lub wolnego”.',
-      'Komunikaty błędów przy logowaniu po polsku.'] },
-    { v: '1.19', d: '20.11.2026', p: [
-      'Skan profilu PKK: poprawna kolejność imienia i nazwiska.'] },
-    { v: '1.18', d: '20.11.2026', p: [
-      'Przyciski Dziś / Jutro / Pojutrze w grafiku.',
-      'Nakładające się jazdy oznaczone na czerwono (także jazda w czasie wolnego i kursant u dwóch instruktorów naraz).',
-      'Egzamin: czas instruktora zaokrąglany do pełnej godziny lub wpół do.'] },
-    { v: '1.16', d: '20.11.2026', p: [
-      'Egzamin z godziną w WORD (np. 13:45) – czas instruktora ustawia się sam wg kategorii.',
-      'Termin wstępny „❓ do potwierdzenia” z przypomnieniem na górze grafiku.',
-      'Przełącznik „Nie wliczaj kursantowi do godzin kursu”.'] },
-    { v: '1.15', d: '20.11.2026', p: [
-      'Wolne: kilka odcinków jednego dnia naraz (np. 8–9 i 13–14).'] },
-    { v: '1.12', d: '20.11.2026', p: [
-      'Instruktor prowadzący kursanta (z filtrem na liście kursantów).',
-      'Lepsza ochrona danych – instruktor widzi tylko podstawowe dane swoich kursantów.'] },
-    { v: '1.11', d: '20.11.2026', p: [
-      'PESEL w karcie kursanta – rozróżnia kursantów o tym samym imieniu i nazwisku.',
-      'Wolne na kilka dni (urlop), „Wyczyść dzień”, ostrzeżenie „ponad kurs – dokupił godziny?”.',
-      'Lista kursantów: pasek postępu, najbliższa jazda, sortowanie i filtry.',
-      'WhatsApp: wysyłka „po kolei” do wszystkich instruktorów, kopiowanie obrazka do schowka.',
-      'Wydruk całego tygodnia.'] },
-    { v: '1.9', d: '19.11.2026', p: [
-      'Logo szkoły z wyborem, gdzie ma się pokazywać.'] },
-    { v: '1.8', d: '19.11.2026', p: [
-      'Kopia zapasowa: automatycznie do pliku i na Dysk Google, przywracanie z pliku.'] },
-    { v: '1.0–1.7', d: '19.11.2026', p: [
-      'Pierwsza wersja: logowanie biuro / instruktor, rejestr kursantów ze skanem PKK, grafik jazd, wolne, zestawienie miesiąca, WhatsApp, wydruki, Excel, kosz i PIN.'] }
+    { v: '1.45', d: '20.11.2026', p: [
+      'Start programu Grafik OSK pod adresem grafikosk.pl.',
+      'Grafik jazd i rejestr kursantów dla biura, aplikacja „Mój grafik jazd” dla instruktorów i osobisty link dla kursantów.',
+      'Codzienna kopia zapasowa do pliku i na Dysk Google, kosz 30 dni, PIN i historia zmian.',
+      'Wysyłka grafiku przez WhatsApp i SMS, wydruki oraz eksport do Excela.'] }
   ];
   // ======================
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   const ADRES = location.origin + location.pathname;
   const $ = id => document.getElementById(id);
-  const EKRANY = ['s-ladowanie', 's-login', 's-haslo', 's-kod', 's-czeka', 's-panel', 's-admin', 's-kursant'];
+  const EKRANY = ['s-start', 's-ladowanie', 's-login', 's-haslo', 's-kod', 's-czeka', 's-panel', 's-admin', 's-kursant'];
   const KURSANT_TOKEN = new URLSearchParams(location.search).get('k');   // osobisty link kursanta
 
   let tryb = 'login';
@@ -1282,6 +1305,26 @@
   async function zajety(btn, fn) {
     btn.disabled = true;
     try { await fn(); } finally { btn.disabled = false; }
+  }
+
+  // ----- Strona startowa: dla nowych odwiedzających; kto już się logował (albo ma aplikację na ekranie) – od razu logowanie -----
+  let wybranoLogowanie = false;
+  function pokazStart() {
+    if (wybranoLogowanie) return false;
+    try { if (localStorage.getItem('konto_bylo') === '1') return false; } catch (_) {}
+    return !(window.matchMedia && matchMedia('(display-mode: standalone)').matches) && !navigator.standalone;
+  }
+  const doLogowania = t => { wybranoLogowanie = true; ustawTryb(t); pokaz('s-login'); window.scrollTo(0, 0); };
+  document.querySelectorAll('[data-do-logowania]').forEach(b => b.onclick = () => doLogowania('login'));
+  document.querySelectorAll('[data-do-rejestracji]').forEach(b => b.onclick = () => doLogowania('rej'));
+  $('l-o-programie').onclick = () => { pokaz('s-start'); window.scrollTo(0, 0); };
+  {
+    const temat = 'Grafik OSK – prośba o dostęp próbny';
+    const tresc = 'Dzień dobry,\n\nchcielibyśmy wypróbować Grafik OSK.\n\nNazwa szkoły:\nMiejscowość:\nLiczba instruktorów:\nTelefon kontaktowy:\n';
+    const mail = `mailto:${PROGRAM.email}?subject=${encodeURIComponent(temat)}&body=${encodeURIComponent(tresc)}`;
+    $('ls-proba').href = mail; $('ls-proba2').href = mail;
+    $('ls-mail').href = 'mailto:' + PROGRAM.email; $('ls-mail').textContent = PROGRAM.email;
+    if (PROGRAM.telefon) $('ls-tel').innerHTML = ` · tel. <a href="tel:${PROGRAM.telefon.replace(/\s/g, '')}">${PROGRAM.telefon}</a>`;
   }
 
   // ----- Logowanie / rejestracja -----
@@ -1464,7 +1507,8 @@
     if (KURSANT_TOKEN) { pokazKursanta(); return; }
     if (odzyskiwanieHasla) { pokaz('s-haslo'); return; }
     if (session === undefined) session = (await sb.auth.getSession()).data.session;
-    if (!session) { ja = null; profil = null; ustawTryb(tryb); pokaz('s-login'); return; }
+    if (!session) { ja = null; profil = null; ustawTryb(tryb); pokaz(pokazStart() ? 's-start' : 's-login'); return; }
+    try { localStorage.setItem('konto_bylo', '1'); } catch (_) {}
     if (location.hash.includes('access_token')) history.replaceState(null, '', ADRES);
 
     ja = session.user;
