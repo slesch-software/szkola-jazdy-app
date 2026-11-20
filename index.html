@@ -166,8 +166,11 @@
   .ls-siatka{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
   .ls-kafel{background:#fff;border:1px solid var(--b);border-radius:12px;padding:16px}
   .ls-kafel b{font-size:16px}.ls-kafel p{margin:6px 0 0;font-size:14.5px;color:#4a545d;line-height:1.5}
-  .ls-telefony{display:flex;gap:16px;overflow-x:auto;justify-content:center;padding-bottom:6px}
-  .ls-telefony figure{margin:0;flex:0 0 220px;text-align:center}
+  .ls-telefony{display:flex;gap:16px;overflow-x:auto;padding:0 4px 6px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+  .ls-telefony figure{margin:0;flex:0 0 220px;text-align:center;scroll-snap-align:center}
+  .ls-telefony figure:first-child{margin-left:auto}.ls-telefony figure:last-child{margin-right:auto}
+  .ls-przesun{display:none;text-align:center;font-size:14px;color:var(--m);margin:6px 0 0}
+  @media(max-width:760px){.ls-telefony figure{flex-basis:72%}.ls-przesun{display:block}}
   .ls-telefony img{width:100%;border-radius:18px;border:6px solid #1d2329;box-shadow:0 8px 24px rgba(20,25,30,.15)}
   .ls-telefony figcaption{font-size:14px;color:var(--m);margin-top:8px}
   .ls-ceny{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:10px}
@@ -444,6 +447,7 @@
         <figure><img src="img/kursanci.jpg" alt="Lista kursantów na telefonie" loading="lazy"><figcaption>Biuro – kursanci i postęp</figcaption></figure>
         <figure><img src="img/kursant.jpg" alt="Widok kursanta" loading="lazy"><figcaption>Kursant – jego jazdy</figcaption></figure>
       </div>
+      <p class="ls-przesun">← przesuń palcem, żeby zobaczyć pozostałe →</p>
     </section>
 
     <section>
@@ -1178,7 +1182,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.45';
+  const WERSJA = '1.46';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
