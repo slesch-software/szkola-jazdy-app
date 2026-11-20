@@ -193,6 +193,15 @@
   table.mc tr.det a{color:var(--gl)}
   table.mc tr.razem td{font-weight:700;border-top:2px solid var(--t)}
   #druk{display:none}
+  .zw-nag{cursor:pointer;user-select:none;display:flex;align-items:center;gap:10px;margin:0!important}
+  .zw-nag::before{content:'▸';font-size:.9em;color:var(--m);transition:transform .15s;display:inline-block;width:1em}
+  .zw-otw > .zw-nag::before{transform:rotate(90deg)}
+  .zw-nag .zw-info{margin-left:auto;font-size:13px;font-weight:500;color:var(--m);text-align:right}
+  .zw-tresc{margin-top:12px}
+  [data-zw]:not(.zw-otw) > .zw-tresc{display:none}
+  .zw-pod{border:1px solid var(--b);border-radius:10px;padding:10px 12px;margin-top:14px;background:#fafbfc}
+  .zw-pod > .zw-nag{font-size:15px}
+  .zw-pod .zw-tresc{margin-top:8px}
   .a-szk{border:1px solid var(--b);border-radius:12px;padding:12px 14px;margin-top:10px;background:#fff}
   .a-szk.zabl{background:#fdf2f2;border-color:#f5c2c0}
   .a-szk h3{margin:0 0 4px;font-size:16px;display:flex;justify-content:space-between;gap:8px;align-items:center}
@@ -530,24 +539,24 @@
 
       <!-- Zakładka: osoby -->
       <div id="tab-osoby" class="hidden">
-        <div class="card">
+        <div class="card" data-zw="kod">
           <h2>Kod dla instruktorów</h2>
           <div class="kod" id="p-kod"></div>
           <p class="hint">Instruktor zakłada konto, wpisuje ten kod, a Ty zatwierdzasz go poniżej.</p>
         </div>
-        <div class="card">
+        <div class="card" data-zw="osoby">
           <h2>Osoby w szkole</h2>
           <div id="p-osoby"><p class="hint">Ładowanie…</p></div>
           <div id="m-osoby" class="msg"></div>
         </div>
-        <div class="card">
+        <div class="card" data-zw="instr">
           <h2>Instruktorzy w grafiku</h2>
           <p class="hint" style="margin-bottom:8px">Instruktor może być w grafiku także bez konta. Gdy później założy konto pod tym samym imieniem i nazwiskiem, po zatwierdzeniu połączy się z tym wpisem.</p>
           <div id="p-instruktorzy"><p class="hint">Ładowanie…</p></div>
           <button id="i-dodaj" class="btn2" type="button">+ Instruktor bez konta</button>
           <div id="m-instruktorzy" class="msg"></div>
         </div>
-        <div class="card">
+        <div class="card" data-zw="pin">
           <h2>🔒 PIN do ważnych operacji</h2>
           <p class="hint" id="pin-status">Sprawdzam…</p>
           <p class="hint" style="margin-top:6px">Gdy PIN jest włączony, program pyta o niego przy usuwaniu kursanta, usuwaniu osoby ze szkoły, wczytywaniu z Excela i przywracaniu kopii.</p>
@@ -557,25 +566,29 @@
           </div>
           <div id="m-pin" class="msg"></div>
         </div>
-          <div id="g-ustawienia" class="card hidden">
+          <div id="g-ustawienia" class="card hidden" data-zw="grafik">
             <h2>🕘 Grafik i godziny kursu</h2>
             <div class="siatka">
               <div><label for="u-od">Praca od</label><input type="time" id="u-od" step="900"></div>
               <div><label for="u-do">Praca do</label><input type="time" id="u-do" step="900"></div>
               <div class="cala"><label for="u-dl">Długość jazdy (minuty)</label><input type="number" id="u-dl" min="30" max="480" step="15"></div>
             </div>
-            <label style="margin-top:16px">Godziny kursu wg kategorii</label>
+            <div class="zw-pod" data-zw="katy">
+              <h3>Godziny kursu wg kategorii</h3>
             <p class="hint">Puste pole = jak w rozporządzeniu (szara liczba). Wpisz, jeśli szkoła prowadzi kurs w innym wymiarze.</p>
-            <div class="katy" id="u-katy"></div>
-            <label style="margin-top:16px">Czas instruktora na egzamin (godziny) wg kategorii</label>
+              <div class="katy" id="u-katy"></div>
+            </div>
+            <div class="zw-pod" data-zw="egz">
+              <h3>Czas instruktora na egzamin wg kategorii</h3>
             <p class="hint">Ile godzin instruktor jest zajęty przy egzaminie – program sam ustawi taki blok w grafiku po wpisaniu godziny egzaminu.</p>
-            <div class="katy" id="u-egz"></div>
+              <div class="katy" id="u-egz"></div>
+            </div>
             <button id="u-zapisz" class="btn" type="button">Zapisz ustawienia</button>
             <label class="przel" style="margin-top:18px"><input id="u-pytaj" type="checkbox"><span class="suw"></span> Pytaj przed usunięciem jazdy lub wolnego</label>
             <p class="hint" style="margin-top:2px">Wyłączone – jazda i wolne usuwają się od razu (zawsze można je przywrócić z kosza). Usuwanie kursanta, osoby czy całego dnia zawsze pyta.</p>
             <div id="m-ust" class="msg"></div>
           </div>
-        <div class="card">
+        <div class="card" data-zw="logo">
           <h2>🖼 Logo szkoły</h2>
           <p class="hint" id="lg-status">Brak logo.</p>
           <img id="lg-podglad" class="logo-pod hidden" alt="" style="margin-top:10px">
@@ -591,7 +604,7 @@
           <label class="check"><input type="checkbox" data-lm="karta"> Na karcie kursanta</label>
           <div id="m-logo" class="msg"></div>
         </div>
-        <div class="card">
+        <div class="card" data-zw="kopia">
           <h2>💾 Kopia zapasowa</h2>
           <p class="hint">Cała baza szkoły (instruktorzy, kursanci, jazdy, wolne, dokupione godziny) w jednym pliku.</p>
           <h3 style="font-size:15px;margin:14px 0 4px">Na tym komputerze</h3>
@@ -611,7 +624,7 @@
           </div>
           <div id="m-kopia" class="msg"></div>
         </div>
-        <div class="card">
+        <div class="card" data-zw="kosz">
           <h2>🗑 Kosz (30 dni)</h2>
           <p class="hint">Usunięte jazdy, kursanci, wolne i dokupione godziny. Po 30 dniach znikają na stałe.</p>
           <div id="kosz-lista" style="margin-top:8px"><p class="hint">Ładowanie…</p></div>
@@ -854,7 +867,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.21';
+  const WERSJA = '1.22';
   // ======================
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -3277,6 +3290,44 @@ function cellTime(v) {
     profil.szkoly.pytaj_usun = v;
     msg('m-ust', v ? 'Program będzie pytał przed usunięciem jazdy i wolnego.' : 'Jazdy i wolne będą usuwane bez pytania (zostają w koszu przez 30 dni).', 'ok');
   };
+  // ===== ZWIJANE SEKCJE W USTAWIENIACH =====
+  function zwStan(k) { try { return localStorage.getItem('zw_' + k) === '1'; } catch (_) { return false; } }
+  document.querySelectorAll('[data-zw]').forEach(el => {
+    const nag = el.querySelector(':scope > h2, :scope > h3');
+    const tresc = document.createElement('div'); tresc.className = 'zw-tresc';
+    while (nag.nextSibling) tresc.appendChild(nag.nextSibling);
+    el.appendChild(tresc);
+    nag.classList.add('zw-nag'); nag.setAttribute('role', 'button'); nag.tabIndex = 0;
+    const info = document.createElement('span'); info.className = 'zw-info'; nag.appendChild(info);
+    el.classList.toggle('zw-otw', zwStan(el.dataset.zw));
+    nag.setAttribute('aria-expanded', el.classList.contains('zw-otw'));
+    const przelacz = () => {
+      const otw = el.classList.toggle('zw-otw');
+      nag.setAttribute('aria-expanded', otw);
+      try { localStorage.setItem('zw_' + el.dataset.zw, otw ? '1' : '0'); } catch (_) {}
+    };
+    nag.onclick = przelacz;
+    nag.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); przelacz(); } };
+  });
+  function zwInfo(k, t) { const el = document.querySelector(`[data-zw="${k}"] > .zw-nag .zw-info`); if (el) el.textContent = t || ''; }
+  function odswiezZwInfo() {
+    if (!profil || profil.rola !== 'biuro') return;
+    const sz = profil.szkoly || {};
+    zwInfo('kod', sz.kod_zaproszenia || '');
+    const os = $('p-osoby').querySelectorAll('.row').length; zwInfo('osoby', os ? os + ' ' + (os === 1 ? 'osoba' : os < 5 ? 'osoby' : 'osób') : '');
+    const ins = (instruktorzy || []).filter(i => i.aktywny).length; zwInfo('instr', ins ? ins + ' aktywnych' : '');
+    zwInfo('pin', typeof pinWlaczony === 'undefined' ? '' : (pinWlaczony ? 'włączony' : 'wyłączony'));
+    zwInfo('grafik', sz.grafik_od ? `${hm(sz.grafik_od)}–${hm(sz.grafik_do)} · jazda ${sz.dlugosc_jazdy} min` : '');
+    const kk = Object.keys(sz.godziny_kategorii || {}).length; zwInfo('katy', kk ? `zmienione: ${kk}` : 'domyślne');
+    const ke = Object.keys(sz.egzamin_kategorii || {}).length; zwInfo('egz', ke ? `zmienione: ${ke}` : 'domyślne (1 h / 2 h)');
+    zwInfo('logo', sz.logo ? 'ustawione' : 'brak');
+    let ost = ''; try { ost = localStorage.getItem('kopia_plik_' + profil.szkola_id) || ''; } catch (_) {}
+    zwInfo('kopia', ost ? 'ostatnia: ' + (dzisStr(new Date(ost)) === dzisStr() ? 'dziś ' + godzina(ost) : fmtData(ost)) : 'brak kopii na tym komputerze');
+    const kz = $('kosz-lista').querySelectorAll('.row').length; zwInfo('kosz', kz ? kz + ' ' + (kz === 1 ? 'pozycja' : kz < 5 ? 'pozycje' : 'pozycji') : 'pusty');
+  }
+  { let t; new MutationObserver(() => { clearTimeout(t); t = setTimeout(odswiezZwInfo, 150); })
+      .observe($('tab-osoby'), { subtree: true, childList: true, characterData: true }); }
+
   // ===== OKIENKO PYTANIA (zamiast okna przeglądarki) =====
   function pytaj(tekst, o = {}) {
     const t = String(tekst);
