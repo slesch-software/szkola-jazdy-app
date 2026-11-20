@@ -193,6 +193,14 @@
   table.mc tr.det a{color:var(--gl)}
   table.mc tr.razem td{font-weight:700;border-top:2px solid var(--t)}
   #druk{display:none}
+  #modal-pytaj{z-index:40}
+  #modal-pytaj .sheet{max-width:440px}
+  #mq-tekst{white-space:pre-line;font-size:16px;line-height:1.45;margin:4px 0 18px}
+  #mq-przyciski{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+  #mq-przyciski button{min-width:110px;padding:11px 18px;font-size:15px;border-radius:10px;cursor:pointer;font-weight:600}
+  #mq-nie{background:#fff;border:1px solid var(--b);color:var(--t)}
+  #mq-tak{background:var(--g);border:1px solid var(--g);color:var(--ga)}
+  #mq-tak.niebezp{background:var(--r);border-color:var(--r);color:#fff}
   .szybkie{display:flex;gap:6px;justify-content:center;margin:10px 0 12px}
   .szybkie button{padding:6px 16px;font-size:14px;border-radius:99px;border:1px solid var(--b);background:#fff;cursor:pointer;color:var(--t);line-height:1.2}
   .szybkie button small{color:var(--m);margin-left:5px}
@@ -501,6 +509,8 @@
             <p class="hint">Ile godzin instruktor jest zajęty przy egzaminie – program sam ustawi taki blok w grafiku po wpisaniu godziny egzaminu.</p>
             <div class="katy" id="u-egz"></div>
             <button id="u-zapisz" class="btn" type="button">Zapisz ustawienia</button>
+            <label class="przel" style="margin-top:18px"><input id="u-pytaj" type="checkbox"><span class="suw"></span> Pytaj przed usunięciem jazdy lub wolnego</label>
+            <p class="hint" style="margin-top:2px">Wyłączone – jazda i wolne usuwają się od razu (zawsze można je przywrócić z kosza). Usuwanie kursanta, osoby czy całego dnia zawsze pyta.</p>
             <div id="m-ust" class="msg"></div>
           </div>
         <div class="card">
@@ -614,6 +624,16 @@
 </div>
 
 <!-- Okno: PIN -->
+<div id="modal-pytaj" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="mq-tytul">
+  <div class="sheet">
+    <h2 id="mq-tytul" style="margin-top:0"></h2>
+    <p id="mq-tekst"></p>
+    <div id="mq-przyciski">
+      <button id="mq-nie" type="button">Anuluj</button>
+      <button id="mq-tak" type="button">OK</button>
+    </div>
+  </div>
+</div>
 <div id="modal-pin" class="modal hidden">
   <div class="sheet" style="max-width:380px">
     <h2 id="mp-tytul">Podaj PIN</h2>
@@ -772,7 +792,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.19';
+  const WERSJA = '1.20';
   // ======================
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -797,7 +817,21 @@
     el.textContent = tekst || '';
     el.className = 'msg ' + (tekst ? typ : '');
   }
+  const BLEDY_PL = [
+    [/Error sending recovery email|Error sending .*email/i, 'Nie udało się wysłać maila. Spróbuj za chwilę albo zgłoś to biuru.'],
+    [/Invalid login credentials/i, 'Zły e-mail lub hasło.'],
+    [/Email not confirmed/i, 'Adres e-mail nie został jeszcze potwierdzony.'],
+    [/User already registered/i, 'Konto z tym adresem e-mail już istnieje – zaloguj się albo użyj „Nie pamiętam hasła”.'],
+    [/Password should be at least (\d+)/i, 'Hasło musi mieć co najmniej $1 znaków.'],
+    [/(email )?rate limit|too many requests|For security purposes, you can only request this/i, 'Zbyt wiele prób w krótkim czasie – odczekaj chwilę i spróbuj ponownie.'],
+    [/Unable to validate email address|invalid format/i, 'Nieprawidłowy adres e-mail.'],
+    [/New password should be different/i, 'Nowe hasło musi być inne niż poprzednie.'],
+    [/Auth session missing|JWT expired|invalid JWT/i, 'Sesja wygasła – zaloguj się ponownie.'],
+    [/Failed to fetch|NetworkError|Load failed/i, 'Brak połączenia z internetem albo serwer nie odpowiada.']
+  ];
   function tlumacz(e) {
+    { const t = String((e && (e.message || e.error_description)) || e || '');
+      for (const [r, pl] of BLEDY_PL) { const mm = t.match(r); if (mm) return pl.replace('$1', mm[1] || '6'); } }
     const m = (e && e.message) || String(e);
     if (/Invalid login credentials/i.test(m)) return 'Nieprawidłowy e-mail lub hasło.';
     if (/Email not confirmed/i.test(m)) return 'E-mail nie jest jeszcze potwierdzony – kliknij link w wiadomości.';
@@ -908,7 +942,7 @@
 
     ja = session.user;
     const { data, error } = await sb.from('profile')
-      .select('id, rola, imie_nazwisko, zatwierdzony, szkola_id, szkoly(nazwa, kod_zaproszenia, grafik_od, grafik_do, dlugosc_jazdy, godziny_kategorii, google_client_id, kopia_dysk, logo, logo_miejsca, egzamin_kategorii)')
+      .select('id, rola, imie_nazwisko, zatwierdzony, szkola_id, szkoly(*)')
       .eq('id', ja.id).maybeSingle();
 
     if (error) {
@@ -1166,7 +1200,7 @@
         <button type="button" data-dok="${d.id}" title="Usuń">✕</button></div>`;
     }).join('') || '<p class="hint">Brak dokupionych godzin.</p>';
     $('k-dok-lista').querySelectorAll('button[data-dok]').forEach(b => b.onclick = () => zajety(b, async () => {
-      if (!confirm('Usunąć ten wpis dokupionych godzin?')) return;
+      if (!await pytaj('Usunąć ten wpis dokupionych godzin?')) return;
       const { error } = await sb.from('dokupione').delete().eq('id', b.dataset.dok);
       if (error) { $('k-dok-info').textContent = tlumacz(error); return; }
       await odswiezEdytowanego(); pokazDokupione();
@@ -1217,10 +1251,10 @@
       if ($('k-prowadzacy').value || (edytowany && edytowany.instruktor_id)) dane.instruktor_id = $('k-prowadzacy').value || null;
       const pesel = $('k-pesel').value.replace(/\D/g, '');
       if (pesel || (edytowany && edytowany.pesel)) dane.pesel = pesel || null;
-      if (pesel && !peselOk(pesel) && !confirm('Numer PESEL wygląda na błędny (zła liczba cyfr albo suma kontrolna). Zapisać mimo to?')) return;
+      if (pesel && !peselOk(pesel) && !await pytaj('Numer PESEL wygląda na błędny (zła liczba cyfr albo suma kontrolna). Zapisać mimo to?')) return;
       if (pesel) {
         const inny = kursanci.find(x => x.pesel === pesel && (!edytowany || x.id !== edytowany.id));
-        if (inny && !confirm(`Ten PESEL ma już kursant „${nazwaK(inny)}”${inny.kategoria ? ' (kat. ' + inny.kategoria + ')' : ''}.\n\nTo może być ta sama osoba na innym kursie. Zapisać mimo to?`)) return;
+        if (inny && !await pytaj(`Ten PESEL ma już kursant „${nazwaK(inny)}”${inny.kategoria ? ' (kat. ' + inny.kategoria + ')' : ''}.\n\nTo może być ta sama osoba na innym kursie. Zapisać mimo to?`)) return;
       }
       const zapis = $('k-zapis').value;
       if (zapis && zapis !== (edytowany && edytowany.utworzono ? dzisStr(new Date(edytowany.utworzono)) : dzisStr()))
@@ -1228,14 +1262,14 @@
       if (dane.pkk) {
         const ten = kursanci.find(x => x.pkk === dane.pkk && (!edytowany || x.id !== edytowany.id));
         if (ten) {
-          if (confirm(`Kursant z tym numerem PKK już jest w rejestrze: ${nazwaK(ten)}${ten.kategoria ? ' (kat. ' + ten.kategoria + ')' : ''}.\n\nOtworzyć jego kartę zamiast zapisywać nowego?`)) {
+          if (await pytaj(`Kursant z tym numerem PKK już jest w rejestrze: ${nazwaK(ten)}${ten.kategoria ? ' (kat. ' + ten.kategoria + ')' : ''}.\n\nOtworzyć jego kartę zamiast zapisywać nowego?`)) {
             zamknijKursanta(); otworzKursanta(ten);
           }
           return;
         }
       }
       if (dane.pkk && dane.pkk.length !== 20 &&
-          !confirm('Numer PKK ma ' + dane.pkk.length + ' cyfr zamiast 20. Zapisać mimo to?')) return;
+          !await pytaj('Numer PKK ma ' + dane.pkk.length + ' cyfr zamiast 20. Zapisać mimo to?')) return;
       let wynik;
       if (edytowany) {
         wynik = await sb.from('kursanci').update(dane).eq('id', edytowany.id);
@@ -1265,7 +1299,7 @@
   $('k-usun').onclick = () => zajety($('k-usun'), async () => {
     if (!edytowany) return;
     if (!(await wymagajPin('Usunięcie kursanta „' + nazwaK(edytowany) + '”'))) return;
-    if (!confirm('Usunąć kursanta „' + edytowany.nazwisko + ' ' + edytowany.imie +
+    if (!await pytaj('Usunąć kursanta „' + edytowany.nazwisko + ' ' + edytowany.imie +
                  '” z rejestru?\n\nTrafi do kosza na 30 dni (Ustawienia → Kosz). Jeśli kurs się skończył, lepiej zaznaczyć „Kurs zakończony”.')) return;
     const { error } = await sb.from('kursanci').delete().eq('id', edytowany.id);
     if (error) { msg('m-kursant', tlumacz(error)); return; }
@@ -1299,7 +1333,7 @@
 
     $('p-osoby').querySelectorAll('button[data-akcja]').forEach(b => b.onclick = () => zajety(b, async () => {
       if (b.dataset.akcja === 'usun' &&
-          !confirm('Usunąć osobę „' + b.dataset.nazwa + '” ze szkoły? Jej jazdy w grafiku zostaną.')) return;
+          !await pytaj('Usunąć osobę „' + b.dataset.nazwa + '” ze szkoły? Jej jazdy w grafiku zostaną.')) return;
       if (b.dataset.akcja === 'usun' && b.textContent.trim() === 'Usuń' && !(await wymagajPin('Usunięcie osoby „' + b.dataset.nazwa + '”'))) return;
       const fn = b.dataset.akcja === 'tak' ? 'zatwierdz_osobe' : 'usun_osobe';
       const { error } = await sb.rpc(fn, { p_id: b.dataset.id });
@@ -1378,9 +1412,9 @@
     const v = prompt(`${nazwaK(k)} – ile godzin dokupił?`, sugestia ? godz(Math.ceil(sugestia / 30) / 2) : '2');
     if (v === null) return;
     const h = liczba(v, 0);
-    if (!(h > 0)) { alert('Wpisz liczbę godzin większą od zera.'); return; }
+    if (!(h > 0)) { komunikat('Wpisz liczbę godzin większą od zera.'); return; }
     const { error } = await sb.from('dokupione').insert({ szkola_id: profil.szkola_id, kursant_id: kid, godziny: h, dzien: dzisStr(), uwagi: null });
-    if (error) { alert(tlumacz(error)); return; }
+    if (error) { komunikat(tlumacz(error)); return; }
     const { data } = await sb.from('kursanci').select('*').eq('id', kid).maybeSingle();
     if (data) gKursanci.set(kid, data);
     ladujKursantow(); ladujDzien(true);
@@ -1882,14 +1916,14 @@
         kid = z.id;
         if (!kid) {
           const nm = rozdzielNazwe(txt.split(' · ')[0]);
-          if (!confirm(`Nie ma kursanta „${txt}” w rejestrze.\n\nDodać go teraz jako: nazwisko „${nm.nazwisko}”, imię „${nm.imie}”?\nResztę danych uzupełnisz w zakładce Kursanci.`)) return;
+          if (!await pytaj(`Nie ma kursanta „${txt}” w rejestrze.\n\nDodać go teraz jako: nazwisko „${nm.nazwisko}”, imię „${nm.imie}”?\nResztę danych uzupełnisz w zakładce Kursanci.`)) return;
           const { data, error } = await sb.from('kursanci')
             .insert({ szkola_id: profil.szkola_id, imie: nm.imie, nazwisko: nm.nazwisko }).select().single();
           if (error) { msg('m-jazda', tlumacz(error)); return; }
           gKursanci.set(data.id, data); kid = data.id;
           ladujKursantow();
         }
-      } else if (rodzaj !== 'inne' && !confirm('Zapisać jazdę bez kursanta?')) return;
+      } else if (rodzaj !== 'inne' && !await pytaj('Zapisać jazdę bez kursanta?')) return;
 
       const dane = {
         instruktor_id: $('j-instr').value, kursant_id: kid,
@@ -1903,7 +1937,7 @@
       if ($('j-wstepna').checked || maNowe) dane.potwierdzona = !$('j-wstepna').checked;
       if ($('j-nieliczy').checked || maNowe) dane.nie_liczy = $('j-nieliczy').checked;
       const k = await kolizje(dane, edytJazda && edytJazda.id);
-      if (k.length && !confirm('Uwaga – nakładają się jazdy:\n' + k.join('\n') + '\n\nZapisać mimo to?')) return;
+      if (k.length && !await pytaj('Uwaga – nakładają się jazdy:\n' + k.join('\n') + '\n\nZapisać mimo to?')) return;
       const w = edytJazda
         ? await sb.from('jazdy').update(dane).eq('id', edytJazda.id)
         : await sb.from('jazdy').insert({ ...dane, szkola_id: profil.szkola_id });
@@ -1918,11 +1952,13 @@
   $('j-usun').onclick = () => zajety($('j-usun'), async () => {
     if (!edytJazda) return;
     const k = gKursanci.get(edytJazda.kursant_id);
-    if (!confirm(`Usunąć jazdę ${godzina(edytJazda.poczatek)}–${godzina(edytJazda.koniec)}${k ? ' (' + nazwaK(k) + ')' : ''}?\n\nW razie pomyłki przywrócisz ją z kosza (Ustawienia → Kosz).`)) return;
+    if (pytajUsun() && !await pytaj(`Usunąć jazdę ${godzina(edytJazda.poczatek)}–${godzina(edytJazda.koniec)}${k ? ' (' + nazwaK(k) + ')' : ''}?\n\nW razie pomyłki przywrócisz ją z kosza (Ustawienia → Kosz).`)) return;
+    const opisUs = `${godzina(edytJazda.poczatek)}–${godzina(edytJazda.koniec)}${k ? ' (' + nazwaK(k) + ')' : ''}`;
     const { error } = await sb.from('jazdy').delete().eq('id', edytJazda.id);
     if (error) { msg('m-jazda', tlumacz(error)); return; }
     zamknijJazde();
     await ladujDzien();
+    msg('m-grafik', `Usunięto jazdę ${opisUs}. Można ją przywrócić z kosza (Ustawienia → Kosz).`, 'ok');
   });
 
   // ----- ustawienia grafiku -----
@@ -1932,6 +1968,7 @@
     const wl = (profil.szkoly && profil.szkoly.godziny_kategorii) || {};
     $('u-katy').innerHTML = Object.keys(GODZ_KAT).map(c => `<div><label for="u-kat-${c}">${c}</label>
       <input id="u-kat-${c}" data-kat="${c}" type="number" min="1" max="200" inputmode="numeric" placeholder="${GODZ_KAT[c]}" value="${wl[c] ?? ''}"></div>`).join('');
+    $('u-pytaj').checked = pytajUsun();
     const we = (profil.szkoly && profil.szkoly.egzamin_kategorii) || {};
     $('u-egz').innerHTML = Object.keys(EGZ_KAT).map(c => `<div><label for="u-egz-${c}">${c}</label>
       <input id="u-egz-${c}" data-egz="${c}" type="number" min="0.5" max="8" step="0.5" inputmode="decimal" placeholder="${EGZ_KAT[c]}" value="${we[c] ?? ''}"></div>`).join('');
@@ -1986,7 +2023,7 @@
           }
         }
       } else {
-        if (i.aktywny && !confirm(`Ukryć instruktora „${i.imie_nazwisko}” w grafiku? Jego jazdy zostaną zachowane.`)) return;
+        if (i.aktywny && !await pytaj(`Ukryć instruktora „${i.imie_nazwisko}” w grafiku? Jego jazdy zostaną zachowane.`)) return;
         zm = { aktywny: !i.aktywny };
       }
       const { error } = await sb.from('instruktorzy').update(zm).eq('id', i.id);
@@ -2049,7 +2086,7 @@
     const ins = instruktorzy.find(i => i.id === gInstr); if (!ins) return;
     const jz = gJazdy.filter(j => j.instruktor_id === gInstr);
     if (!jz.length) { msg('m-grafik', `${ins.imie_nazwisko} nie ma jazd ${dataKrotka(gDzien)}.`); return; }
-    if (!confirm(`Usunąć WSZYSTKIE jazdy (${jz.length}) instruktora ${ins.imie_nazwisko} – ${dataKrotka(gDzien)}?\n\nW razie pomyłki przywrócisz je z kosza (Ustawienia → Kosz).`)) return;
+    if (!await pytaj(`Usunąć WSZYSTKIE jazdy (${jz.length}) instruktora ${ins.imie_nazwisko} – ${dataKrotka(gDzien)}?\n\nW razie pomyłki przywrócisz je z kosza (Ustawienia → Kosz).`)) return;
     if (!(await wymagajPin('Wyczyszczenie dnia – ' + ins.imie_nazwisko))) return;
     const { error } = await sb.from('jazdy').delete().in('id', jz.map(j => j.id));
     if (error) { msg('m-grafik', tlumacz(error)); return; }
@@ -2074,7 +2111,7 @@
       // kilka dni (urlop)
       const d2 = !edytWolne && $('w-data2').value && $('w-data2').value > d.dzien ? $('w-data2').value : d.dzien;
       const dni = []; for (let x = d.dzien; x <= d2 && dni.length < 92; x = dodajDni(x, 1)) dni.push(x);
-      if (dni.length > 1 && !confirm(`Zapisać wolne na ${dni.length} dni (${fmtData(d.dzien)} – ${fmtData(d2)})?`)) return;
+      if (dni.length > 1 && !await pytaj(`Zapisać wolne na ${dni.length} dni (${fmtData(d.dzien)} – ${fmtData(d2)})?`)) return;
       // jazdy w czasie wolnego – ostrzeżenie
       const kol = [];
       for (const dz of dni) for (const z of zakresy) {
@@ -2084,7 +2121,7 @@
           .lt('poczatek', doo.toISOString()).gt('koniec', od.toISOString());
         (r.data || []).forEach(x => kol.push((dni.length > 1 ? pad(new Date(x.poczatek).getDate()) + '.' + pad(new Date(x.poczatek).getMonth() + 1) + ' ' : '') + godzina(x.poczatek) + '–' + godzina(x.koniec)));
       }
-      if (kol.length && !confirm(`W tym czasie instruktor ma ${kol.length} ${slowoJazd(kol.length)}: ` +
+      if (kol.length && !await pytaj(`W tym czasie instruktor ma ${kol.length} ${slowoJazd(kol.length)}: ` +
           kol.join(', ') + '.\n\nZapisać wolne mimo to?')) return;
       const w = edytWolne
         ? await sb.from('wolne').update(d).eq('id', edytWolne.id)
@@ -2100,7 +2137,7 @@
     });
   };
   $('w-usun').onclick = () => zajety($('w-usun'), async () => {
-    if (!edytWolne || !confirm('Usunąć to wolne?')) return;
+    if (!edytWolne || (pytajUsun() && !await pytaj('Usunąć to wolne?'))) return;
     const { error } = await sb.from('wolne').delete().eq('id', edytWolne.id);
     if (error) { msg('m-wolne', tlumacz(error)); return; }
     zamknijWolne(); await ladujDzien();
@@ -2625,7 +2662,7 @@
     el.querySelectorAll('button[data-dz]').forEach(b => b.onclick = () => { gDzien = b.dataset.dz; ladujDzien(); window.scrollTo(0, 0); });
   }
   $('i-powiad').onclick = async () => {
-    if (!('Notification' in window)) { alert('Ta przeglądarka nie obsługuje powiadomień.'); return; }
+    if (!('Notification' in window)) { komunikat('Ta przeglądarka nie obsługuje powiadomień.'); return; }
     const p = await Notification.requestPermission();
     $('i-powiad').textContent = p === 'granted' ? '🔔 Powiadomienia włączone' : '🔕 Powiadomienia zablokowane w przeglądarce';
   };
@@ -2911,7 +2948,7 @@ function cellTime(v) {
         const dni = new Set(parsed.map(p => normName(p.nm) + '|' + p.d));
         const nowiI = [...new Set(parsed.map(p => p.nm))].filter(nm => !instruktorzy.some(i => normName(i.imie_nazwisko) === normName(nm)));
         const nowiK = [...new Set(parsed.filter(p => p.k).map(p => p.k))].filter(k => !kursantPoNazwie(k));
-        if (!confirm(`Wczytać z Excela ${parsed.length} jazd (${dni.size} dni)?` +
+        if (!await pytaj(`Wczytać z Excela ${parsed.length} jazd (${dni.size} dni)?` +
             (pomin ? `\nPominięto ${pomin} wierszy z błędną datą lub godziną.` : '') +
             (nowiI.length ? `\nNowi instruktorzy (${nowiI.length}): ${nowiI.join(', ')}` : '') +
             (nowiK.length ? `\nKursanci spoza rejestru zostaną dodani (${nowiK.length}).` : '') +
@@ -3023,7 +3060,7 @@ function cellTime(v) {
       const r = await sb.rpc('sprawdz_pin', { p_pin: w.pin });
       if (!r.error && r.data) return true;
     }
-    alert('Trzy razy podano zły PIN.');
+    komunikat('Trzy razy podano zły PIN.');
     return false;
   }
   $('pin-ustaw').onclick = async () => {
@@ -3076,6 +3113,49 @@ function cellTime(v) {
       msg('m-kosz', 'Przywrócono.', 'ok');
     }));
   }
+
+  $('u-pytaj').onchange = async () => {
+    const v = $('u-pytaj').checked;
+    const { error } = await sb.from('szkoly').update({ pytaj_usun: v }).eq('id', profil.szkola_id);
+    if (error) { $('u-pytaj').checked = !v; msg('m-ust', /pytaj_usun/.test(error.message) ? 'Najpierw uruchom w Supabase plik krok14_pytaj.sql.' : tlumacz(error)); return; }
+    profil.szkoly.pytaj_usun = v;
+    msg('m-ust', v ? 'Program będzie pytał przed usunięciem jazdy i wolnego.' : 'Jazdy i wolne będą usuwane bez pytania (zostają w koszu przez 30 dni).', 'ok');
+  };
+  // ===== OKIENKO PYTANIA (zamiast okna przeglądarki) =====
+  function pytaj(tekst, o = {}) {
+    const t = String(tekst);
+    const [pierwsza, ...reszta] = t.split('\n');
+    let tak = o.tak, niebezp = o.niebezp;
+    if (!tak) {
+      if (/^Usunąć/.test(t)) { tak = 'Usuń'; niebezp = true; }
+      else if (/^Ukryć/.test(t)) tak = 'Ukryj';
+      else if (/^Przywrócić/.test(t)) tak = 'Przywróć';
+      else if (/^Wczytać/.test(t)) tak = 'Wczytaj';
+      else if (/^Dodać/.test(t)) tak = 'Dodaj';
+      else if (/^Otworzyć/.test(t) || /Otworzyć jego kartę/.test(t)) tak = 'Otwórz kartę';
+      else if (/mimo to\?\s*$/.test(t)) tak = 'Zapisz mimo to';
+      else if (/^Zapisać/.test(t)) tak = 'Zapisz';
+      else tak = 'Tak';
+    }
+    $('mq-tytul').textContent = o.tytul || pierwsza;
+    $('mq-tekst').textContent = o.tytul ? t : reszta.join('\n').replace(/^\n+/, '');
+    $('mq-tekst').classList.toggle('hidden', !$('mq-tekst').textContent);
+    $('mq-tak').textContent = tak;
+    $('mq-tak').classList.toggle('niebezp', !!niebezp);
+    $('mq-nie').classList.toggle('hidden', !!o.tylkoOk);
+    const m = $('modal-pytaj'); m.classList.remove('hidden');
+    setTimeout(() => $(niebezp ? 'mq-nie' : 'mq-tak').focus(), 30);
+    return new Promise(res => {
+      const koniec = w => { m.classList.add('hidden'); document.removeEventListener('keydown', kl, true); res(w); };
+      const kl = e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); koniec(false); } };
+      document.addEventListener('keydown', kl, true);
+      $('mq-tak').onclick = () => koniec(true);
+      $('mq-nie').onclick = () => koniec(false);
+      m.onclick = e => { if (e.target === m) koniec(false); };
+    });
+  }
+  const komunikat = t => pytaj(t, { tylkoOk: true, tak: 'OK' });
+  const pytajUsun = () => !(profil && profil.szkoly && profil.szkoly.pytaj_usun === false);
 
   // ===== LOGO SZKOŁY =====
   const LOGO_MIEJSCA = ['naglowek', 'logowanie', 'druk', 'obrazek', 'karta'];
@@ -3136,7 +3216,7 @@ function cellTime(v) {
     inp.click();
   };
   $('lg-usun').onclick = () => zajety($('lg-usun'), async () => {
-    if (!confirm('Usunąć logo szkoły?')) return;
+    if (!await pytaj('Usunąć logo szkoły?')) return;
     try { await zapiszLogo({ logo: null }); msg('m-logo', 'Usunięto logo.', 'ok'); } catch (err) { msg('m-logo', err.message || String(err)); }
   });
   document.querySelectorAll('[data-lm]').forEach(c => c.onchange = async () => {
@@ -3199,8 +3279,8 @@ function cellTime(v) {
       let k; try { k = JSON.parse(await f.text()); } catch (_) { msg('m-kopia', 'To nie jest plik kopii.'); return; }
       if (!k || k.app !== 'program-szkoly-jazdy' || !k.dane) { msg('m-kopia', 'To nie jest plik kopii tego programu.'); return; }
       if (k.szkola && k.szkola.id !== profil.szkola_id &&
-          !confirm(`Ta kopia pochodzi z innej szkoły („${k.szkola.nazwa || '?'}”). Wczytać ją do „${profil.szkoly.nazwa}”?`)) return;
-      if (!confirm(`Przywrócić kopię z ${fmtData(k.utworzono)} ${godzina(k.utworzono)}?\n\n${opisKopii(k)}\n\n` +
+          !await pytaj(`Ta kopia pochodzi z innej szkoły („${k.szkola.nazwa || '?'}”). Wczytać ją do „${profil.szkoly.nazwa}”?`)) return;
+      if (!await pytaj(`Przywrócić kopię z ${fmtData(k.utworzono)} ${godzina(k.utworzono)}?\n\n${opisKopii(k)}\n\n` +
           'Wpisy z kopii wrócą do programu (usunięte zostaną odtworzone, zmienione – cofnięte do stanu z kopii).\n' +
           'Wpisy dodane PO zrobieniu kopii zostaną bez zmian.')) return;
       if (!(await wymagajPin('Przywracanie kopii zapasowej'))) return;
