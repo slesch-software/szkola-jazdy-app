@@ -756,8 +756,9 @@
           </div>
           <h3 style="font-size:15px;margin:18px 0 4px">Na Dysku Google</h3>
           <p class="hint" id="kd-status"></p>
-          <label for="kd-client">Identyfikator klienta Google (Client ID)</label>
-          <div class="pasek"><input id="kd-client" placeholder="…apps.googleusercontent.com" autocomplete="off"><button id="kd-zapisz-id" type="button">Zapisz</button></div>
+          <details style="margin:6px 0 4px"><summary class="hint" style="cursor:pointer">Zaawansowane: własny identyfikator Google</summary>
+          <label for="kd-client">Identyfikator klienta Google (puste = wbudowany w program)</label>
+          <div class="pasek"><input id="kd-client" placeholder="…apps.googleusercontent.com" autocomplete="off"><button id="kd-zapisz-id" type="button">Zapisz</button></div></details>
           <label class="check"><input id="kd-auto" type="checkbox"> Codziennie przypominaj o kopii na Dysk (jedno kliknięcie)</label>
           <div class="akcje" style="margin-top:10px">
             <button id="kd-teraz" type="button" style="grid-column:1/-1">☁️ Wyślij kopię na Dysk Google teraz</button>
@@ -1091,7 +1092,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.39';
+  const WERSJA = '1.40';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -1101,6 +1102,9 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.40', d: '20.11.2026', p: [
+      'Program działa pod adresem grafikosk.pl.',
+      'Kopia na Dysk Google działa od razu – bez wpisywania identyfikatora Google (Ustawienia → Kopia zapasowa → „Wyślij kopię na Dysk Google teraz”).'] },
     { v: '1.39', d: '20.11.2026', p: [
       '🔗 Osobisty link dla kursanta (w karcie kursanta): kursant bez logowania widzi swoje jazdy, godziny kursu i egzamin. Wysyłka SMS-em lub WhatsAppem.'] },
     { v: '1.38', d: '20.11.2026', p: [
@@ -4493,13 +4497,16 @@ function cellTime(v) {
     if (!cicho) msg('m-kopia', 'Zapisano kopię w Pobranych (' + opisKopii(k) + ').', 'ok');
     pokazKopie();
   }
+  // identyfikator Google programu (kopia na Dysk) – działa na grafikosk.pl; szkoła może wpisać własny
+  const GOOGLE_CLIENT_ID = '489928741557-bkpjhi0orpd0nd8f337rd5u64e22lm8f.apps.googleusercontent.com';
+  const cidGoogle = () => (profil && profil.szkoly && profil.szkoly.google_client_id) || GOOGLE_CLIENT_ID;
   function pokazKopie() {
     if (!profil || profil.rola !== 'biuro') return;
     const ost = lsGet(kluczK('kopia_plik'), '');
     $('kp-status').textContent = ost ? `Ostatnia kopia na tym komputerze: ${fmtData(ost)} ${godzina(ost)}.` : 'Na tym komputerze nie było jeszcze kopii.';
     $('kp-auto').checked = lsGet(kluczK('kopia_auto_plik'), '1') === '1';
-    const cid = (profil.szkoly && profil.szkoly.google_client_id) || '';
-    $('kd-client').value = cid;
+    const cid = cidGoogle();
+    $('kd-client').value = (profil.szkoly && profil.szkoly.google_client_id) || '';
     $('kd-auto').checked = lsGet(kluczK('kopia_auto_dysk'), '1') === '1';
     const kd = profil.szkoly && profil.szkoly.kopia_dysk;
     $('kd-status').textContent = !cid ? 'Nie ustawiono połączenia z Google – wpisz poniżej identyfikator klienta Google i kliknij Zapisz.'
@@ -4560,7 +4567,7 @@ function cellTime(v) {
   });
   async function tokenGoogle() {
     if (gToken && Date.now() < gTokenDo - 60000) return gToken;
-    const cid = profil.szkoly && profil.szkoly.google_client_id;
+    const cid = cidGoogle();
     if (!cid) throw new Error('Najpierw wpisz identyfikator klienta Google w zakładce Ustawienia → Kopia zapasowa.');
     if (!window.google || !google.accounts || !google.accounts.oauth2) await loadScript('https://accounts.google.com/gsi/client');
     return new Promise((res, rej) => {
@@ -4611,7 +4618,7 @@ function cellTime(v) {
 
   function pokazBanerKopii() {
     const el = $('kopia-baner');
-    const potrzeba = profil && profil.rola === 'biuro' && profil.szkoly && profil.szkoly.google_client_id &&
+    const potrzeba = profil && profil.rola === 'biuro' && profil.szkoly && cidGoogle() &&
       lsGet(kluczK('kopia_auto_dysk'), '1') === '1' && profil.szkoly.kopia_dysk !== dzisStr();
     if (!potrzeba) { el.classList.add('hidden'); return; }
     el.classList.remove('hidden');
