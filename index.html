@@ -844,12 +844,14 @@
           </div>
           <h3 style="font-size:15px;margin:18px 0 4px">Na Dysku Google</h3>
           <p class="hint" id="kd-status"></p>
+          <p class="hint" id="kd-konto" style="margin-top:4px"></p>
           <details style="margin:6px 0 4px"><summary class="hint" style="cursor:pointer">Zaawansowane: własny identyfikator Google</summary>
           <label for="kd-client">Identyfikator klienta Google (puste = wbudowany w program)</label>
           <div class="pasek"><input id="kd-client" placeholder="…apps.googleusercontent.com" autocomplete="off"><button id="kd-zapisz-id" type="button">Zapisz</button></div></details>
           <label class="check"><input id="kd-auto" type="checkbox"> Codziennie przypominaj o kopii na Dysk (jedno kliknięcie)</label>
           <div class="akcje" style="margin-top:10px">
-            <button id="kd-teraz" type="button" style="grid-column:1/-1">☁️ Wyślij kopię na Dysk Google teraz</button>
+            <button id="kd-teraz" type="button">☁️ Wyślij kopię na Dysk Google teraz</button>
+            <button id="kd-konto-zmien" type="button">🔄 Zmień konto Google</button>
           </div>
           <div id="m-kopia" class="msg"></div>
         </div>
@@ -1182,7 +1184,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.46';
+  const WERSJA = '1.47';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -1192,6 +1194,8 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.47', d: '20.11.2026', p: [
+      'Kopia na Dysk Google: widać, na które konto Google idą kopie, i można je zmienić przyciskiem „Zmień konto Google”.'] },
     { v: '1.45', d: '20.11.2026', p: [
       'Start programu Grafik OSK pod adresem grafikosk.pl.',
       'Grafik jazd i rejestr kursantów dla biura, aplikacja „Mój grafik jazd” dla instruktorów i osobisty link dla kursantów.',
@@ -4281,6 +4285,8 @@ function cellTime(v) {
     const kd = profil.szkoly && profil.szkoly.kopia_dysk;
     $('kd-status').textContent = !cid ? 'Nie ustawiono połączenia z Google – wpisz poniżej identyfikator klienta Google i kliknij Zapisz.'
       : (kd ? `Ostatnia kopia na Dysku: ${fmtData(kd)}.` : 'Na Dysku nie ma jeszcze kopii.');
+    const konto = lsGet(kluczK('kopia_dysk_konto'), '');
+    $('kd-konto').innerHTML = konto ? `Kopie z tego komputera idą na Dysk konta: <b>${esc(konto)}</b>` : 'Konto Google wybierzesz przy pierwszej kopii.';
   }
   $('kp-auto').onchange = () => lsSet(kluczK('kopia_auto_plik'), $('kp-auto').checked ? '1' : '0');
   $('kd-auto').onchange = () => lsSet(kluczK('kopia_auto_dysk'), $('kd-auto').checked ? '1' : '0');
@@ -4335,8 +4341,8 @@ function cellTime(v) {
     profil.szkoly.google_client_id = id || null; gKlient = null; gToken = null;
     msg('m-kopia', 'Zapisano.', 'ok'); pokazKopie();
   });
-  async function tokenGoogle() {
-    if (gToken && Date.now() < gTokenDo - 60000) return gToken;
+  async function tokenGoogle(wybierzKonto) {
+    if (!wybierzKonto && gToken && Date.now() < gTokenDo - 60000) return gToken;
     const cid = cidGoogle();
     if (!cid) throw new Error('Najpierw wpisz identyfikator klienta Google w zakładce Ustawienia → Kopia zapasowa.');
     if (!window.google || !google.accounts || !google.accounts.oauth2) await loadScript('https://accounts.google.com/gsi/client');
@@ -4347,7 +4353,7 @@ function cellTime(v) {
           gToken = r.access_token; gTokenDo = Date.now() + (Number(r.expires_in) || 3600) * 1000; res(gToken); },
         error_callback: e => rej(new Error(e && e.type === 'popup_closed' ? 'Zamknięto okno logowania Google.' : 'Nie udało się połączyć z Google (' + ((e && e.type) || '?') + ').'))
       });
-      gKlient.requestAccessToken({ prompt: '' });
+      gKlient.requestAccessToken({ prompt: wybierzKonto ? 'select_account' : '' });
     });
   }
   async function gApi(url, opt = {}) {
@@ -4363,6 +4369,8 @@ function cellTime(v) {
     let folder = f.files[0] && f.files[0].id;
     if (!folder) folder = (await gApi('https://www.googleapis.com/drive/v3/files', { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: nazwaFolderu, mimeType: 'application/vnd.google-apps.folder' }) })).id;
+    // zapamiętaj, na czyj Dysk idą kopie (pokazujemy w Ustawieniach)
+    try { const u = await gApi('https://www.googleapis.com/drive/v3/about?fields=user(emailAddress)'); if (u && u.user && u.user.emailAddress) lsSet(kluczK('kopia_dysk_konto'), u.user.emailAddress); } catch (_) {}
     const k = await zbierzKopie();
     const nazwa = `kopia-${slugSzkoly()}-${dzisStr()}.json`;
     const ist = await gApi(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(`'${folder}' in parents and name='${nazwa}' and trashed=false`)}&fields=files(id)`);
@@ -4381,6 +4389,13 @@ function cellTime(v) {
     pokazKopie(); pokazBanerKopii();
     return opisKopii(k);
   }
+  $('kd-konto-zmien').onclick = () => zajety($('kd-konto-zmien'), async () => {
+    try {
+      gToken = null; await tokenGoogle(true);
+      const o = await kopiaNaDysk();
+      msg('m-kopia', `Konto zmienione. Kopia zapisana na Dysku ${lsGet(kluczK('kopia_dysk_konto'), '')} (${o}).`, 'ok');
+    } catch (err) { msg('m-kopia', err.message || String(err)); }
+  });
   $('kd-teraz').onclick = () => zajety($('kd-teraz'), async () => {
     try { const o = await kopiaNaDysk(); msg('m-kopia', `Kopia zapisana na Dysku Google, w folderze „Kopie – ${profil.szkoly.nazwa}” (${o}).`, 'ok'); }
     catch (err) { msg('m-kopia', err.message || String(err)); }
