@@ -193,6 +193,26 @@
   table.mc tr.det a{color:var(--gl)}
   table.mc tr.razem td{font-weight:700;border-top:2px solid var(--t)}
   #druk{display:none}
+  footer{display:flex;justify-content:center;align-items:center;gap:6px;flex-wrap:wrap}
+  .stopka-link{background:none;border:none;padding:4px 2px;color:var(--m);font:inherit;cursor:pointer;text-decoration:underline;text-decoration-color:#c9ced3;text-underline-offset:3px}
+  .stopka-link:hover{color:var(--t)}
+  .stopka-kropka{color:#c9ced3}
+  #modal-info .sheet{max-width:620px;max-height:88vh;overflow:auto}
+  .nw-wer{border-top:1px solid var(--b);padding:12px 0 6px}
+  .nw-wer:first-child{border-top:none;padding-top:0}
+  .nw-wer h3{margin:0 0 6px;font-size:16px;display:flex;justify-content:space-between;gap:8px}
+  .nw-wer h3 small{font-weight:500;color:var(--m);font-size:13px}
+  .nw-wer ul{margin:0;padding-left:20px;line-height:1.55;font-size:14.5px}
+  .nw-nowa h3::after{content:'nowość';font-size:11px;font-weight:700;background:var(--ga);color:var(--g);border-radius:6px;padding:2px 7px;margin-left:auto;order:2}
+  .o-prog{font-size:15px;line-height:1.6}
+  .o-prog .o-wiersz{display:flex;gap:10px;padding:7px 0;border-top:1px solid var(--b)}
+  .o-prog .o-wiersz span:first-child{min-width:110px;color:var(--m)}
+  .o-prog a{color:var(--gl);font-weight:600}
+  .akt-baner{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--g);color:#fff;border-radius:12px;padding:10px 14px;margin:0 0 12px;font-size:14.5px}
+  .akt-baner b{color:var(--ga)}
+  .akt-baner button{padding:6px 12px;font-size:13px;border-radius:8px;cursor:pointer}
+  .akt-baner .akt-zob{background:var(--ga);border:none;color:var(--g);font-weight:700}
+  .akt-baner .akt-x{background:none;border:1px solid #4b5563;color:#e5e7eb;margin-left:auto}
   .zw-nag{cursor:pointer;user-select:none;display:flex;align-items:center;gap:10px;margin:0!important}
   .zw-nag::before{content:'▸';font-size:.9em;color:var(--m);transition:transform .15s;display:inline-block;width:1em}
   .zw-otw > .zw-nag::before{transform:rotate(90deg)}
@@ -429,6 +449,11 @@
     <!-- Grafik (biuro: edycja, instruktor: podgląd swoich jazd) -->
     <div id="tab-grafik">
       <div id="g-zmiany" class="zmiany hidden"></div>
+      <div id="akt-baner" class="akt-baner hidden">
+        <span>✨ Program został zaktualizowany do wersji <b id="akt-wer"></b>.</span>
+        <button type="button" class="akt-zob" id="akt-zobacz">Zobacz, co nowego</button>
+        <button type="button" class="akt-x" id="akt-zamknij">Zamknij</button>
+      </div>
       <div id="kopia-baner" class="zmiany hidden"></div>
       <details id="wst-baner" class="wst-baner hidden"></details>
       <div class="card">
@@ -637,7 +662,23 @@
 
   </div>
 
-  <footer>wersja <span id="wersja"></span></footer>
+  <footer>
+    <button type="button" class="stopka-link" id="f-nowosci">wersja <span id="wersja"></span> · co nowego</button>
+    <span class="stopka-kropka">·</span>
+    <button type="button" class="stopka-link" id="f-o">O programie</button>
+  </footer>
+
+<div id="modal-info" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <div class="tabs" style="margin-bottom:14px">
+      <button id="mi-t1" class="on" type="button">✨ Co nowego</button>
+      <button id="mi-t2" type="button">ℹ️ O programie</button>
+    </div>
+    <div id="mi-nowosci"></div>
+    <div id="mi-o" class="hidden"></div>
+    <button id="mi-zamknij" class="btn2" type="button" style="margin-top:14px">Zamknij</button>
+  </div>
+</div>
 </div>
 
 <!-- Okno: wolne instruktora -->
@@ -869,7 +910,56 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.23';
+  const WERSJA = '1.24';
+  // ----- informacje o programie -----
+  const PROGRAM = {
+    nazwa: 'Program dla szkół jazdy',
+    autor: 'Slesch – Beniamin Dziura',
+    email: 'slesch.software@gmail.com',
+    telefon: ''          // <- wpisz numer, np. '600 123 456'
+  };
+  // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
+  const ZMIANY = [
+    { v: '1.24', d: '20.11.2026', p: [
+      'Nowe okienko „Co nowego” i „O programie” (na dole strony) – z kontaktem i przyciskiem „Zgłoś problem / pomysł”.',
+      'Po aktualizacji programu pojawia się pasek z informacją, co się zmieniło.'] },
+    { v: '1.23', d: '20.11.2026', p: [
+      'Pogrubione napisy na zakładkach Grafik, Kursanci, Miesiąc, Ustawienia.',
+      'Ustawienia podzielone na zwijane sekcje z podglądem najważniejszych informacji.'] },
+    { v: '1.21', d: '20.11.2026', p: [
+      'Zakładanie nowej szkoły kodem aktywacyjnym („Zakładam nową szkołę” przy rejestracji).'] },
+    { v: '1.20', d: '20.11.2026', p: [
+      'Pytania o potwierdzenie w okienku programu zamiast okna przeglądarki.',
+      'Ustawienie „Pytaj przed usunięciem jazdy lub wolnego”.',
+      'Komunikaty błędów przy logowaniu po polsku.'] },
+    { v: '1.19', d: '20.11.2026', p: [
+      'Skan profilu PKK: poprawna kolejność imienia i nazwiska.'] },
+    { v: '1.18', d: '20.11.2026', p: [
+      'Przyciski Dziś / Jutro / Pojutrze w grafiku.',
+      'Nakładające się jazdy oznaczone na czerwono (także jazda w czasie wolnego i kursant u dwóch instruktorów naraz).',
+      'Egzamin: czas instruktora zaokrąglany do pełnej godziny lub wpół do.'] },
+    { v: '1.16', d: '20.11.2026', p: [
+      'Egzamin z godziną w WORD (np. 13:45) – czas instruktora ustawia się sam wg kategorii.',
+      'Termin wstępny „❓ do potwierdzenia” z przypomnieniem na górze grafiku.',
+      'Przełącznik „Nie wliczaj kursantowi do godzin kursu”.'] },
+    { v: '1.15', d: '20.11.2026', p: [
+      'Wolne: kilka odcinków jednego dnia naraz (np. 8–9 i 13–14).'] },
+    { v: '1.12', d: '20.11.2026', p: [
+      'Instruktor prowadzący kursanta (z filtrem na liście kursantów).',
+      'Lepsza ochrona danych – instruktor widzi tylko podstawowe dane swoich kursantów.'] },
+    { v: '1.11', d: '20.11.2026', p: [
+      'PESEL w karcie kursanta – rozróżnia kursantów o tym samym imieniu i nazwisku.',
+      'Wolne na kilka dni (urlop), „Wyczyść dzień”, ostrzeżenie „ponad kurs – dokupił godziny?”.',
+      'Lista kursantów: pasek postępu, najbliższa jazda, sortowanie i filtry.',
+      'WhatsApp: wysyłka „po kolei” do wszystkich instruktorów, kopiowanie obrazka do schowka.',
+      'Wydruk całego tygodnia.'] },
+    { v: '1.9', d: '19.11.2026', p: [
+      'Logo szkoły z wyborem, gdzie ma się pokazywać.'] },
+    { v: '1.8', d: '19.11.2026', p: [
+      'Kopia zapasowa: automatycznie do pliku i na Dysk Google, przywracanie z pliku.'] },
+    { v: '1.0–1.7', d: '19.11.2026', p: [
+      'Pierwsza wersja: logowanie biuro / instruktor, rejestr kursantów ze skanem PKK, grafik jazd, wolne, zestawienie miesiąca, WhatsApp, wydruki, Excel, kosz i PIN.'] }
+  ];
   // ======================
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -883,6 +973,49 @@
   let odzyskiwanieHasla = /type=recovery/.test(location.hash);
 
   $('wersja').textContent = WERSJA;
+  // ===== CO NOWEGO / O PROGRAMIE =====
+  function pokazInfo(t) {
+    $('mi-t1').classList.toggle('on', t === 'nowosci'); $('mi-t2').classList.toggle('on', t === 'o');
+    $('mi-nowosci').classList.toggle('hidden', t !== 'nowosci'); $('mi-o').classList.toggle('hidden', t !== 'o');
+    if (t === 'nowosci') {
+      $('mi-nowosci').innerHTML = ZMIANY.map((z, i) => `<div class="nw-wer${i === 0 ? ' nw-nowa' : ''}">
+        <h3>Wersja ${esc(z.v)} <small>${esc(z.d)}</small></h3><ul>${z.p.map(x => '<li>' + esc(x) + '</li>').join('')}</ul></div>`).join('');
+    } else {
+      const tel = PROGRAM.telefon ? `<div class="o-wiersz"><span>Telefon</span><a href="tel:${PROGRAM.telefon.replace(/\s/g, '')}">${esc(PROGRAM.telefon)}</a></div>` : '';
+      $('mi-o').innerHTML = `<div class="o-prog">
+        <h2 style="margin:0 0 4px">${esc(PROGRAM.nazwa)}</h2>
+        <p class="hint" style="margin:0 0 12px">Grafik jazd, rejestr kursantów i instruktorzy – w jednym miejscu, na komputerze i telefonie.</p>
+        <div class="o-wiersz"><span>Wersja</span><b>${esc(WERSJA)}</b></div>
+        <div class="o-wiersz"><span>Twórca</span><b>${esc(PROGRAM.autor)}</b></div>
+        <div class="o-wiersz"><span>E-mail</span><a href="mailto:${PROGRAM.email}">${esc(PROGRAM.email)}</a></div>
+        ${tel}
+        ${profil && profil.szkoly ? `<div class="o-wiersz"><span>Twoja szkoła</span><span>${esc(profil.szkoly.nazwa)}</span></div>` : ''}
+        <button id="mi-zglos" class="btn" type="button" style="margin-top:14px">✉️ Zgłoś problem / pomysł</button>
+        <p class="hint" style="margin-top:8px">Otworzy się wiadomość e-mail z numerem wersji i nazwą szkoły – opisz, co się stało albo co warto dodać.</p>
+      </div>`;
+      $('mi-zglos').onclick = () => {
+        const tem = `${PROGRAM.nazwa} ${WERSJA} – zgłoszenie${profil && profil.szkoly ? ' – ' + profil.szkoly.nazwa : ''}`;
+        const tresc = `Dzień dobry,\n\n(opisz problem albo pomysł)\n\n\n---\nWersja programu: ${WERSJA}\nSzkoła: ${(profil && profil.szkoly && profil.szkoly.nazwa) || '-'}\nKonto: ${(ja && ja.email) || '-'} (${(profil && profil.rola) || '-'})\nUrządzenie: ${navigator.userAgent}`;
+        location.href = `mailto:${PROGRAM.email}?subject=${encodeURIComponent(tem)}&body=${encodeURIComponent(tresc)}`;
+      };
+    }
+    $('modal-info').classList.remove('hidden');
+    try { localStorage.setItem('widziana_wersja', WERSJA); } catch (_) {}
+    $('akt-baner').classList.add('hidden');
+  }
+  $('f-nowosci').onclick = () => pokazInfo('nowosci');
+  $('f-o').onclick = () => pokazInfo('o');
+  $('mi-t1').onclick = () => pokazInfo('nowosci');
+  $('mi-t2').onclick = () => pokazInfo('o');
+  $('mi-zamknij').onclick = () => $('modal-info').classList.add('hidden');
+  $('modal-info').onclick = e => { if (e.target === $('modal-info')) $('modal-info').classList.add('hidden'); };
+  function banerAktualizacji() {
+    let w = null; try { w = localStorage.getItem('widziana_wersja'); } catch (_) {}
+    if (w === null) { try { localStorage.setItem('widziana_wersja', WERSJA); } catch (_) {} return; }   // pierwsze uruchomienie na tym urządzeniu
+    if (w !== WERSJA) { $('akt-wer').textContent = WERSJA; $('akt-baner').classList.remove('hidden'); }
+  }
+  $('akt-zobacz').onclick = () => pokazInfo('nowosci');
+  $('akt-zamknij').onclick = () => { $('akt-baner').classList.add('hidden'); try { localStorage.setItem('widziana_wersja', WERSJA); } catch (_) {} };
 
   function pokaz(id) { EKRANY.forEach(e => $(e).classList.toggle('hidden', e !== id)); }
   function esc(s) {
@@ -1150,6 +1283,7 @@
     $('g-wa').classList.toggle('hidden', !biuro);
     $('g-ustawienia').classList.toggle('hidden', !biuro);
     pokaz('s-panel');
+    banerAktualizacji();
     if (biuro) {
       $('p-kod').textContent = (profil.szkoly && profil.szkoly.kod_zaproszenia) || '';
       ustawZakladke(zakladka);
