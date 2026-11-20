@@ -1020,7 +1020,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.33';
+  const WERSJA = '1.34';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -1030,6 +1030,8 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.34', d: '20.11.2026', p: [
+      'Wydruk dzienny: dwie puste linijki na końcu do ręcznego dopisania kursanta.'] },
     { v: '1.33', d: '20.11.2026', p: [
       'Zmiana nazwy szkoły w Ustawieniach.',
       'Na telefonie logo i nazwa szkoły jedno pod drugim – nazwa nie łamie się już na kilka linijek.'] },
@@ -2996,7 +2998,7 @@
     const pusty = '<tr class="pusty"><td></td><td></td><td></td><td></td><td></td><td></td></tr>';
     const wolne = d.wolne.length ? `<p><b>Wolne:</b> ${d.wolne.map(w => (w.godz_od ? hm(w.godz_od) + '–' + hm(w.godz_do) : 'cały dzień') + (w.uwagi ? ' (' + esc(w.uwagi) + ')' : '')).join(', ')}</p>` : '';
     const tabela = `<table><thead><tr><th style="width:13%">Godzina</th><th>Kursant</th><th style="width:7%">Kat.</th><th style="width:14%">Telefon</th><th style="width:12%">Godz. kursu</th><th style="width:20%">Uwagi</th></tr></thead>
-      <tbody>${wiersze}${pusty}</tbody></table>${wolne}`;
+      <tbody>${wiersze}${tydz ? pusty : pusty + pusty}</tbody></table>${wolne}`;   // wydruk dzienny: 2 puste linijki do dopisania
     if (tydz) return `<div class="tydz"><h2>${dataKrotka(dzien)} – ${s.n} ${slowoJazd(s.n)}, ${fmtH(s.min)} h</h2>${tabela}</div>`;
     return `<div class="strona">${logoDruku('druk')}<h1>${esc((profil.szkoly && profil.szkoly.nazwa) || '')} – grafik pracy</h1>
       <h2>${esc(ins.imie_nazwisko)} · ${dataKrotka(dzien)}</h2>${tabela}
