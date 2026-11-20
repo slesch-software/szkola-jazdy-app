@@ -1009,7 +1009,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.31';
+  const WERSJA = '1.32';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -1019,6 +1019,8 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.32', d: '20.11.2026', p: [
+      'Poprawka nazwy „Mój grafik jazd” przy instalacji na Androidzie.'] },
     { v: '1.31', d: '20.11.2026', p: [
       'Program dodany do ekranu telefonu przez instruktora nazywa się „Mój grafik jazd” (z nazwą szkoły).'] },
     { v: '1.30', d: '20.11.2026', p: [
@@ -1827,15 +1829,10 @@
     const short = instr ? 'Mój grafik jazd' : (szk || 'Szkoła jazdy').slice(0, 15);
     document.title = name;
     const ap = document.querySelector('meta[name="apple-mobile-web-app-title"]'); if (ap) ap.content = short;
-    try {
-      const baza = new URL('./', ADRES).href;
-      const man = { name, short_name: short, start_url: baza, scope: baza, display: 'standalone',
-        background_color: '#f4f6f8', theme_color: '#1f2937', lang: 'pl',
-        icons: [{ src: baza + 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
-                { src: baza + 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }] };
-      const ln = document.querySelector('link[rel="manifest"]');
-      if (ln) ln.href = 'data:application/manifest+json;charset=utf-8,' + encodeURIComponent(JSON.stringify(man));
-    } catch (_) {}
+    // Android bierze nazwę tylko z pliku na serwerze – instruktor dostaje osobny plik z nazwą „Mój grafik jazd”
+    const ln = document.querySelector('link[rel="manifest"]');
+    const plik = instr ? 'manifest-instruktor.webmanifest' : 'manifest.webmanifest';
+    if (ln && ln.getAttribute('href') !== plik) ln.setAttribute('href', plik);
   }
 
   // ===== MOJE KONTO =====
