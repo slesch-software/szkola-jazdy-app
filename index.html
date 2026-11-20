@@ -272,6 +272,11 @@
   @media(max-width:520px){.tabs .ik{display:block;margin:0 auto 3px;font-size:22px}}
   .top-l{display:flex;align-items:center;gap:12px;min-width:0}
   .logo-n{max-height:52px;max-width:140px;object-fit:contain;flex:none}
+  @media(max-width:600px){
+    .top-l{flex-direction:column;align-items:flex-start;gap:8px}
+    .logo-n{max-height:56px;max-width:min(230px,100%)}
+    #p-szkola{font-size:19px;line-height:1.2}
+  }
   .logo-l{display:block;max-height:90px;max-width:220px;object-fit:contain;margin:0 auto 10px}
   .logo-pod{max-height:90px;max-width:240px;object-fit:contain;border:1px solid var(--b);border-radius:8px;padding:6px;background:#fff}
   @media print{
@@ -590,6 +595,12 @@
 
       <!-- Zakładka: osoby -->
       <div id="tab-osoby" class="hidden">
+        <div class="card" data-zw="szkola">
+          <h2>🏫 Nazwa szkoły</h2>
+          <label for="u-nazwa">Nazwa szkoły (na górze programu, na wydrukach i obrazku grafiku)</label>
+          <div class="pasek"><input id="u-nazwa" maxlength="80" autocomplete="organization"><button id="u-nazwa-zapisz" type="button">Zapisz</button></div>
+          <div id="m-nazwa" class="msg"></div>
+        </div>
         <div class="card" data-zw="kod">
           <h2>Kod do dołączenia</h2>
           <div class="kod" id="p-kod"></div>
@@ -1009,7 +1020,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.32';
+  const WERSJA = '1.33';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -1019,6 +1030,9 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.33', d: '20.11.2026', p: [
+      'Zmiana nazwy szkoły w Ustawieniach.',
+      'Na telefonie logo i nazwa szkoły jedno pod drugim – nazwa nie łamie się już na kilka linijek.'] },
     { v: '1.32', d: '20.11.2026', p: [
       'Poprawka nazwy „Mój grafik jazd” przy instalacji na Androidzie.'] },
     { v: '1.31', d: '20.11.2026', p: [
@@ -1834,6 +1848,16 @@
     const plik = instr ? 'manifest-instruktor.webmanifest' : 'manifest.webmanifest';
     if (ln && ln.getAttribute('href') !== plik) ln.setAttribute('href', plik);
   }
+
+  // ===== NAZWA SZKOŁY =====
+  $('u-nazwa-zapisz').onclick = () => zajety($('u-nazwa-zapisz'), async () => {
+    const n = $('u-nazwa').value.trim().replace(/\s+/g, ' ');
+    if (!n) { msg('m-nazwa', 'Wpisz nazwę szkoły.'); return; }
+    const { error } = await sb.from('szkoly').update({ nazwa: n }).eq('id', profil.szkola_id);
+    if (error) { msg('m-nazwa', tlumacz(error)); return; }
+    profil.szkoly.nazwa = n; $('p-szkola').textContent = n; nazwaAplikacji();
+    msg('m-nazwa', 'Zapisano. Instruktorzy zobaczą nową nazwę po odświeżeniu programu.', 'ok');
+  });
 
   // ===== MOJE KONTO =====
   function pokazJa() {
@@ -4054,6 +4078,8 @@ function cellTime(v) {
     if (!profil || profil.rola !== 'biuro') return;
     const sz = profil.szkoly || {};
     zwInfo('kod', sz.kod_zaproszenia || '');
+    zwInfo('szkola', sz.nazwa || '');
+    if (document.activeElement !== $('u-nazwa') && !$('u-nazwa').value) $('u-nazwa').value = sz.nazwa || '';
     const os = $('p-osoby').querySelectorAll('.row').length; zwInfo('osoby', os ? os + ' ' + (os === 1 ? 'osoba' : os < 5 ? 'osoby' : 'osób') : '');
     const ins = (instruktorzy || []).filter(i => i.aktywny).length; zwInfo('instr', ins ? ins + ' aktywnych' : '');
     zwInfo('pin', typeof pinWlaczony === 'undefined' ? '' : (pinWlaczony ? 'włączony' : 'wyłączony'));
