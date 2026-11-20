@@ -233,6 +233,12 @@
   .a-kod b{font-family:monospace;font-size:15px;letter-spacing:1px}
   #modal-pytaj{z-index:40}
   #modal-tekst{z-index:35}
+  .prz-h{font-size:16px;margin:18px 0 4px}
+  .prz-instr{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid var(--b)}
+  .prz-instr select{width:auto;max-width:56%;padding:8px;font-size:14px}
+  .prz-lista{margin-top:8px;font-size:14px}.prz-lista summary{cursor:pointer;color:var(--gl);font-weight:600}
+  .prz-lista > div{padding:5px 0;border-top:1px solid var(--b)}
+  .prz-uwaga{margin-top:12px;padding:10px 12px;border-radius:8px;background:#fff4e0;color:#8a4b00;font-size:14px}
   .konto-btn{white-space:nowrap}
   .j-hist{margin-top:14px;padding:10px 12px;border-radius:8px;background:#f4f6f8;font-size:13px;color:var(--m);line-height:1.55}
   .j-hist b{color:var(--t);font-weight:600}
@@ -649,6 +655,15 @@
           <label class="check"><input type="checkbox" data-lm="karta"> Na karcie kursanta</label>
           <div id="m-logo" class="msg"></div>
         </div>
+        <div class="card" data-zw="przen">
+          <h2>📥 Przenieś dane ze starych programów</h2>
+          <p class="hint">Wybierz naraz dwa pliki: kopię ze starego grafiku („💾 Kopia .json”) i ze starego rejestru PKK („⬇ Kopia zapasowa”). Przed zapisem zobaczysz podsumowanie. Przeniesienie można powtórzyć – nie zrobi duplikatów.</p>
+          <label class="check" style="margin-top:10px"><input id="prz-wyczysc" type="checkbox"> Najpierw usuń obecne dane testowe (kursanci, jazdy, wolne, dokupione – instruktorzy i konta zostają)</label>
+          <input id="prz-pliki" type="file" accept=".json,application/json" multiple class="hidden">
+          <button id="prz-wybierz" class="btn2" type="button">📂 Wybierz pliki ze starych programów</button>
+          <div id="prz-podsum" class="hidden" style="margin-top:12px"></div>
+          <div id="m-prz" class="msg"></div>
+        </div>
         <div class="card" data-zw="kopia">
           <h2>💾 Kopia zapasowa</h2>
           <p class="hint">Cała baza szkoły (instruktorzy, kursanci, jazdy, wolne, dokupione godziny) w jednym pliku.</p>
@@ -994,7 +1009,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.28';
+  const WERSJA = '1.29';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -1004,6 +1019,8 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.29', d: '20.11.2026', p: [
+      '📥 Przeniesienie danych ze starego grafiku i rejestru PKK (Ustawienia) – z podsumowaniem przed zapisem.'] },
     { v: '1.28', d: '20.11.2026', p: [
       'Zapomniany PIN: dostawca programu może go zresetować na prośbę biura (z wpisem w historii zmian).'] },
     { v: '1.27', d: '20.11.2026', p: [
@@ -3591,6 +3608,300 @@ function cellTime(v) {
     });
     inp.click();
   };
+
+  // ===== PRZENIESIENIE DANYCH ZE STARYCH PROGRAMÓW (grafik_jazd + rejestr_pkk) =====
+  const STARE_IMIONA = new Set(('adam adrian agata agnieszka aleksander aleksandra alan albert alicja amelia ana anastazja andrzej aneta angelika ania anita anna antek antoni antonina arek arkadiusz artur bartek bartłomiej bartosz beata bogdan bogusław borys bożena błażej celina cezary czesław damian daniel daniela danuta dariusz daria dawid dominik dominika dorota edyta elżbieta emil emilia ernest eryk ewa ewelina filip franciszek gabriel gabriela gabrysia grażyna grzegorz halina hanna helena henryk hubert ida igor iga ilona irena iryna iwona iza izabela jacek jakub jan janek janina jarek jarosław jerzy joanna jolanta julia julian julka justyna kacper kamil kamila karol karolina kasia katarzyna kinga klaudia konrad krystian krystyna krzysiek krzysztof kuba lena leszek laura lucyna ludwik łucja łukasz maciej maciek magda magdalena maja maks maksymilian malwina małgorzata marcel marcin marek maria marian mariusz marta martyna mateusz michał mikołaj milena miłosz monika nadia natalia natan nikola nikolas norbert ola oliwer oliwia olga patryk patrycja paula paulina paweł piotr przemek przemysław rafał robert roksana roman ryszard sabina sandra sebastian seweryn szymon sławomir stanisław stefan sylwia sylwester tadeusz tamara teresa tomasz tomek tymek tymon tymoteusz urszula wanda weronika wiesław wiktor wiktoria witold władysław wojciech wojtek zbigniew zdzisław zofia zosia zuzanna żaneta'.split(' ')));
+  const STARE_KAT = new Set(['am', 'a1', 'a2', 'a', 'b1', 'b', 'be', 'c1', 'c1e', 'c', 'ce', 'd1', 'd1e', 'd', 'de', 't']);
+  function lev1(a, b) {   // czy różnią się najwyżej jedną literą
+    if (a === b) return true;
+    if (Math.abs(a.length - b.length) > 1 || Math.min(a.length, b.length) < 4) return false;
+    let i = 0, j = 0, r = 0;
+    while (i < a.length && j < b.length) {
+      if (a[i] === b[j]) { i++; j++; continue; }
+      if (++r > 1) return false;
+      if (a.length > b.length) i++; else if (b.length > a.length) j++; else { i++; j++; }
+    }
+    return r + (a.length - i) + (b.length - j) <= 1;
+  }
+  // stary grafik: „Nazwisko Imię [kat]”, czasem odwrotnie
+  function staraNazwaGrafiku(nazwa) {
+    let cz = String(nazwa || '').trim().split(/\s+/).filter(Boolean), kat = '';
+    if (cz.length >= 3 && STARE_KAT.has(cz[cz.length - 1].toLowerCase())) kat = cz.pop().toUpperCase();
+    if (cz.length === 1) return { imie: '', nazwisko: cz[0], kat };
+    const im = s => STARE_IMIONA.has(s.toLowerCase());
+    if (cz.length === 2 && im(cz[0]) && !im(cz[1])) return { imie: cz[0], nazwisko: cz[1], kat };
+    return { nazwisko: cz[0], imie: cz.slice(1).join(' '), kat };
+  }
+  const kluczOsoby = (imie, nazwisko) => [imie, nazwisko].join(' ').toLowerCase().split(/\s+/).filter(Boolean).sort().join(' ');
+  const wielkaLitera = s => String(s || '').replace(/(^|[\s-])(\p{L})/gu, (m, a, b) => a + b.toUpperCase());
+
+  // pliki = [{ nazwa, dane }]; ist = { instruktorzy, kursanci, wyczysc }
+  function planPrzeniesienia(pliki, ist) {
+    let R = [], G = null;
+    for (const p of pliki) {
+      const d = p.dane;
+      if (Array.isArray(d) && d.every(x => x && 'pkk' in x && 'name' in x)) R.push(...d);
+      else if (d && d.grafik && d.grafik.days) { G = d.grafik; if (Array.isArray(d.pkk)) R.push(...d.pkk); }
+      else if (d && d.days && d.instructors) G = d;
+      else throw new Error(`Nie rozpoznaję pliku „${p.nazwa}” – to nie jest kopia starego grafiku ani rejestru PKK.`);
+    }
+    { const m = new Map(); R.forEach(r => { const o = m.get(r.id); if (!o || String(r.u || '') > String(o.u || '')) m.set(r.id, r); }); R = [...m.values()]; }
+
+    const plan = { instr: [], kursanci: [], jazdy: [], wolne: [], polaczone: [], pominieteJazdy: 0, zRejestru: 0, zGrafiku: 0 };
+    const kurs = new Map();          // klucz → kursant
+    const poNazwie = new Map();      // klucz osoby → [klucze kursantów]
+    const dodajK = k => { kurs.set(k.klucz, k); const n = kluczOsoby(k.imie, k.nazwisko); poNazwie.set(n, [...(poNazwie.get(n) || []), k.klucz]); };
+
+    // kursanci z rejestru
+    for (const r of R) {
+      const nm = rozdzielImieNazwisko(r.name);
+      dodajK({ klucz: 'r:' + r.id, zrodlo: 'rejestr', imie: wielkaLitera(nm.imie), nazwisko: wielkaLitera(nm.nazwisko),
+        telefon: (r.phone || '').trim() || null, email: (r.email || '').trim() || null, pkk: (r.pkk || '').replace(/\s/g, '') || null,
+        kategoria: (r.cat || '').trim().toUpperCase() || null, typ_kursu: ['Podstawowy', 'Uzupełniający'].includes(r.kurs) ? r.kurs : null,
+        posiadane_kategorie: (r.has || '').trim() || null, nr_prawa_jazdy: (r.lic || '').trim() || null, uwagi: (r.note || '').trim() || null,
+        zapis: /^\d{4}-\d{2}-\d{2}$/.test(r.date || '') ? r.date : null, jazdy: 0, instr: {} });
+    }
+    plan.zRejestru = kurs.size;
+
+    // instruktorzy
+    const instrStary = new Map();
+    for (const i of (G ? G.instructors || [] : [])) {
+      const nz = normName(i.name);
+      const jest = ist.instruktorzy.find(x => normName(x.imie_nazwisko) === nz)
+        || ist.instruktorzy.find(x => { const a = nz.split(' '), b = normName(x.imie_nazwisko).split(' '); return a.length === b.length && a.every((s, n) => lev1(s, b[n])); });
+      const o = { stareId: i.id, nazwa: String(i.name || '').trim(), telefon: (i.phone || '').trim() || null,
+        od: i.start || null, do: i.end || null, celId: jest ? jest.id : 'nowy', jazdy: 0 };
+      instrStary.set(i.id, o); plan.instr.push(o);
+    }
+    const kCat = (G && G.kCat) || {};
+
+    // jazdy
+    const surowe = [];
+    for (const [klucz, lista] of Object.entries((G && G.days) || {})) {
+      const [iid, dzien] = klucz.split('|');
+      if (!instrStary.has(iid) || !/^\d{4}-\d{2}-\d{2}$/.test(dzien)) continue;
+      for (const e of lista || []) {
+        if (!e || !e.start || !e.end || naMin(e.end) <= naMin(e.start)) { plan.pominieteJazdy++; continue; }
+        surowe.push({ iid, dzien, e });
+      }
+    }
+    // kursant dla każdej jazdy
+    const gKlucz = new Map();   // klucz osoby z grafiku → klucz kursanta
+    for (const s of surowe) {
+      const nazwa = String(s.e.name || '').trim();
+      if (!nazwa) { s.k = null; continue; }
+      if (s.e.kid && !String(s.e.kid).startsWith('m:') && kurs.has('r:' + s.e.kid)) { s.k = 'r:' + s.e.kid; continue; }
+      const nm = staraNazwaGrafiku(nazwa), ko = kluczOsoby(nm.imie, nm.nazwisko);
+      const kc = kCat[normName(nazwa)] || {};
+      const kat = (kc.cat || nm.kat || '').toUpperCase();
+      const zRej = (poNazwie.get(ko) || []).filter(k => k.startsWith('r:'));
+      if (zRej.length) { s.k = zRej.find(k => kurs.get(k).kategoria === kat) || zRej[0]; continue; }
+      if (!gKlucz.has(ko)) {
+        const k = { klucz: 'g:' + ko, zrodlo: 'grafik', imie: wielkaLitera(nm.imie), nazwisko: wielkaLitera(nm.nazwisko), telefon: (kc.phone || '').trim() || null,
+          email: null, pkk: null, kategoria: kat || null, typ_kursu: null, posiadane_kategorie: null, nr_prawa_jazdy: null,
+          uwagi: 'przeniesiony ze starego grafiku', zapis: null, jazdy: 0, instr: {}, inneNazwy: new Set([nazwa]) };
+        dodajK(k); gKlucz.set(ko, k.klucz);
+      } else {
+        const k = kurs.get(gKlucz.get(ko)); k.inneNazwy.add(nazwa);
+        if (!k.kategoria && kat) k.kategoria = kat; if (!k.telefon && kc.phone) k.telefon = kc.phone.trim();
+      }
+      s.k = gKlucz.get(ko);
+    }
+    // literówki: „Natali Kowalczyk” = „Natalia Kowalczyk”
+    const tylkoG = [...kurs.values()].filter(k => k.zrodlo === 'grafik');
+    const ile = new Map(); surowe.forEach(s => s.k && ile.set(s.k, (ile.get(s.k) || 0) + 1));
+    const zamiana = new Map();
+    for (let a = 0; a < tylkoG.length; a++) for (let b = a + 1; b < tylkoG.length; b++) {
+      const A = tylkoG[a], B = tylkoG[b];
+      if (zamiana.has(A.klucz) || zamiana.has(B.klucz)) continue;
+      const ta = A.klucz.slice(2).split(' '), tb = B.klucz.slice(2).split(' ');
+      if (ta.length !== tb.length || A.klucz === B.klucz) continue;
+      let roznic = 0; if (!ta.every((t, n) => t === tb[n] || (lev1(t, tb[n]) && ++roznic))) continue;
+      if (roznic !== 1) continue;
+      const [zost, usun] = (ile.get(A.klucz) || 0) >= (ile.get(B.klucz) || 0) ? [A, B] : [B, A];
+      zamiana.set(usun.klucz, zost.klucz);
+      plan.polaczone.push(`${usun.nazwisko} ${usun.imie} → ${zost.nazwisko} ${zost.imie}`);
+      if (!zost.kategoria) zost.kategoria = usun.kategoria; if (!zost.telefon) zost.telefon = usun.telefon;
+    }
+    zamiana.forEach((_, k) => kurs.delete(k));
+    surowe.forEach(s => { if (s.k && zamiana.has(s.k)) s.k = zamiana.get(s.k); });
+
+    // jazdy: rodzaj, godzina egzaminu
+    for (const s of surowe) {
+      const u = String(s.e.note || '').trim(), od = s.e.start, doo = s.e.end;
+      const egz = /egzamin/i.test(u) && !/teori/i.test(u);
+      let godz = null;
+      if (egz) { const m = u.match(/\b(\d{1,2})[.:](\d{2})\b/); if (m && +m[1] < 24 && +m[2] < 60) { const t = pad(+m[1]) + ':' + m[2]; if (naMin(t) >= naMin(od) - 30 && naMin(t) <= naMin(doo) + 30) godz = t; } }
+      const o = instrStary.get(s.iid); o.jazdy++;
+      if (s.k) { const k = kurs.get(s.k); k.jazdy++; k.instr[s.iid] = (k.instr[s.iid] || 0) + 1; }
+      plan.jazdy.push({ iid: s.iid, k: s.k, dzien: s.dzien, od, do: doo, rodzaj: !s.k ? 'inne' : egz ? 'egzamin' : 'jazda',
+        godz_egzaminu: godz, uwagi: u || null });
+    }
+    // wolne
+    const bylo = new Set();
+    for (const [klucz, lista] of Object.entries((G && G.off) || {})) {
+      const [iid, dzien] = klucz.split('|'); const o = instrStary.get(iid);
+      if (!o || !/^\d{4}-\d{2}-\d{2}$/.test(dzien)) continue;
+      for (const w of lista || []) {
+        const caly = /cały dzień/i.test(w.note || '') || !w.from || !w.to || (o.od && o.do && naMin(w.from) <= naMin(o.od) && naMin(w.to) >= naMin(o.do));
+        const od = caly ? null : w.from, doo = caly ? null : w.to;
+        if (!caly && naMin(doo) <= naMin(od)) continue;
+        const id = iid + dzien + od + doo; if (bylo.has(id)) continue; bylo.add(id);
+        plan.wolne.push({ iid, dzien, od, do: doo, uwagi: caly && /cały dzień/i.test(w.note || '') ? null : (String(w.note || '').trim() || null) });
+      }
+    }
+    // dopasowanie do kursantów już w programie (gdy nie czyścimy)
+    const istK = ist.wyczysc ? [] : ist.kursanci;
+    for (const k of kurs.values()) {
+      const top = Object.entries(k.instr).sort((a, b) => b[1] - a[1])[0];
+      k.prowadzacy = top ? top[0] : null;
+      const jest = (k.pkk && istK.find(x => (x.pkk || '').replace(/\s/g, '') === k.pkk))
+        || istK.find(x => kluczOsoby(x.imie, x.nazwisko) === kluczOsoby(k.imie, k.nazwisko) && (!k.pkk || !x.pkk) && (!k.kategoria || !x.kategoria || x.kategoria === k.kategoria));
+      k.istniejeId = jest ? jest.id : null;
+      plan.kursanci.push(k);
+    }
+    plan.zGrafiku = plan.kursanci.filter(k => k.zrodlo === 'grafik').length;
+    plan.kursanci.sort((a, b) => (a.nazwisko + ' ' + a.imie).localeCompare(b.nazwisko + ' ' + b.imie, 'pl'));
+    return plan;
+  }
+
+  // ----- ekran przeniesienia -----
+  let przPlan = null;
+  const przIle = (n, a, b, c) => n + ' ' + (n === 1 ? a : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14)) ? b : c);
+  $('prz-wybierz').onclick = () => $('prz-pliki').click();
+  $('prz-pliki').onchange = () => zajety($('prz-wybierz'), async () => {
+    const pliki = [];
+    try {
+      for (const f of $('prz-pliki').files) pliki.push({ nazwa: f.name, dane: JSON.parse(await f.text()) });
+    } catch (e) { msg('m-prz', 'Nie da się odczytać pliku – wybierz kopie .json ze starego grafiku i rejestru.'); return; }
+    finally { $('prz-pliki').value = ''; }
+    if (!pliki.length) return;
+    try {
+      await ladujInstruktorow(); await ladujKursantowDoGrafiku();
+      przPlan = planPrzeniesienia(pliki, { instruktorzy, kursanci: [...gKursanci.values()], wyczysc: $('prz-wyczysc').checked });
+      przPlan.pliki = pliki;
+      if (!przPlan.jazdy.length && !przPlan.kursanci.length) throw new Error('W plikach nie ma kursantów ani jazd.');
+      pokazPlan(); msg('m-prz', '');
+    } catch (e) { przPlan = null; $('prz-podsum').classList.add('hidden'); msg('m-prz', e.message || String(e)); }
+  });
+  $('prz-wyczysc').onchange = () => {
+    if (!przPlan) return;
+    const p = planPrzeniesienia(przPlan.pliki, { instruktorzy, kursanci: [...gKursanci.values()], wyczysc: $('prz-wyczysc').checked });
+    p.pliki = przPlan.pliki; p.instr.forEach((i, n) => i.celId = przPlan.instr[n].celId); przPlan = p; pokazPlan();
+  };
+  function pokazPlan() {
+    const p = przPlan, istK = gKursanci.size;
+    const opcje = sel => `<option value="nowy"${sel === 'nowy' ? ' selected' : ''}>➕ dodaj jako nowego</option><option value="pomin"${sel === 'pomin' ? ' selected' : ''}>✖ nie przenoś (ani jego jazd)</option>` +
+      instruktorzy.map(i => `<option value="${i.id}"${sel === i.id ? ' selected' : ''}>= ${esc(i.imie_nazwisko)}</option>`).join('');
+    const nowiK = p.kursanci.filter(k => !k.istniejeId), istniejacy = p.kursanci.length - nowiK.length;
+    const egz = p.jazdy.filter(j => j.rodzaj === 'egzamin').length;
+    const dni = p.jazdy.map(j => j.dzien).sort();
+    $('prz-podsum').innerHTML = `
+      <h3 class="prz-h">👨‍🏫 Instruktorzy (${p.instr.length})</h3>
+      <p class="hint">Sprawdź, czy każdy ze starego grafiku trafia do właściwej osoby w nowym programie.</p>
+      ${p.instr.map((i, n) => `<div class="prz-instr"><span><b>${esc(i.nazwa)}</b><br><small class="hint">${przIle(i.jazdy, 'jazda', 'jazdy', 'jazd')}${i.telefon ? ' · tel. ' + esc(i.telefon) : ''}</small></span>
+        <select data-prz-i="${n}">${opcje(i.celId)}</select></div>`).join('')}
+      <h3 class="prz-h">👤 Kursanci (${p.kursanci.length})</h3>
+      <p class="hint">Z rejestru PKK: <b>${p.zRejestru}</b> · tylko w grafiku: <b>${p.zGrafiku}</b>${istniejacy ? ` · już są w programie: <b>${istniejacy}</b> (nie zostaną zdublowani)` : ''}</p>
+      ${p.polaczone.length ? `<p class="hint" style="margin-top:4px">Połączone podobne nazwiska (literówki): ${p.polaczone.map(esc).join(', ')}</p>` : ''}
+      <details class="prz-lista"><summary>Pokaż listę kursantów</summary>
+        ${p.kursanci.map(k => `<div>${k.zrodlo === 'rejestr' ? '📋' : '🗓'} <b>${esc(k.nazwisko)}</b> ${esc(k.imie)}${k.kategoria ? ' <span class="pill">' + esc(k.kategoria) + '</span>' : ''}
+          <small class="hint">${k.pkk ? 'PKK …' + esc(k.pkk.slice(-4)) : 'bez PKK'}${k.telefon ? ' · ' + esc(k.telefon) : ''} · ${przIle(k.jazdy, 'jazda', 'jazdy', 'jazd')}${k.istniejeId ? ' · już jest' : ''}</small></div>`).join('')}
+        <p class="hint" style="margin-top:6px">📋 z rejestru PKK · 🗓 tylko ze starego grafiku (bez PKK – uzupełnisz w karcie kursanta). Instruktor prowadzący = ten, z którym kursant ma najwięcej jazd.</p>
+      </details>
+      <h3 class="prz-h">🚗 Grafik</h3>
+      <p class="hint"><b>${przIle(p.jazdy.length, 'jazda', 'jazdy', 'jazd')}</b>${dni.length ? ` (${fmtData(dni[0])} – ${fmtData(dni[dni.length - 1])})` : ''}, w tym egzaminy: <b>${egz}</b> · wolne: <b>${p.wolne.length}</b>.
+        Jazdy, które już są w programie (ten sam instruktor, godziny i kursant), zostaną pominięte.</p>
+      ${$('prz-wyczysc').checked ? `<p class="prz-uwaga">⚠️ Najpierw zostaną usunięte obecne dane w nowym programie: ${przIle(istK, 'kursant', 'kursantów', 'kursantów')} oraz wszystkie jazdy, wolne i dokupione godziny (trafią do kosza na 30 dni). Instruktorzy i konta zostają.</p>` : ''}
+      <button id="prz-start" class="btn" type="button">📥 Przenieś dane</button>`;
+    $('prz-podsum').classList.remove('hidden');
+    $('prz-podsum').querySelectorAll('[data-prz-i]').forEach(s => s.onchange = () => { przPlan.instr[+s.dataset.przI].celId = s.value; });
+    $('prz-start').onclick = () => zajety($('prz-start'), wykonajPrzeniesienie);
+  }
+  async function wykonajPrzeniesienie() {
+    const p = przPlan, S = profil.szkola_id, wyczysc = $('prz-wyczysc').checked;
+    const cele = p.instr.map(i => i.celId).filter(c => c !== 'nowy' && c !== 'pomin');
+    if (new Set(cele).size !== cele.length && !await pytaj('Dwóch instruktorów ze starego grafiku trafia do tej samej osoby w nowym programie. Ich jazdy zostaną połączone.\nPrzenieść mimo to?', { tak: 'Przenieś mimo to' })) return;
+    if (!await pytaj(`Przenieść dane ze starych programów?\n${p.kursanci.length} kursantów, ${p.jazdy.length} jazd, ${p.wolne.length} wolnych.` +
+        (wyczysc ? '\n\nObecni kursanci, jazdy, wolne i dokupione godziny w nowym programie zostaną najpierw usunięte (do kosza).' : ''), { tak: 'Przenieś' })) return;
+    if (!(await wymagajPin('Przeniesienie danych ze starych programów'))) return;
+    const krok = t => msg('m-prz', t, 'ok');
+    try {
+      if (wyczysc) {
+        krok('Usuwam dane testowe…');
+        for (const t of ['jazdy', 'wolne', 'dokupione', 'kursanci']) {
+          const { error } = await sb.from(t).delete().eq('szkola_id', S); if (error) throw error;
+        }
+        gKursanci.clear();
+      }
+      krok('Instruktorzy…');
+      const mapI = new Map();
+      for (const i of p.instr) {
+        if (i.celId === 'pomin') continue;
+        if (i.celId === 'nowy') {
+          const { data, error } = await sb.from('instruktorzy').insert({ szkola_id: S, imie_nazwisko: i.nazwa, telefon: i.telefon, godz_od: i.od, godz_do: i.do }).select().single();
+          if (error) throw error; mapI.set(i.stareId, data.id);
+        } else {
+          const cel = instruktorzy.find(x => x.id === i.celId) || {}, zm = {};
+          if (i.telefon && !cel.telefon) zm.telefon = i.telefon;
+          if (i.od && i.do && !cel.godz_od) { zm.godz_od = i.od; zm.godz_do = i.do; }
+          if (Object.keys(zm).length) { const { error } = await sb.from('instruktorzy').update(zm).eq('id', i.celId); if (error) throw error; }
+          mapI.set(i.stareId, i.celId);
+        }
+      }
+      krok('Kursanci…');
+      const mapK = new Map(), noweK = [];
+      for (const k of p.kursanci) {
+        if (k.istniejeId && !wyczysc) { mapK.set(k.klucz, k.istniejeId); continue; }
+        const id = crypto.randomUUID(); mapK.set(k.klucz, id);
+        const w = { id, szkola_id: S, imie: k.imie, nazwisko: k.nazwisko, telefon: k.telefon, email: k.email, pkk: k.pkk,
+          kategoria: k.kategoria, typ_kursu: k.typ_kursu, posiadane_kategorie: k.posiadane_kategorie, nr_prawa_jazdy: k.nr_prawa_jazdy,
+          uwagi: k.uwagi, instruktor_id: (k.prowadzacy && mapI.get(k.prowadzacy)) || null };
+        if (k.zapis) w.utworzono = new Date(k.zapis + 'T12:00:00').toISOString();
+        noweK.push(w);
+      }
+      for (let x = 0; x < noweK.length; x += 200) {
+        let { error } = await sb.from('kursanci').insert(noweK.slice(x, x + 200));
+        if (error && /instruktor_id/.test(error.message)) ({ error } = await sb.from('kursanci').insert(noweK.slice(x, x + 200).map(({ instruktor_id, ...r }) => r)));
+        if (error) throw error;
+      }
+      krok('Jazdy…');
+      let istJ = [], istW = [];
+      if (!wyczysc && p.jazdy.length) {
+        const dni = p.jazdy.map(j => j.dzien).sort();
+        ({ data: istJ } = await sb.from('jazdy').select('instruktor_id, kursant_id, poczatek, koniec').eq('szkola_id', S)
+          .gte('poczatek', new Date(dni[0] + 'T00:00:00').toISOString()).lt('poczatek', new Date(dodajDni(dni[dni.length - 1], 1) + 'T00:00:00').toISOString()));
+        ({ data: istW } = await sb.from('wolne').select('instruktor_id, dzien, godz_od, godz_do').eq('szkola_id', S));
+      }
+      const jestJ = new Set((istJ || []).map(j => [j.instruktor_id, j.kursant_id || '', new Date(j.poczatek).getTime(), new Date(j.koniec).getTime()].join('|')));
+      const jazdy = [];
+      let pomJ = 0;
+      for (const j of p.jazdy) {
+        const iid = mapI.get(j.iid); if (!iid) continue;
+        const kid = j.k ? mapK.get(j.k) || null : null, od = isoZ(j.dzien, j.od), doo = isoZ(j.dzien, j.do);
+        if (jestJ.has([iid, kid || '', new Date(od).getTime(), new Date(doo).getTime()].join('|'))) { pomJ++; continue; }
+        const w = { szkola_id: S, instruktor_id: iid, kursant_id: kid, poczatek: od, koniec: doo, rodzaj: j.rodzaj, uwagi: j.uwagi };
+        if (j.godz_egzaminu) w.godz_egzaminu = j.godz_egzaminu;
+        jazdy.push(w);
+      }
+      for (let x = 0; x < jazdy.length; x += 300) {
+        const { error } = await sb.from('jazdy').insert(jazdy.slice(x, x + 300)); if (error) throw error;
+      }
+      krok('Wolne…');
+      const hm5 = t => t ? String(t).slice(0, 5) : '';
+      const jestW = new Set((istW || []).map(w => [w.instruktor_id, w.dzien, hm5(w.godz_od), hm5(w.godz_do)].join('|')));
+      const wolne = p.wolne.filter(w => mapI.get(w.iid)).map(w => ({ szkola_id: S, instruktor_id: mapI.get(w.iid), dzien: w.dzien, godz_od: w.od, godz_do: w.do, uwagi: w.uwagi }))
+        .filter(w => !jestW.has([w.instruktor_id, w.dzien, hm5(w.godz_od), hm5(w.godz_do)].join('|')));
+      if (wolne.length) { const { error } = await sb.from('wolne').insert(wolne); if (error) throw error; }
+
+      przPlan = null; $('prz-podsum').classList.add('hidden'); $('prz-wyczysc').checked = false;
+      await ladujInstruktorow(); wypelnijInstr(); await ladujKursantowDoGrafiku(); ladujKursantow(); ladujInstruktorowLista(); ladujDzien(true);
+      msg('m-prz', `Gotowe ✅ Przeniesiono: ${przIle(noweK.length, 'kursanta', 'kursantów', 'kursantów')}, ${przIle(jazdy.length, 'jazdę', 'jazdy', 'jazd')}, ${przIle(wolne.length, 'wolne', 'wolne', 'wolnych')}` +
+        (pomJ ? ` (pominięto ${pomJ} jazd, które już były)` : '') + '. Sprawdź grafik i kursantów, a potem zapisz kopię zapasową.', 'ok');
+    } catch (e) {
+      msg('m-prz', 'Przerwano: ' + tlumacz(e) + '. To, co zdążyło się zapisać, zostaje – możesz uruchomić przeniesienie jeszcze raz (bez zaznaczania „Usuń dane testowe”), duplikatów nie będzie.');
+    }
+  }
 
   // ===== PIN =====
   let pinWlaczony = false;
