@@ -1009,7 +1009,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.29';
+  const WERSJA = '1.30';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -1019,6 +1019,8 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.30', d: '20.11.2026', p: [
+      'Poprawka przenoszenia danych (błąd „utworzono” przy zapisie kursantów).'] },
     { v: '1.29', d: '20.11.2026', p: [
       '📥 Przeniesienie danych ze starego grafiku i rejestru PKK (Ustawienia) – z podsumowaniem przed zapisem.'] },
     { v: '1.28', d: '20.11.2026', p: [
@@ -3857,7 +3859,8 @@ function cellTime(v) {
         const w = { id, szkola_id: S, imie: k.imie, nazwisko: k.nazwisko, telefon: k.telefon, email: k.email, pkk: k.pkk,
           kategoria: k.kategoria, typ_kursu: k.typ_kursu, posiadane_kategorie: k.posiadane_kategorie, nr_prawa_jazdy: k.nr_prawa_jazdy,
           uwagi: k.uwagi, instruktor_id: (k.prowadzacy && mapI.get(k.prowadzacy)) || null };
-        if (k.zapis) w.utworzono = new Date(k.zapis + 'T12:00:00').toISOString();
+        // każdy wiersz musi mieć te same pola (inaczej baza wstawia puste zamiast domyślnych)
+        w.utworzono = k.zapis ? new Date(k.zapis + 'T12:00:00').toISOString() : new Date().toISOString();
         noweK.push(w);
       }
       for (let x = 0; x < noweK.length; x += 200) {
@@ -3880,8 +3883,8 @@ function cellTime(v) {
         const iid = mapI.get(j.iid); if (!iid) continue;
         const kid = j.k ? mapK.get(j.k) || null : null, od = isoZ(j.dzien, j.od), doo = isoZ(j.dzien, j.do);
         if (jestJ.has([iid, kid || '', new Date(od).getTime(), new Date(doo).getTime()].join('|'))) { pomJ++; continue; }
-        const w = { szkola_id: S, instruktor_id: iid, kursant_id: kid, poczatek: od, koniec: doo, rodzaj: j.rodzaj, uwagi: j.uwagi };
-        if (j.godz_egzaminu) w.godz_egzaminu = j.godz_egzaminu;
+        const w = { szkola_id: S, instruktor_id: iid, kursant_id: kid, poczatek: od, koniec: doo, rodzaj: j.rodzaj, uwagi: j.uwagi,
+          godz_egzaminu: j.godz_egzaminu || null, potwierdzona: true, nie_liczy: false };
         jazdy.push(w);
       }
       for (let x = 0; x < jazdy.length; x += 300) {
