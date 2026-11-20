@@ -223,6 +223,8 @@
   .szybkie button.on{background:var(--g);color:var(--ga);border-color:var(--g);font-weight:600}
   .szybkie button.on small{color:var(--ga)}
   @media(max-width:520px){.szybkie button{padding:6px 12px}.szybkie button small{display:none}}
+  #p-biuro-tabs button{font-weight:700;font-size:16px;letter-spacing:.1px}
+  @media(max-width:520px){#p-biuro-tabs button{font-size:13.5px;padding-left:2px;padding-right:2px}}
   .tabs .ik{font-size:22px;line-height:1;vertical-align:-3px;margin-right:8px}
   @media(max-width:520px){.tabs .ik{display:block;margin:0 auto 3px;font-size:22px}}
   .top-l{display:flex;align-items:center;gap:12px;min-width:0}
@@ -867,7 +869,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.22';
+  const WERSJA = '1.23';
   // ======================
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
