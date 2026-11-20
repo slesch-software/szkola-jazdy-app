@@ -74,7 +74,9 @@
   .sheet h2{font-size:19px}
   .usun{width:100%;margin-top:10px;color:var(--r)}
   .dzien{display:flex;align-items:center;gap:8px;margin-top:4px}
-  .dzien>button{font-size:22px;line-height:1;padding:8px 14px}
+  .dzien>button{font-size:34px;font-weight:700;line-height:1;width:64px;height:64px;padding:0 0 4px;display:flex;align-items:center;justify-content:center;border-radius:14px;background:#fff;border:1px solid var(--b);color:var(--g);cursor:pointer}
+  .dzien>button:hover{background:var(--g);color:var(--ga);border-color:var(--g)}
+  @media(max-width:520px){.dzien>button{width:50px;height:50px;font-size:28px}}
   .dz-opis{flex:1;text-align:center;margin:0;cursor:pointer;position:relative}
   .dz-opis b{display:block;font-size:22px}
   .dz-opis span{font-size:16px;color:#4b5563;font-weight:500}
@@ -910,7 +912,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.25';
+  const WERSJA = '1.26';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -920,8 +922,8 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
-    { v: '1.25', d: '20.11.2026', p: [
-      'Większe i czytelniejsze przyciski Dziś / Jutro / Pojutrze oraz data dnia w grafiku.'] },
+    { v: '1.26', d: '20.11.2026', p: [
+      'Większe i czytelniejsze przyciski Dziś / Jutro / Pojutrze, strzałki ‹ › oraz data dnia w grafiku.'] },
     { v: '1.24', d: '20.11.2026', p: [
       'Nowe okienko „Co nowego” i „O programie” (na dole strony) – z kontaktem i przyciskiem „Zgłoś problem / pomysł”.',
       'Po aktualizacji programu pojawia się pasek z informacją, co się zmieniło.'] },
