@@ -357,6 +357,12 @@
     .logo-n{max-height:56px;max-width:min(230px,100%)}
     #p-szkola{font-size:19px;line-height:1.2}
   }
+  .kto-kafle{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 14px}
+  .kto-kafel{background:#fff;border:2px solid var(--b);border-radius:14px;padding:14px 12px;text-align:left;cursor:pointer;font:inherit;color:inherit;display:flex;flex-direction:column;gap:2px;min-height:44px}
+  .kto-kafel .e{font-size:26px}.kto-kafel b{font-size:16px;margin-top:4px}.kto-kafel span:last-child{font-size:12.5px;color:var(--m);line-height:1.35}
+  .kto-kafel.on{border-color:var(--gy);background:#fffbe6;box-shadow:0 0 0 3px rgba(245,196,0,.25)}
+  .kto-podp{font-size:13.5px;color:var(--m);background:#f4f6f8;border-radius:10px;padding:10px 12px;margin:14px 0 0;line-height:1.45}
+  .kto-podp button{background:none;border:none;padding:0;font:inherit;color:var(--gl);text-decoration:underline;cursor:pointer}
   .logo-l{display:block;max-height:90px;max-width:220px;object-fit:contain;margin:0 auto 10px}
   .logo-pod{max-height:90px;max-width:240px;object-fit:contain;border:1px solid var(--b);border-radius:8px;padding:6px;background:#fff}
   @media print{
@@ -483,8 +489,13 @@
     <button type="button" class="ls-wstecz" id="l-o-programie">‹ Czym jest Grafik OSK?</button>
     <img id="l-logo" class="logo-l hidden" alt="">
     <h1>Program dla szkół jazdy</h1>
-    <p class="sub">Grafik jazd, kursanci, instruktorzy</p>
+    <p class="sub">Wybierz, kim jesteś:</p>
+    <div class="kto-kafle">
+      <button type="button" class="kto-kafel" data-kto="biuro"><span class="e" aria-hidden="true">🏢</span><b>Biuro OSK</b><span>grafik wszystkich, kursanci, ustawienia</span></button>
+      <button type="button" class="kto-kafel" data-kto="instruktor"><span class="e" aria-hidden="true">🚗</span><b>Instruktor</b><span>„Mój grafik jazd”</span></button>
+    </div>
     <div class="card">
+      <h2 id="l-tytul" style="margin:0 0 12px;font-size:19px"></h2>
       <div class="tabs">
         <button id="t-login" class="on" type="button">Logowanie</button>
         <button id="t-rej" type="button">Nowe konto</button>
@@ -502,6 +513,7 @@
       </form>
       <button id="b-zapomnialem" class="link" type="button">Nie pamiętam hasła</button>
       <div id="m-login" class="msg"></div>
+      <p id="l-podp" class="kto-podp"></p>
     </div>
   </div>
 
@@ -1192,7 +1204,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.50';
+  const WERSJA = '1.51';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -1202,6 +1214,8 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.51', d: '21.11.2026', p: [
+      'Ekran logowania: wybór „Biuro OSK” albo „Instruktor” z podpowiedziami (program pamięta wybór na urządzeniu).'] },
     { v: '1.48', d: '20.11.2026', p: [
       'Informacja o kończącym się okresie próbnym lub abonamencie (7 dni wcześniej) z kontaktem do dostawcy programu.'] },
     { v: '1.47', d: '20.11.2026', p: [
@@ -1370,6 +1384,20 @@
     $('b-zapomnialem').classList.toggle('hidden', t !== 'login');
     msg('m-login', '');
   }
+  // ----- wybór: biuro OSK / instruktor (tylko podpowiedzi – uprawnienia i tak wynikają z konta) -----
+  let ktoLog = (() => { try { return localStorage.getItem('kto_log') || 'biuro'; } catch (_) { return 'biuro'; } })();
+  function ustawKto(k) {
+    ktoLog = k; try { localStorage.setItem('kto_log', k); } catch (_) {}
+    document.querySelectorAll('.kto-kafel').forEach(b => { b.classList.toggle('on', b.dataset.kto === k); b.setAttribute('aria-pressed', b.dataset.kto === k); });
+    $('l-tytul').textContent = k === 'biuro' ? '🏢 Logowanie – biuro OSK' : '🚗 Logowanie – instruktor';
+    $('i-email').placeholder = k === 'biuro' ? 'biuro@twojaszkola.pl' : 'twój e-mail';
+    $('l-podp').innerHTML = k === 'biuro'
+      ? 'Zakładasz nową szkołę? <button type="button" id="l-kod">Mam kod aktywacyjny →</button>'
+      : 'Nie masz konta? Poproś biuro o zaproszenie albo <button type="button" id="l-kod">załóż konto z kodem szkoły →</button>';
+    $('l-kod').onclick = () => { try { localStorage.setItem('chce_nowa', k === 'biuro' ? '1' : '0'); } catch (_) {} ustawTryb('rej'); $('i-imie').focus(); };
+  }
+  document.querySelectorAll('.kto-kafel').forEach(b => b.onclick = () => ustawKto(b.dataset.kto));
+  ustawKto(ktoLog);
   $('t-login').onclick = () => ustawTryb('login');
   $('t-rej').onclick = () => ustawTryb('rej');
 
@@ -1621,6 +1649,7 @@
     if (!profil) {
       $('i-kod-imie').value = (ja.user_metadata && ja.user_metadata.imie_nazwisko) || '';
       pokaz('s-kod');
+      try { if (localStorage.getItem('chce_nowa') === '1' && $('kt-nowa')) $('kt-nowa').click(); } catch (_) {}
       return;
     }
     if (profil.szkoly && profil.szkoly.aktywna === false) {
