@@ -676,8 +676,8 @@
 
     <!-- Instruktor: wyszukiwarka i godziny -->
     <div id="p-instr-extra" class="hidden">
-      <div id="mw-karta" class="card hidden">
-        <h2 id="mw-tytul">⛔ Moje wolne</h2>
+      <div id="mw-karta" class="card hidden" data-zw="mwolne">
+        <h2><span id="mw-tytul">⛔ Moje wolne</span></h2>
         <p class="hint" id="mw-opis"></p>
         <div class="siatka" style="margin-top:6px">
           <div><label for="mw-od-dnia">Od dnia</label><input type="date" id="mw-od-dnia"></div>
@@ -1192,7 +1192,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.49';
+  const WERSJA = '1.50';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -2153,6 +2153,8 @@
       const st = w.status || 'ok', usun = st !== 'ok' || sam;
       return `<div class="mw-row"><span>${opisWolnego(w)} ${ST[st] || ''}</span>${usun ? `<button type="button" data-mw="${w.id}" style="padding:5px 10px;font-size:13px">${st === 'zgloszone' ? 'Wycofaj' : 'Usuń'}</button>` : ''}</div>`;
     }).join('') || '<p class="hint">Brak wpisanego wolnego.</p>';
+    const czeka = data.filter(w => w.status === 'zgloszone').length, odrz = data.filter(w => w.status === 'odrzucone').length;
+    zwInfo('mwolne', [czeka ? `⏳ ${czeka} czeka` : '', odrz ? `✖ ${odrz} odrzucone` : '', !czeka && !odrz && data.length ? `${data.length} w grafiku` : ''].filter(Boolean).join(' · '));
     $('mw-lista').querySelectorAll('button[data-mw]').forEach(b => b.onclick = () => zajety(b, async () => {
       if (!await pytaj(b.textContent === 'Wycofaj' ? 'Wycofać to zgłoszenie?' : 'Usunąć ten wpis?', { tak: b.textContent === 'Wycofaj' ? 'Wycofaj' : 'Usuń' })) return;
       const { error } = await sb.rpc('usun_moje_wolne', { p_id: b.dataset.mw });
