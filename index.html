@@ -127,6 +127,8 @@
   .uprawn label{display:flex;align-items:center;justify-content:flex-start;gap:8px;font-size:13.5px;font-weight:400;color:var(--m);cursor:pointer;margin:0;width:auto;text-align:left}
   .uprawn input{width:auto;margin:0;flex:none}
   #mw-karta .siatka{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  @media(max-width:520px){#mw-karta .siatka,#modal-wolne .siatka{grid-template-columns:1fr}}
+  input[type=date]{min-width:0}
   #mw-karta .siatka input{min-width:0;width:100%;max-width:100%;box-sizing:border-box}
   .mw-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--b);font-size:14px}
   .mw-row:first-child{border-top:none}
@@ -1190,7 +1192,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.48';
+  const WERSJA = '1.49';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
