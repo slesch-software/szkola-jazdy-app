@@ -1338,7 +1338,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.53';
+  const WERSJA = '1.54';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -1348,6 +1348,8 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.54', d: '21.11.2026', p: [
+      'Biuro może pozwolić instruktorowi zatwierdzać prośby kursantów o jazdy do niego (Ustawienia → Instruktorzy w grafiku).'] },
     { v: '1.53', d: '21.11.2026', p: [
       '📅 Rezerwacje kursantów – do włączenia w Ustawieniach: kursant na swoim linku widzi wolne godziny instruktora i wysyła prośbę o jazdę, a biuro zatwierdza ją jednym kliknięciem. Zasady (ile dni do przodu, do kiedy, długość jazdy, którzy instruktorzy) i godziny pracy instruktorów ustawia każda szkoła sama.'] },
     { v: '1.52', d: '21.11.2026', p: [
@@ -2456,7 +2458,7 @@
     const v = $('u-rez').checked;
     const { error } = await sb.from('szkoly').update({ rez_wl: v }).eq('id', profil.szkola_id);
     if (error) { $('u-rez').checked = !v; msg('m-rez-ust', /rez_wl/.test(error.message) ? 'Najpierw uruchom w Supabase plik krok23_rezerwacje.sql.' : tlumacz(error)); return; }
-    profil.szkoly.rez_wl = v; pokazUstRez();
+    profil.szkoly.rez_wl = v; pokazUstRez(); ladujInstruktorowLista();
     const bezGodzin = !instruktorzy.some(i => i.aktywny && i.rez_godziny);
     msg('m-rez-ust', v ? (bezGodzin ? 'Włączone. Teraz ustaw godziny pracy instruktorów – bez nich kursanci nie zobaczą wolnych terminów.' : 'Rezerwacje włączone – kursanci zobaczą je na swoim linku.') : 'Rezerwacje wyłączone.', 'ok');
   };
@@ -2501,9 +2503,15 @@
   // --- biuro: baner z prośbami ---
   async function ladujRezerwacje() {
     const el = $('rz-baner');
-    if (!profil || profil.rola !== 'biuro' || !(profil.szkoly && profil.szkoly.rez_wl)) { el.classList.add('hidden'); el.innerHTML = ''; return; }
-    const { data, error } = await sb.from('rezerwacje').select('*, kursanci(imie, nazwisko, kategoria, telefon)').eq('szkola_id', profil.szkola_id)
-      .eq('status', 'czeka').gte('koniec', new Date().toISOString()).order('poczatek');
+    const biuroR = profil && profil.rola === 'biuro';
+    if (!profil || !(profil.szkoly && profil.szkoly.rez_wl)) { el.classList.add('hidden'); el.innerHTML = ''; return; }
+    let data, error;
+    if (biuroR) ({ data, error } = await sb.from('rezerwacje').select('*, kursanci(imie, nazwisko, kategoria, telefon)').eq('szkola_id', profil.szkola_id)
+      .eq('status', 'czeka').gte('koniec', new Date().toISOString()).order('poczatek'));
+    else {   // instruktor z uprawnieniem – tylko prośby do niego
+      ({ data, error } = await sb.rpc('moje_prosby_rez'));
+      if (!error) data = (data || []).map(r => ({ ...r, kursanci: { imie: r.imie, nazwisko: r.nazwisko, kategoria: r.kategoria, telefon: r.telefon } }));
+    }
     if (error || !data.length) { el.classList.add('hidden'); el.innerHTML = ''; return; }
     const otw = el.classList.contains('hidden') ? true : el.open;
     const nazwaI = id => (instruktorzy.find(i => i.id === id) || {}).imie_nazwisko || '—';
@@ -2511,7 +2519,7 @@
     el.innerHTML = `<summary>📩 ${data.length} ${data.length === 1 ? 'prośba' : data.length < 5 ? 'prośby' : 'próśb'} kursantów o jazdę</summary>` +
       data.map(r => { const k = r.kursanci || {}, d = new Date(r.poczatek);
         return `<div class="wr"><span><b>${esc(k.nazwisko || '')} ${esc(k.imie || '')}</b>${k.kategoria ? ` <span class="kat">${esc(k.kategoria)}</span>` : ''}<br>
-          ${DNI_KR[d.getDay()]} ${fmtData(r.poczatek)}, ${godzina(r.poczatek)}–${godzina(r.koniec)} · ${esc(nazwaI(r.instruktor_id))}</span>
+          ${DNI_KR[d.getDay()]} ${fmtData(r.poczatek)}, ${godzina(r.poczatek)}–${godzina(r.koniec)}${biuroR ? ' · ' + esc(nazwaI(r.instruktor_id)) : ''}${!biuroR && k.telefon ? ` · <a href="tel:${telLink(k.telefon)}">📞 ${esc(k.telefon)}</a>` : ''}</span>
           <span class="bt"><button type="button" data-rz="ok" data-id="${r.id}">✓ Zatwierdź</button><button type="button" data-rz="nie" data-id="${r.id}">✖ Odrzuć</button></span></div>`; }).join('');
     el.open = otw;
     el.querySelectorAll('button[data-rz]').forEach(b => b.onclick = () => zajety(b, async () => {
@@ -2527,7 +2535,9 @@
       } else {
         const pow = await zapytajTekst('Odrzucić prośbę?', 'Możesz wpisać krótki powód – kursant zobaczy go na swoim linku (np. „proszę wybrać inny dzień”). Można zostawić puste.', '');
         if (pow === null) return;
-        const { error } = await sb.from('rezerwacje').update({ status: 'odrzucona', powod: pow.trim() || null }).eq('id', r.id).eq('status', 'czeka');
+        const { error } = biuroR
+          ? await sb.from('rezerwacje').update({ status: 'odrzucona', powod: pow.trim() || null }).eq('id', r.id).eq('status', 'czeka')
+          : await sb.rpc('odrzuc_rezerwacje', { p_id: r.id, p_powod: pow });
         if (error) { msg('m-grafik', tlumacz(error)); return; }
       }
       ladujRezerwacje(); ladujDzien(true);
@@ -3542,13 +3552,14 @@
           <button data-a="ukryj" data-id="${i.id}">${i.aktywny ? 'Ukryj' : 'Przywróć'}</button></div>
         ${i.user_id && 'moze_zglaszac_wolne' in i ? `<div class="uprawn">
           <label><input type="checkbox" data-upr="moze_zglaszac_wolne" data-id="${i.id}"${i.moze_zglaszac_wolne ? ' checked' : ''}> może zgłaszać wolne (biuro zatwierdza)</label>
-          <label><input type="checkbox" data-upr="moze_dodawac_wolne" data-id="${i.id}"${i.moze_dodawac_wolne ? ' checked' : ''}> może sam wpisywać wolne</label></div>` : ''}</div>`).join('')
+          <label><input type="checkbox" data-upr="moze_dodawac_wolne" data-id="${i.id}"${i.moze_dodawac_wolne ? ' checked' : ''}> może sam wpisywać wolne</label>
+          ${'moze_zatwierdzac_rez' in i && profil.szkoly && profil.szkoly.rez_wl ? `<label><input type="checkbox" data-upr="moze_zatwierdzac_rez" data-id="${i.id}"${i.moze_zatwierdzac_rez ? ' checked' : ''}> może zatwierdzać prośby kursantów o jazdy (do siebie)</label>` : ''}</div>` : ''}</div>`).join('')
       || '<p class="hint">Brak instruktorów.</p>';
     $('p-instruktorzy').querySelectorAll('input[data-upr]').forEach(c => c.onchange = async () => {
       const { error } = await sb.from('instruktorzy').update({ [c.dataset.upr]: c.checked }).eq('id', c.dataset.id);
       if (error) { c.checked = !c.checked; msg('m-instruktorzy', tlumacz(error)); return; }
       const i = instruktorzy.find(x => x.id === c.dataset.id); if (i) i[c.dataset.upr] = c.checked;
-      msg('m-instruktorzy', `${i ? i.imie_nazwisko : 'Instruktor'}: ${c.checked ? 'włączono' : 'wyłączono'} – ${c.dataset.upr === 'moze_dodawac_wolne' ? 'samodzielne wpisywanie wolnego' : 'zgłaszanie wolnego'}.`, 'ok');
+      msg('m-instruktorzy', `${i ? i.imie_nazwisko : 'Instruktor'}: ${c.checked ? 'włączono' : 'wyłączono'} – ${({ moze_dodawac_wolne: 'samodzielne wpisywanie wolnego', moze_zglaszac_wolne: 'zgłaszanie wolnego', moze_zatwierdzac_rez: 'zatwierdzanie próśb kursantów' })[c.dataset.upr]}.`, 'ok');
     });
     if (instruktorzy.some(i => i.user_id) && !instruktorzy.some(i => 'moze_zglaszac_wolne' in i))
       $('p-instruktorzy').insertAdjacentHTML('beforeend', '<p class="hint" style="margin-top:8px">Żeby instruktorzy mogli zgłaszać wolne, uruchom w Supabase plik krok19_wolne_instruktora.sql.</p>');
