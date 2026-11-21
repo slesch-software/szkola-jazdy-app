@@ -1178,6 +1178,12 @@
       <input id="mk-h2" type="password" autocomplete="new-password" minlength="6" required>
       <button class="btn2" type="submit">Zmień hasło</button>
     </form>
+    <div id="mk-zegarek" class="hidden">
+      <h3 style="font-size:16px;margin:22px 0 2px">⌚ Zegarek Garmin</h3>
+      <p class="hint" style="margin-top:2px">Twoje jazdy na dziś i jutro na zegarku. Kod wpisujesz raz w aplikacji Garmin Connect (ustawienia aplikacji „Grafik OSK”). Zegarek tylko odczytuje grafik – niczego nie zmieni.</p>
+      <button type="button" id="mk-zeg-pokaz" class="btn2">⌚ Pokaż kod do zegarka</button>
+      <div id="mk-zeg-box" class="link-box hidden"></div>
+    </div>
     <div id="m-konto" class="msg"></div>
     <button id="mk-zamknij" class="btn2" type="button">Zamknij</button>
   </div>
@@ -1339,7 +1345,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.56';
+  const WERSJA = '1.57';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -1349,6 +1355,7 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.57', d: '21.11.2026', p: ['⌚ Zegarek Garmin: instruktor w „👤 Konto” pobiera kod do zegarka i widzi na nim swoje jazdy na dziś i jutro.'] },
     { v: '1.56', d: '21.11.2026', p: ['Większe logo szkoły na górze programu i na ekranie logowania.', 'Podpowiedź, w jakim rozmiarze najlepiej wgrać logo; przezroczyste tło logo jest zachowywane.'] },
     { v: '1.54', d: '21.11.2026', p: [
       'Biuro może pozwolić instruktorowi zatwierdzać prośby kursantów o jazdy do niego (Ustawienia → Instruktorzy w grafiku).'] },
@@ -2782,8 +2789,36 @@
     $('mk-tel').value = profil.telefon || '';
     $('mk-h1').value = ''; $('mk-h2').value = '';
     msg('m-konto', '');
+    const ja_i = (instruktorzy || []).find(i => i.user_id === ja.id);
+    $('mk-zegarek').classList.toggle('hidden', !ja_i);
+    $('mk-zeg-box').classList.add('hidden'); $('mk-zeg-box').innerHTML = '';
     $('modal-konto').classList.remove('hidden');
   }
+  // ===== KOD DO ZEGARKA GARMIN (instruktor) =====
+  async function pokazKodZegarka(nowy) {
+    const box = $('mk-zeg-box'); box.classList.remove('hidden');
+    const { data, error } = await sb.rpc('link_zegarka', { p_nowy: !!nowy });
+    if (error) { box.innerHTML = `<p class="hint">${/link_zegarka/.test(error.message) ? 'Biuro musi najpierw uruchomić w Supabase plik krok25_zegarek.sql.' : esc(tlumacz(error))}</p>`; return; }
+    const kod = data.token, czytelny = kod.match(/.{1,4}/g).join(' ');
+    const ost = data.ostatnio ? `ostatnio połączony: ${fmtData(data.ostatnio)} ${godzina(data.ostatnio)}` : 'zegarek jeszcze się nie połączył';
+    box.innerHTML = `<b>Kod do zegarka</b>
+      <div class="url" style="font-size:18px;letter-spacing:1px;text-align:center">${esc(czytelny)}</div>
+      <p class="hint" style="margin:0 0 8px">Garmin Connect → Urządzenie → Aplikacje Connect IQ → Grafik OSK → Ustawienia → „Kod z programu”. Spacje możesz pominąć. · ${esc(ost)}</p>
+      <div class="akcje">
+        <button type="button" id="zg-kopiuj" style="margin:0">📋 Kopiuj kod</button>
+        <button type="button" id="zg-nowy" style="margin:0">♻️ Nowy kod</button>
+        <button type="button" id="zg-wylacz" style="margin:0;color:var(--r)">✖ Wyłącz</button>
+      </div>${nowy ? '<p class="hint" style="margin-top:8px">✅ Utworzono nowy kod – poprzedni już nie działa. Wpisz go w zegarku.</p>' : ''}
+      <p class="hint" style="margin-top:8px">Nie podawaj kodu nikomu – kto go zna, widzi Twój grafik.</p>`;
+    $('zg-kopiuj').onclick = async () => { try { await navigator.clipboard.writeText(kod); $('zg-kopiuj').textContent = '✅ Skopiowano'; } catch (_) { prompt('Skopiuj kod:', kod); } };
+    $('zg-nowy').onclick = async () => { if (await pytaj('Utworzyć nowy kod?\nZegarek z poprzednim kodem przestanie pokazywać jazdy (np. po zgubieniu zegarka).', { tak: 'Nowy kod' })) zajety($('zg-nowy'), () => pokazKodZegarka(true)); };
+    $('zg-wylacz').onclick = async () => {
+      if (!await pytaj('Wyłączyć zegarek?\nZegarek przestanie pokazywać jazdy, dopóki nie utworzysz nowego kodu.', { tak: 'Wyłącz', niebezp: true })) return;
+      const { error } = await sb.rpc('usun_link_zegarka');
+      box.innerHTML = error ? esc(tlumacz(error)) : '<p class="hint">Zegarek wyłączony.</p>';
+    };
+  }
+  $('mk-zeg-pokaz').onclick = () => zajety($('mk-zeg-pokaz'), () => pokazKodZegarka(false));
   const zamknijKonto = () => $('modal-konto').classList.add('hidden');
   document.querySelectorAll('.konto-btn').forEach(b => b.onclick = otworzKonto);
   $('mk-zamknij').onclick = zamknijKonto;
