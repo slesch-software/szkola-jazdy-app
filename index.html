@@ -386,10 +386,10 @@
   .tabs .ik{font-size:22px;line-height:1;vertical-align:-3px;margin-right:8px}
   @media(max-width:520px){.tabs .ik{display:block;margin:0 auto 3px;font-size:22px}}
   .top-l{display:flex;align-items:center;gap:12px;min-width:0}
-  .logo-n{max-height:52px;max-width:140px;object-fit:contain;flex:none}
+  .logo-n{max-height:84px;max-width:240px;object-fit:contain;flex:none}
   @media(max-width:600px){
     .top-l{flex-direction:column;align-items:flex-start;gap:8px}
-    .logo-n{max-height:56px;max-width:min(230px,100%)}
+    .logo-n{max-height:76px;max-width:min(240px,100%)}
     #p-szkola{font-size:19px;line-height:1.2}
   }
   .kto-kafle{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 14px}
@@ -398,7 +398,7 @@
   .kto-kafel.on{border-color:var(--gy);background:#fffbe6;box-shadow:0 0 0 3px rgba(245,196,0,.25)}
   .kto-podp{font-size:13.5px;color:var(--m);background:#f4f6f8;border-radius:10px;padding:10px 12px;margin:14px 0 0;line-height:1.45}
   .kto-podp button{background:none;border:none;padding:0;font:inherit;color:var(--gl);text-decoration:underline;cursor:pointer}
-  .logo-l{display:block;max-height:90px;max-width:220px;object-fit:contain;margin:0 auto 10px}
+  .logo-l{display:block;max-height:110px;max-width:min(280px,100%);object-fit:contain;margin:0 auto 10px}
   .logo-pod{max-height:90px;max-width:240px;object-fit:contain;border:1px solid var(--b);border-radius:8px;padding:6px;background:#fff}
   @media print{
     body>*:not(#druk){display:none!important}
@@ -1338,7 +1338,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.54';
+  const WERSJA = '1.55';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -1348,6 +1348,7 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.55', d: '21.11.2026', p: ['Większe logo szkoły na górze programu i na ekranie logowania.'] },
     { v: '1.54', d: '21.11.2026', p: [
       'Biuro może pozwolić instruktorowi zatwierdzać prośby kursantów o jazdy do niego (Ustawienia → Instruktorzy w grafiku).'] },
     { v: '1.53', d: '21.11.2026', p: [
