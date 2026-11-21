@@ -914,6 +914,7 @@
         <div class="card" data-zw="logo">
           <h2>🖼 Logo szkoły</h2>
           <p class="hint" id="lg-status">Brak logo.</p>
+          <p class="hint" style="margin-top:4px">Najlepiej plik PNG o szerokości co najmniej 500 px (np. 800×300), poziomy lub kwadratowy. PNG z przezroczystym tłem ładnie wygląda na każdym tle. Mniejsze obrazki mogą być nieostre, a większe program sam zmniejszy.</p>
           <img id="lg-podglad" class="logo-pod hidden" alt="" style="margin-top:10px">
           <div class="akcje" style="margin-top:10px">
             <button id="lg-wybierz" type="button">🖼 Wybierz plik z logo</button>
@@ -1338,7 +1339,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.55';
+  const WERSJA = '1.56';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -1348,7 +1349,7 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
-    { v: '1.55', d: '21.11.2026', p: ['Większe logo szkoły na górze programu i na ekranie logowania.'] },
+    { v: '1.56', d: '21.11.2026', p: ['Większe logo szkoły na górze programu i na ekranie logowania.', 'Podpowiedź, w jakim rozmiarze najlepiej wgrać logo; przezroczyste tło logo jest zachowywane.'] },
     { v: '1.54', d: '21.11.2026', p: [
       'Biuro może pozwolić instruktorowi zatwierdzać prośby kursantów o jazdy do niego (Ustawienia → Instruktorzy w grafiku).'] },
     { v: '1.53', d: '21.11.2026', p: [
@@ -4826,7 +4827,8 @@ function cellTime(v) {
         const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(im.naturalWidth * sk)); c.height = Math.max(1, Math.round(im.naturalHeight * sk));
         const x = c.getContext('2d'); x.drawImage(im, 0, 0, c.width, c.height);
         let d = c.toDataURL('image/png');
-        if (d.length > 200000) { const c2 = document.createElement('canvas'); c2.width = c.width; c2.height = c.height;
+        if (d.length > 300000) { const w = c.toDataURL('image/webp', 0.9); if (w.startsWith('data:image/webp') && w.length < d.length) d = w; }   // webp zachowuje przezroczystość
+        if (d.length > 300000) { const c2 = document.createElement('canvas'); c2.width = c.width; c2.height = c.height;
           const x2 = c2.getContext('2d'); x2.fillStyle = '#fff'; x2.fillRect(0, 0, c2.width, c2.height); x2.drawImage(c, 0, 0); d = c2.toDataURL('image/jpeg', 0.88); }
         res(d);
       };
