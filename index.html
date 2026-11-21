@@ -149,6 +149,20 @@
   .kbar{height:6px;border-radius:4px;background:#e5e7eb;overflow:hidden;display:flex;margin:5px 0 2px;max-width:260px}
   .kbar i{display:block;height:100%}
   .k-kr{display:none}
+  .wy-gora{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  .wy-gora .btn{width:auto;margin:0;padding:10px 16px}
+  .wy-h{font-size:15px;margin:16px 0 4px}
+  .wy-row{display:flex;gap:12px;align-items:center;padding:10px 4px;border-top:1px solid var(--b);cursor:pointer;width:100%;background:none;border-left:none;border-right:none;border-bottom:none;text-align:left;font:inherit;color:inherit}
+  .wy-row:hover{background:#f8fafc}
+  .wy-data{flex:none;width:58px;text-align:center;border-radius:10px;background:var(--g);color:var(--ga);padding:5px 0;line-height:1.15}
+  .wy-data b{display:block;font-size:19px}.wy-data small{font-size:11.5px;text-transform:uppercase}
+  .wy-op{flex:1;min-width:0;font-size:14.5px;line-height:1.4}.wy-op small{color:var(--m);font-size:13px}
+  .wy-ob{flex:none;font-size:13px;color:var(--m);text-align:right}
+  .wy-minione{margin-top:14px}.wy-minione summary{cursor:pointer;font-weight:600;color:var(--gl)}
+  .ob-lista{max-height:50vh;overflow:auto;border:1px solid var(--b);border-radius:10px}
+  .ob-lista label{display:flex;align-items:center;gap:10px;padding:9px 12px;border-top:1px solid var(--b);margin:0;font-weight:400;cursor:pointer}
+  .ob-lista label:first-child{border-top:none}
+  .ob-lista input{width:20px;height:20px;margin:0;flex:none}
   /* strona startowa */
   #s-start{max-width:1100px;margin:0 auto}
   #s-start section{margin:44px 0}
@@ -637,6 +651,7 @@
       <button id="t-grafik" class="on" type="button"><span class="ik">🚘</span>Grafik</button>
       <button id="t-kursanci" type="button"><span class="ik">👤</span>Kursanci</button>
       <button id="t-miesiac" type="button"><span class="ik">📅</span>Miesiąc</button>
+      <button id="t-wyklady" class="hidden" type="button"><span class="ik">📚</span>Wykłady</button>
       <button id="t-osoby" type="button"><span class="ik">⚙️</span>Ustawienia</button>
     </div>
 
@@ -780,12 +795,32 @@
       </div>
 
       <!-- Zakładka: osoby -->
+      <div id="tab-wyklady" class="hidden">
+        <div class="card">
+          <div class="wy-gora"><h2 style="margin:0">📚 Wykłady (teoria)</h2>
+            <button id="wy-dodaj" class="btn" type="button">+ Dodaj wykład</button></div>
+          <p class="hint" style="margin-top:6px">Kliknij wykład, żeby zaznaczyć obecność albo go zmienić. Godziny teorii liczą się kursantom z zaznaczonej obecności.</p>
+          <h3 class="wy-h">Najbliższe</h3>
+          <div id="wy-przyszle"><p class="hint">Ładowanie…</p></div>
+          <details class="wy-minione"><summary>Odbyte – ostatnie 90 dni</summary><div id="wy-minione"></div></details>
+          <div id="m-wyklady" class="msg"></div>
+        </div>
+      </div>
+
       <div id="tab-osoby" class="hidden">
         <div class="card" data-zw="szkola">
           <h2>🏫 Nazwa szkoły</h2>
           <label for="u-nazwa">Nazwa szkoły (na górze programu, na wydrukach i obrazku grafiku)</label>
           <div class="pasek"><input id="u-nazwa" maxlength="80" autocomplete="organization"><button id="u-nazwa-zapisz" type="button">Zapisz</button></div>
           <div id="m-nazwa" class="msg"></div>
+        </div>
+        <div class="card" data-zw="wyklady">
+          <h2>📚 Wykłady (teoria)</h2>
+          <label class="przel" style="margin-top:4px"><input id="u-wyklady" type="checkbox"><span class="suw"></span> Prowadzimy wykłady w programie</label>
+          <p class="hint">Po włączeniu pojawia się zakładka „Wykłady”: terminy, lista obecności i godziny teorii kursantów (także na ich osobistym linku). Wyłączenie tylko chowa zakładkę – wpisane wykłady zostają.</p>
+          <label for="u-teoria-h">Wymagane godziny teorii</label>
+          <div class="pasek"><input id="u-teoria-h" type="number" min="1" max="200" step="1" style="max-width:120px"><button id="u-teoria-zapisz" type="button">Zapisz</button></div>
+          <div id="m-wyklady-ust" class="msg"></div>
         </div>
         <div class="card" data-zw="kod">
           <h2>Kod do dołączenia</h2>
@@ -1023,6 +1058,51 @@
   </div>
 </div>
 
+<!-- Okno: wykład -->
+<div id="modal-wyklad" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="sheet" style="max-width:480px">
+    <h2 id="wy-tytul" style="margin-top:0">Nowy wykład</h2>
+    <form id="f-wyklad">
+      <label for="wy-dzien">Dzień</label><input id="wy-dzien" type="date" required>
+      <div class="siatka">
+        <div><label for="wy-od">Od</label><input id="wy-od" type="time" step="900" value="17:00" required></div>
+        <div><label for="wy-do">Do</label><input id="wy-do" type="time" step="900" value="19:00" required></div>
+      </div>
+      <label for="wy-temat">Temat</label><input id="wy-temat" placeholder="np. Przepisy ruchu drogowego" autocomplete="off">
+      <div class="siatka">
+        <div><label for="wy-prow">Prowadzący</label><input id="wy-prow" list="wy-prow-lista" autocomplete="off"><datalist id="wy-prow-lista"></datalist></div>
+        <div><label for="wy-sala">Sala / miejsce</label><input id="wy-sala" autocomplete="off"></div>
+      </div>
+      <label for="wy-kat">Dla kategorii</label><select id="wy-kat"></select>
+      <div id="wy-powt-box"><label for="wy-powt">Powtarzaj</label>
+        <select id="wy-powt"><option value="0">tylko ten jeden termin</option></select></div>
+      <button class="btn" type="submit">Zapisz</button>
+      <button id="wy-obecnosc-btn" class="btn2 hidden" type="button">✅ Lista obecności</button>
+      <button id="wy-anuluj" class="btn2" type="button">Anuluj</button>
+      <button id="wy-usun" class="usun hidden" type="button">Usuń wykład</button>
+    </form>
+    <div id="m-wyklad" class="msg"></div>
+  </div>
+</div>
+
+<!-- Okno: obecność na wykładzie -->
+<div id="modal-obecnosc" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="sheet" style="max-width:520px">
+    <h2 style="margin-top:0">✅ Obecność</h2>
+    <p class="hint" id="ob-opis"></p>
+    <div class="pasek" style="margin:8px 0"><input id="ob-szukaj" placeholder="szukaj kursanta…" autocomplete="off">
+      <select id="ob-filtr" style="max-width:46%"></select></div>
+    <div id="ob-lista" class="ob-lista"></div>
+    <p class="hint" id="ob-licznik" style="margin-top:8px"></p>
+    <div class="akcje" style="margin-top:10px">
+      <button id="ob-zapisz" class="btn" type="button" style="margin:0">Zapisz obecność</button>
+      <button id="ob-druk" type="button" style="margin:0">🖨 Lista do podpisu</button>
+    </div>
+    <button id="ob-zamknij" class="btn2" type="button">Zamknij</button>
+    <div id="m-obecnosc" class="msg"></div>
+  </div>
+</div>
+
 <!-- Okno: moje konto -->
 <div id="modal-konto" class="modal hidden" role="dialog" aria-modal="true">
   <div class="sheet" style="max-width:460px">
@@ -1186,6 +1266,7 @@
       <button id="k-karta" class="btn2 hidden" type="button">🖨 Karta kursanta</button>
       <button id="k-link" class="btn2 hidden" type="button">🔗 Link dla kursanta – podgląd jego jazd</button>
       <div id="k-link-box" class="link-box hidden"></div>
+      <p id="k-teoria" class="hint hidden" style="margin-top:10px"></p>
       <button id="k-usun" class="usun hidden" type="button">Usuń kursanta</button>
       <div id="m-kursant" class="msg"></div>
     </form>
@@ -1204,7 +1285,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.51';
+  const WERSJA = '1.52';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -1214,6 +1295,8 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.52', d: '21.11.2026', p: [
+      '📚 Wykłady (teoria) – do włączenia w Ustawieniach: terminy wykładów (także co tydzień), lista obecności z wydrukiem do podpisu, godziny teorii w karcie kursanta i na jego osobistym linku.'] },
     { v: '1.51', d: '21.11.2026', p: [
       'Ekran logowania: wybór „Biuro OSK” albo „Instruktor” z podpowiedziami (program pamięta wybór na urządzeniu).'] },
     { v: '1.48', d: '20.11.2026', p: [
@@ -1682,6 +1765,7 @@
     nazwaAplikacji();
     const biuro = profil.rola === 'biuro';
     $('p-biuro-tabs').classList.toggle('hidden', !biuro);
+    pokazZakladkeWyklady();
     $('p-biuro').classList.toggle('hidden', !biuro);
     $('g-instr-pasek').classList.toggle('hidden', !biuro);
     $('g-dodaj').classList.toggle('hidden', !biuro);
@@ -1709,15 +1793,16 @@
   let zakladka = 'grafik';
   function ustawZakladke(z) {
     zakladka = z;
-    ['grafik', 'kursanci', 'miesiac', 'osoby'].forEach(n => {
+    ['grafik', 'kursanci', 'miesiac', 'wyklady', 'osoby'].forEach(n => {
       $('t-' + n).classList.toggle('on', z === n);
       $('tab-' + n).classList.toggle('hidden', z !== n);
     });
   }
   $('t-grafik').onclick = () => { ustawZakladke('grafik'); ladujDzien(); };
   $('t-kursanci').onclick = () => { ustawZakladke('kursanci'); ladujKursantow(); };
-  $('t-osoby').onclick = () => { ustawZakladke('osoby'); ladujOsoby(); ladujInstruktorowLista(); ladujPin(); ladujKosz(); ladujHistorie(); pokazKopie(); pokazLogoUst(); pokazUstawienia(); };
+  $('t-osoby').onclick = () => { ustawZakladke('osoby'); ladujOsoby(); ladujInstruktorowLista(); ladujPin(); ladujKosz(); ladujHistorie(); pokazKopie(); pokazLogoUst(); pokazUstawienia(); pokazUstWyklady(); };
   $('t-miesiac').onclick = () => { ustawZakladke('miesiac'); ladujMiesiac(); };
+  $('t-wyklady').onclick = () => { ustawZakladke('wyklady'); ladujWyklady(); };
 
   // ----- Rejestr kursantów -----
   let kursanci = [];
@@ -1883,6 +1968,7 @@
     $('k-usun').classList.toggle('hidden', !k);
     $('k-karta').classList.toggle('hidden', !k);
     $('k-link').classList.toggle('hidden', !k); $('k-link-box').classList.add('hidden'); $('k-link-box').innerHTML = '';
+    pokazTeorieKursanta(k);
     msg('m-kursant', '');
     $('modal-kursant').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
@@ -2267,6 +2353,11 @@
         <div class="kv-duze">${fmtH(odb)}${wym ? ' <span style="font-size:18px;color:var(--m)">z ' + godz(wym) + ' h</span>' : ' h'}</div>
         ${wym ? `<div class="kbar" style="height:10px;max-width:none;margin:10px 0 6px"><i class="d" style="width:${proc}%"></i><i class="p" style="width:${procP}%"></i></div>` : ''}
         <p class="hint">${plan ? `+ ${fmtH(plan)} h zaplanowane` : 'Brak zaplanowanych jazd.'}${wym && odb + plan < wym * 60 ? ` · do końca kursu brakuje ${fmtH(wym * 60 - odb - plan)} h` : ''}</p></div>
+      ${d.teoria_h ? `<div class="kv-karta"><h2>📚 Wykłady (teoria)</h2>
+        <div><b>${fmtH(d.teoria_min || 0)} z ${d.teoria_h} h</b> teorii${(d.teoria_min || 0) >= d.teoria_h * 60 ? ' ✅' : ''}</div>
+        <div class="kbar" style="height:8px;max-width:none;margin:8px 0 10px"><i class="d" style="width:${Math.min(100, (d.teoria_min || 0) / (d.teoria_h * 60) * 100)}%"></i></div>
+        ${(d.wyklady || []).map(w => { const t = parseD(w.dzien); return `<div class="kv-jazda"><div class="kv-data"><small>${['nd','pn','wt','śr','cz','pt','sb'][t.getDay()]}</small><b>${t.getDate()}</b><small>${['sty','lut','mar','kwi','maj','cze','lip','sie','wrz','paź','lis','gru'][t.getMonth()]}</small></div>
+          <div class="op"><b>Wykład ${hm(w.od)}–${hm(w.do)}</b>${w.temat ? ' · ' + esc(w.temat) : ''}<br><small>${[w.sala, w.prowadzacy].filter(Boolean).map(esc).join(' · ') || zaIle(t)}</small></div></div>`; }).join('') || '<p class="hint">Brak zaplanowanych wykładów.</p>'}</div>` : ''}
       ${egz ? `<div class="kv-karta" style="border-color:#f5c2c0;background:#fdf2f2"><h2>🎓 Egzamin</h2><b>${DNI[new Date(egz.poczatek).getDay()]} ${fmtData(egz.poczatek)}${egz.godz_egzaminu ? ', godz. ' + hm(egz.godz_egzaminu) : ''}</b> <span class="hint">(${zaIle(new Date(egz.poczatek))})</span>${egz.potwierdzona === false ? '<p class="hint" style="margin-top:4px">Termin wstępny – szkoła potwierdzi go, gdy będzie oficjalny.</p>' : ''}</div>` : ''}
       <div class="kv-karta"><h2>Najbliższe jazdy</h2>${przyszle.map(wiersz).join('') || '<p class="hint">Nie masz teraz zaplanowanych jazd. W sprawie terminów skontaktuj się ze szkołą.</p>'}</div>
       ${byle.length ? `<details class="kv-karta"><summary style="cursor:pointer;font-weight:600">Ostatnie jazdy</summary>${byle.map(wiersz).join('')}</details>` : ''}
@@ -2274,6 +2365,153 @@
       <p class="hint" style="margin-top:12px;text-align:center">Zmiany terminów ustalaj ze szkołą jazdy. Tę stronę możesz dodać do ekranu głównego telefonu (menu przeglądarki → „Dodaj do ekranu głównego”).</p>`;
     $('kv-odswiez').onclick = () => zajety($('kv-odswiez'), pokazKursanta);
   }
+
+  // ===== WYKŁADY (TEORIA) =====
+  const wyklWl = () => !!(profil && profil.szkoly && profil.szkoly.wyklady_wl);
+  const minWykl = w => naMin(hm(w.godz_do)) - naMin(hm(w.godz_od));
+  const DNI_KR = ['nd', 'pn', 'wt', 'śr', 'cz', 'pt', 'sb'];
+  function pokazZakladkeWyklady() {
+    const ok = profil && profil.rola === 'biuro' && wyklWl();
+    $('t-wyklady').classList.toggle('hidden', !ok);
+    if (!ok && zakladka === 'wyklady') { ustawZakladke('grafik'); }
+  }
+  let wyDane = [], wyObec = new Map(), wyEdyt = null;
+  async function ladujWyklady() {
+    const od = dodajDni(dzisStr(), -90);
+    const [w, o] = await Promise.all([
+      sb.from('wyklady').select('*').eq('szkola_id', profil.szkola_id).gte('dzien', od).order('dzien').order('godz_od'),
+      sb.from('wyklady_obecnosc').select('wyklad_id').eq('szkola_id', profil.szkola_id)]);
+    if (w.error) { $('wy-przyszle').innerHTML = `<p class="hint">${/wyklady/.test(w.error.message) ? 'Najpierw uruchom w Supabase plik krok22_wyklady.sql.' : esc(tlumacz(w.error))}</p>`; return; }
+    wyDane = w.data; wyObec = new Map();
+    (o.data || []).forEach(x => wyObec.set(x.wyklad_id, (wyObec.get(x.wyklad_id) || 0) + 1));
+    const dz = dzisStr();
+    const wiersz = x => { const d = parseD(x.dzien);
+      return `<button type="button" class="wy-row" data-wy="${x.id}"><span class="wy-data"><small>${DNI_KR[d.getDay()]}</small><b>${d.getDate()}</b><small>${pad(d.getMonth() + 1)}</small></span>
+        <span class="wy-op"><b>${hm(x.godz_od)}–${hm(x.godz_do)}</b> ${esc(x.temat || 'Wykład')}${x.kategoria ? ` <span class="kat">${esc(x.kategoria)}</span>` : ''}<br>
+        <small>${[x.prowadzacy, x.sala].filter(Boolean).map(esc).join(' · ') || '&nbsp;'}</small></span>
+        <span class="wy-ob">${wyObec.get(x.id) ? `✅ ${wyObec.get(x.id)} obecnych` : (x.dzien <= dz ? 'brak obecności' : '')}</span></button>`; };
+    const przy = wyDane.filter(x => x.dzien >= dz), min = wyDane.filter(x => x.dzien < dz).reverse();
+    $('wy-przyszle').innerHTML = przy.map(wiersz).join('') || '<p class="hint">Brak zaplanowanych wykładów. Dodaj pierwszy przyciskiem „+ Dodaj wykład”.</p>';
+    $('wy-minione').innerHTML = min.map(wiersz).join('') || '<p class="hint" style="margin-top:6px">Brak odbytych wykładów w ostatnich 90 dniach.</p>';
+    document.querySelectorAll('#tab-wyklady [data-wy]').forEach(b => b.onclick = () => otworzWyklad(wyDane.find(x => x.id === b.dataset.wy)));
+  }
+  function otworzWyklad(w) {
+    wyEdyt = w || null;
+    $('wy-tytul').textContent = w ? 'Wykład' : 'Nowy wykład';
+    $('wy-dzien').value = w ? w.dzien : dzisStr();
+    $('wy-od').value = w ? hm(w.godz_od) : '17:00'; $('wy-do').value = w ? hm(w.godz_do) : '19:00';
+    $('wy-temat').value = (w && w.temat) || ''; $('wy-prow').value = (w && w.prowadzacy) || ''; $('wy-sala').value = (w && w.sala) || '';
+    $('wy-prow-lista').innerHTML = [...new Set([...instruktorzy.map(i => i.imie_nazwisko), ...wyDane.map(x => x.prowadzacy).filter(Boolean)])].map(n => `<option value="${esc(n)}">`).join('');
+    $('wy-kat').innerHTML = '<option value="">wszystkie kategorie</option>' + Object.keys(GODZ_KAT).map(k => `<option>${k}</option>`).join('');
+    $('wy-kat').value = (w && w.kategoria) || '';
+    $('wy-powt').innerHTML = '<option value="0">tylko ten jeden termin</option>' + [2, 3, 4, 5, 6, 8, 10, 12].map(n => `<option value="${n}">co tydzień – ${n} terminów</option>`).join('');
+    $('wy-powt-box').classList.toggle('hidden', !!w);
+    $('wy-usun').classList.toggle('hidden', !w); $('wy-obecnosc-btn').classList.toggle('hidden', !w);
+    msg('m-wyklad', '');
+    $('modal-wyklad').classList.remove('hidden');
+  }
+  const zamknijWyklad = () => $('modal-wyklad').classList.add('hidden');
+  $('wy-dodaj').onclick = () => otworzWyklad(null);
+  $('wy-anuluj').onclick = zamknijWyklad;
+  $('f-wyklad').onsubmit = e => { e.preventDefault(); zajety(e.submitter || $('f-wyklad').querySelector('.btn'), async () => {
+    const r = { szkola_id: profil.szkola_id, dzien: $('wy-dzien').value, godz_od: $('wy-od').value, godz_do: $('wy-do').value,
+      temat: $('wy-temat').value.trim() || null, prowadzacy: $('wy-prow').value.trim() || null, sala: $('wy-sala').value.trim() || null, kategoria: $('wy-kat').value || null };
+    if (naMin(r.godz_do) <= naMin(r.godz_od)) { msg('m-wyklad', 'Godzina „do” musi być później niż „od”.'); return; }
+    let error;
+    if (wyEdyt) ({ error } = await sb.from('wyklady').update(r).eq('id', wyEdyt.id));
+    else {
+      const n = +$('wy-powt').value || 1;
+      ({ error } = await sb.from('wyklady').insert(Array.from({ length: n }, (_, i) => ({ ...r, dzien: dodajDni(r.dzien, 7 * i) }))));
+    }
+    if (error) { msg('m-wyklad', tlumacz(error)); return; }
+    zamknijWyklad(); ladujWyklady();
+  }); };
+  $('wy-usun').onclick = () => zajety($('wy-usun'), async () => {
+    const n = wyObec.get(wyEdyt.id) || 0;
+    if (!await pytaj(`Usunąć wykład ${fmtData(wyEdyt.dzien)} ${hm(wyEdyt.godz_od)}?${n ? `\nZaznaczona obecność (${n} os.) też zostanie usunięta, a kursantom ubędzie godzin teorii.` : ''}`, { tak: 'Usuń', niebezp: true })) return;
+    const { error } = await sb.from('wyklady').delete().eq('id', wyEdyt.id);
+    if (error) { msg('m-wyklad', tlumacz(error)); return; }
+    zamknijWyklad(); ladujWyklady();
+  });
+  // obecność
+  let obKursanci = [], obZazn = new Set(), obStart = new Set();
+  $('wy-obecnosc-btn').onclick = () => zajety($('wy-obecnosc-btn'), async () => {
+    const w = wyEdyt;
+    const [k, o] = await Promise.all([
+      sb.from('kursanci').select('id, imie, nazwisko, kategoria, aktywny').eq('szkola_id', profil.szkola_id),
+      sb.from('wyklady_obecnosc').select('kursant_id').eq('wyklad_id', w.id)]);
+    if (k.error || o.error) { msg('m-wyklad', tlumacz(k.error || o.error)); return; }
+    obStart = new Set(o.data.map(x => x.kursant_id)); obZazn = new Set(obStart);
+    obKursanci = k.data.filter(x => x.aktywny || obStart.has(x.id)).sort((a, b) => (a.nazwisko + ' ' + a.imie).localeCompare(b.nazwisko + ' ' + b.imie, 'pl'));
+    const d = parseD(w.dzien);
+    $('ob-opis').textContent = `${DNI[d.getDay()]} ${fmtData(w.dzien)}, ${hm(w.godz_od)}–${hm(w.godz_do)}${w.temat ? ' · ' + w.temat : ''}`;
+    const katy = [...new Set(obKursanci.map(x => (x.kategoria || '').toUpperCase()).filter(Boolean))];
+    $('ob-filtr').innerHTML = '<option value="">każda kategoria</option>' + katy.map(x => `<option>${esc(x)}</option>`).join('');
+    $('ob-filtr').value = w.kategoria && katy.includes(w.kategoria.toUpperCase()) ? w.kategoria.toUpperCase() : '';
+    $('ob-szukaj').value = ''; msg('m-obecnosc', '');
+    rysujObecnosc();
+    zamknijWyklad(); $('modal-obecnosc').classList.remove('hidden');
+  });
+  function rysujObecnosc() {
+    const q = $('ob-szukaj').value.trim().toLowerCase(), f = $('ob-filtr').value;
+    const lista = obKursanci.filter(x => (!f || (x.kategoria || '').toUpperCase() === f || obZazn.has(x.id)) && (!q || (x.nazwisko + ' ' + x.imie).toLowerCase().includes(q)));
+    $('ob-lista').innerHTML = lista.map(x => `<label><input type="checkbox" data-ob="${x.id}"${obZazn.has(x.id) ? ' checked' : ''}>
+      <span><b>${esc(x.nazwisko)}</b> ${esc(x.imie)}${x.kategoria ? ` <span class="kat">${esc(x.kategoria)}</span>` : ''}</span></label>`).join('') || '<p class="hint" style="padding:10px">Brak kursantów.</p>';
+    $('ob-lista').querySelectorAll('[data-ob]').forEach(c => c.onchange = () => { c.checked ? obZazn.add(c.dataset.ob) : obZazn.delete(c.dataset.ob); $('ob-licznik').textContent = `Obecnych: ${obZazn.size}`; });
+    $('ob-licznik').textContent = `Obecnych: ${obZazn.size}`;
+  }
+  $('ob-szukaj').oninput = rysujObecnosc; $('ob-filtr').onchange = rysujObecnosc;
+  $('ob-zamknij').onclick = () => $('modal-obecnosc').classList.add('hidden');
+  $('ob-zapisz').onclick = () => zajety($('ob-zapisz'), async () => {
+    const w = wyEdyt, dod = [...obZazn].filter(id => !obStart.has(id)), usu = [...obStart].filter(id => !obZazn.has(id));
+    if (dod.length) { const { error } = await sb.from('wyklady_obecnosc').insert(dod.map(id => ({ wyklad_id: w.id, kursant_id: id, szkola_id: profil.szkola_id }))); if (error) { msg('m-obecnosc', tlumacz(error)); return; } }
+    if (usu.length) { const { error } = await sb.from('wyklady_obecnosc').delete().eq('wyklad_id', w.id).in('kursant_id', usu); if (error) { msg('m-obecnosc', tlumacz(error)); return; } }
+    obStart = new Set(obZazn);
+    msg('m-obecnosc', `Zapisano – obecnych: ${obZazn.size}.`, 'ok');
+    ladujWyklady();
+  });
+  $('ob-druk').onclick = () => {
+    const w = wyEdyt, f = $('ob-filtr').value;
+    const lista = obKursanci.filter(x => !f || (x.kategoria || '').toUpperCase() === f || obZazn.has(x.id));
+    drukuj(`<h1 style="font-size:16pt;margin:0 0 4pt">Lista obecności – wykład</h1>
+      <p style="margin:0 0 8pt">${esc((profil.szkoly && profil.szkoly.nazwa) || '')} · ${esc($('ob-opis').textContent)}${w.prowadzacy ? ' · prowadzący: ' + esc(w.prowadzacy) : ''}${w.sala ? ' · ' + esc(w.sala) : ''}</p>
+      <table><thead><tr><th style="width:24pt">Lp.</th><th>Nazwisko i imię</th><th style="width:40pt">Kat.</th><th style="width:170pt">Podpis</th></tr></thead>
+      <tbody>${lista.map((x, i) => `<tr><td>${i + 1}</td><td>${esc(x.nazwisko)} ${esc(x.imie)}</td><td>${esc(x.kategoria || '')}</td><td style="height:20pt"></td></tr>`).join('')}
+      ${Array.from({ length: 3 }, (_, i) => `<tr class="pusty"><td>${lista.length + i + 1}</td><td></td><td></td><td></td></tr>`).join('')}</tbody></table>
+      <p style="margin-top:14pt">Podpis prowadzącego: ……………………………………</p>${stopkaDruku()}`);
+  };
+  // godziny teorii w karcie kursanta
+  async function pokazTeorieKursanta(k) {
+    const el = $('k-teoria');
+    if (!k || !wyklWl()) { el.classList.add('hidden'); return; }
+    const { data, error } = await sb.from('wyklady_obecnosc').select('wyklady(godz_od, godz_do)').eq('kursant_id', k.id);
+    if (error || edytowany !== k) { el.classList.add('hidden'); return; }
+    const min = (data || []).reduce((a, x) => a + (x.wyklady ? minWykl(x.wyklady) : 0), 0);
+    const wym = (profil.szkoly.teoria_h || 30);
+    el.innerHTML = `📚 Teoria: <b>${fmtH(min)} z ${wym} h</b> (${data.length} ${data.length === 1 ? 'wykład' : data.length < 5 && data.length > 1 ? 'wykłady' : 'wykładów'})${min >= wym * 60 ? ' ✅' : ''}`;
+    el.classList.remove('hidden');
+  }
+  // ustawienia
+  function pokazUstWyklady() {
+    const sz = profil.szkoly || {};
+    $('u-wyklady').checked = !!sz.wyklady_wl;
+    $('u-teoria-h').value = sz.teoria_h || 30;
+    zwInfo('wyklady', sz.wyklady_wl === undefined ? '' : sz.wyklady_wl ? 'włączone' : 'wyłączone');
+  }
+  $('u-wyklady').onchange = async () => {
+    const v = $('u-wyklady').checked;
+    const { error } = await sb.from('szkoly').update({ wyklady_wl: v }).eq('id', profil.szkola_id);
+    if (error) { $('u-wyklady').checked = !v; msg('m-wyklady-ust', /wyklady_wl/.test(error.message) ? 'Najpierw uruchom w Supabase plik krok22_wyklady.sql.' : tlumacz(error)); return; }
+    profil.szkoly.wyklady_wl = v; pokazZakladkeWyklady(); pokazUstWyklady();
+    msg('m-wyklady-ust', v ? 'Wykłady włączone – na górze pojawiła się zakładka „Wykłady”.' : 'Wykłady wyłączone (dane zostają).', 'ok');
+  };
+  $('u-teoria-zapisz').onclick = () => zajety($('u-teoria-zapisz'), async () => {
+    const h = Math.round(+$('u-teoria-h').value);
+    if (!(h >= 1 && h <= 200)) { msg('m-wyklady-ust', 'Wpisz liczbę godzin, np. 30.'); return; }
+    const { error } = await sb.from('szkoly').update({ teoria_h: h }).eq('id', profil.szkola_id);
+    if (error) { msg('m-wyklady-ust', tlumacz(error)); return; }
+    profil.szkoly.teoria_h = h; msg('m-wyklady-ust', 'Zapisano.', 'ok');
+  });
 
   // ===== NAZWA SZKOŁY =====
   $('u-nazwa-zapisz').onclick = () => zajety($('u-nazwa-zapisz'), async () => {
@@ -2532,7 +2770,7 @@
   }
   function widacGrafik() {
     return profil && !$('s-panel').classList.contains('hidden') && !$('tab-grafik').classList.contains('hidden') &&
-      ['modal-jazda', 'modal-kursant', 'modal-wolne', 'modal-wa', 'modal-druk', 'modal-pin', 'modal-konto', 'modal-tekst'].every(id => $(id).classList.contains('hidden'));
+      ['modal-jazda', 'modal-kursant', 'modal-wolne', 'modal-wa', 'modal-druk', 'modal-pin', 'modal-konto', 'modal-tekst', 'modal-wyklad', 'modal-obecnosc'].every(id => $(id).classList.contains('hidden'));
   }
   document.addEventListener('visibilitychange', () => { if (!document.hidden && widacGrafik()) ladujDzien(true); });
 
@@ -4369,7 +4607,7 @@ function cellTime(v) {
   logoLogowania();
 
   // ===== KOPIA ZAPASOWA =====
-  const KOPIA_TAB = ['instruktorzy', 'kursanci', 'jazdy', 'wolne', 'dokupione'];
+  const KOPIA_TAB = ['instruktorzy', 'kursanci', 'jazdy', 'wolne', 'dokupione', 'wyklady', 'wyklady_obecnosc'];
   const kluczK = n => n + '_' + (profil && profil.szkola_id);
   const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (_) { return d; } };
   const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (_) {} };
@@ -4381,7 +4619,7 @@ function cellTime(v) {
       const wiersze = [];
       for (let od = 0; ; od += 1000) {
         const { data, error } = await sb.from(t).select('*').eq('szkola_id', profil.szkola_id).range(od, od + 999);
-        if (error) { if (t === 'dokupione' && /dokupione/.test(error.message)) break; throw error; }
+        if (error) { if (/^(dokupione|wyklady|wyklady_obecnosc)$/.test(t) && new RegExp(t).test(error.message)) break; throw error; }
         wiersze.push(...data); if (data.length < 1000) break;
       }
       dane[t] = wiersze;
@@ -4441,10 +4679,12 @@ function cellTime(v) {
         for (const t of KOPIA_TAB) {
           let w = (k.dane[t] || []).map(x => ({ ...x, szkola_id: profil.szkola_id }));
           if (t === 'jazdy') w = w.map(x => (x.kursant_id && !kursIds.has(x.kursant_id) ? { ...x, kursant_id: null } : x));
-          if (t === 'dokupione') w = w.filter(x => kursIds.has(x.kursant_id));
+          if (t === 'dokupione' || t === 'wyklady_obecnosc') w = w.filter(x => kursIds.has(x.kursant_id));
           for (let i = 0; i < w.length; i += 500) {
             const cz = w.slice(i, i + 500);
-            const { error } = t === 'dokupione'
+            const { error } = t === 'wyklady_obecnosc'
+              ? await sb.from(t).upsert(cz, { onConflict: 'wyklad_id,kursant_id', ignoreDuplicates: true })
+              : t === 'dokupione'
               ? await sb.from(t).upsert(cz, { onConflict: 'id', ignoreDuplicates: true })
               : await sb.from(t).upsert(cz, { onConflict: 'id' });
             if (error) throw new Error(`${t}: ${tlumacz(error)}`);
