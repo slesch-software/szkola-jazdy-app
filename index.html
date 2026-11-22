@@ -222,6 +222,16 @@
   .kr-dni button small{display:block;font-size:11.5px;color:var(--m)}.kr-dni button b{font-size:17px}
   .kr-dni button.on{background:var(--g);border-color:var(--g);color:var(--ga)}.kr-dni button.on small{color:var(--ga)}
   .kr-dni button.pusty{opacity:.45}
+  .kr-dni button.nieprac{opacity:.35;background:#f3f4f6}.kr-dni button.nieprac b{text-decoration:line-through}
+  .gp-dod{margin-top:14px;padding-top:10px;border-top:1px solid var(--b)}
+  .gp-dod h3{font-size:15px;margin:0 0 4px}
+  .gp-dod .wr{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-top:1px dashed var(--b);font-size:14.5px}
+  .gp-dod .wr button{margin:0;padding:4px 10px;width:auto;color:var(--r);background:#fff;border:1px solid var(--b);border-radius:8px;cursor:pointer}
+  .gp-dod-form{display:none;margin-top:8px;padding:10px;border:1px solid var(--b);border-radius:12px;background:#fafafa}
+  .gp-dod-form.on{display:block}
+  .gp-dod-form .siatka3{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px}
+  .gp-dod-form .siatka3 input{margin:0;width:100%;min-width:0}
+  @media(max-width:520px){.gp-dod-form .siatka3{grid-template-columns:1fr 1fr}.gp-dod-form .siatka3 .gp-dd{grid-column:1/-1}}
   .kr-sl{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px}
   .kr-sl button{padding:10px 4px;border-radius:10px;border:1.5px solid #86efac;background:#f0fdf4;color:#166534;font:inherit;font-weight:700;cursor:pointer}
   .kr-dl{display:flex;gap:6px;margin:4px 0 8px}.kr-dl button{flex:1;padding:7px;border-radius:9px;border:1px solid var(--b);background:#fff;font:inherit;cursor:pointer}
@@ -1264,6 +1274,25 @@
     <h2 style="margin-top:0">🕘 Godziny pracy</h2>
     <p class="hint" id="gp-kto"></p>
     <div id="gp-dni" class="gp-dni"></div>
+    <div class="gp-dod">
+      <h3>➕ Dodatkowe dni pracy</h3>
+      <p class="hint" style="margin-top:0">Pojedyncze dni poza zwykłym tygodniem, np. jedna sobota lub niedziela. Po tej dacie wpis sam znika.</p>
+      <div id="gp-dod-lista"></div>
+      <button type="button" id="gp-dod-dodaj" class="btn2" style="margin-top:6px">➕ Dodatkowy dzień pracy</button>
+      <div id="gp-dod-form" class="gp-dod-form">
+        <div class="siatka3">
+          <div class="gp-dd"><label for="gp-dod-dzien" style="margin-top:0">Dzień</label><input id="gp-dod-dzien" type="date"></div>
+          <div><label for="gp-dod-od" style="margin-top:0">Od</label><input id="gp-dod-od" type="time" step="900"></div>
+          <div><label for="gp-dod-do" style="margin-top:0">Do</label><input id="gp-dod-do" type="time" step="900"></div>
+        </div>
+        <label class="przel" style="margin-top:10px"><input id="gp-dod-powt" type="checkbox"><span class="suw"></span> Powtórz co tydzień do…</label>
+        <input id="gp-dod-powt-do" type="date" class="hidden" style="margin-top:6px">
+        <div class="akcje" style="margin-top:8px">
+          <button type="button" id="gp-dod-zapisz" style="margin:0">Dodaj</button>
+          <button type="button" id="gp-dod-anuluj" style="margin:0">Anuluj</button>
+        </div>
+      </div>
+    </div>
     <label class="przel" style="margin-top:12px"><input id="gp-przyjmuje" type="checkbox"><span class="suw"></span> Przyjmuje rezerwacje od kursantów</label>
     <button id="gp-zapisz" class="btn" type="button">Zapisz</button>
     <button id="gp-anuluj" class="btn2" type="button">Anuluj</button>
@@ -1505,7 +1534,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.61';
+  const WERSJA = '1.62';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -1515,6 +1544,9 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.62', d: '22.11.2026', p: [
+      '➕ Dodatkowe dni pracy instruktora (Ustawienia → Godziny pracy): np. jedna sobota albo niedziela, także co tydzień do wybranej daty – kursanci mogą wtedy prosić o jazdy.',
+      'Kursant widzi, w które dni instruktor nie pracuje.'] },
     { v: '1.61', d: '22.11.2026', p: [
       '⌚ Zegarek Garmin: instruktor w „👤 Konto” pobiera kod do zegarka i widzi na nim swoje jazdy na dziś i jutro (aplikacja „Grafik OSK” w sklepie Connect IQ).'] },
     { v: '1.60', d: '22.11.2026', p: [
@@ -2615,7 +2647,7 @@
   const NAZWY_DNI = ['niedziela', 'poniedziałek', 'wtorek', 'środa', 'czwartek', 'piątek', 'sobota'];
   const opisDl = v => String(v).split(',').map(m => fmtH(+m) + ' h').join(' / ');
   const opisGodzPracy = g => { if (!g) return 'nie przyjmuje rezerwacji';
-    const dni = DNI_PRAC.filter(d => g[d]); if (!dni.length) return 'nie przyjmuje rezerwacji';
+    const dni = DNI_PRAC.filter(d => g[d]); if (!dni.length) return 'tylko dodatkowe dni';
     const takieSame = dni.every(d => g[d][0] === g[dni[0]][0] && g[d][1] === g[dni[0]][1]);
     return takieSame ? `${dni.map(d => DNI_KR[d]).join(', ')} · ${g[dni[0]][0]}–${g[dni[0]][1]}` : dni.map(d => `${DNI_KR[d]} ${g[d][0]}–${g[d][1]}`).join(', '); };
   // --- biuro: ustawienia ---
@@ -2628,8 +2660,9 @@
     $('u-rez-lista').checked = sz.rez_lista_wl !== false; $('u-rez-lista').parentElement.classList.toggle('hidden', !('rez_lista_wl' in sz));
     $('u-rez-max').value = String(sz.rez_max || 2); $('u-rez-dl').value = sz.rez_dlugosc || '120'; $('u-rez-instr').value = sz.rez_instr || 'prowadzacy';
     zwInfo('rez', sz.rez_wl ? 'włączone' : 'wyłączone');
-    $('u-rez-instruktorzy').innerHTML = instruktorzy.filter(i => i.aktywny).map(i => `<div class="rz-i"><span><b>${esc(i.imie_nazwisko)}</b><br><small>${esc(opisGodzPracy(i.rez_godziny))}</small></span>
+    $('u-rez-instruktorzy').innerHTML = instruktorzy.filter(i => i.aktywny).map(i => `<div class="rz-i"><span><b>${esc(i.imie_nazwisko)}</b><br><small>${esc(opisGodzPracy(i.rez_godziny))}</small><small class="rz-dod" data-dod="${i.id}"></small></span>
       <button type="button" data-gp="${i.id}">🕘 Godziny</button></div>`).join('') || '<p class="hint">Brak instruktorów.</p>';
+    ladujDniDod();
     $('u-rez-instruktorzy').querySelectorAll('[data-gp]').forEach(b => b.onclick = () => otworzGodziny(instruktorzy.find(i => i.id === b.dataset.gp)));
   }
   $('u-rez').onchange = async () => {
@@ -2647,6 +2680,60 @@
     if (error) { msg('m-rez-ust', tlumacz(error)); return; }
     Object.assign(profil.szkoly, d); msg('m-rez-ust', 'Zasady zapisane.', 'ok');
   });
+  // --- dodatkowe dni pracy (krok29) ---
+  let dniDod = [];   // nadchodzące dodatkowe dni pracy w szkole
+  const opisDniaDod = x => `${DNI_KR[parseD(x.dzien).getDay()]} ${fmtData(x.dzien).slice(0, 5)} ${String(x.godz_od).slice(0, 5)}–${String(x.godz_do).slice(0, 5)}`;
+  async function ladujDniDod() {
+    const { data, error } = await sb.from('instr_dni_dod').select('*').eq('szkola_id', profil.szkola_id).gte('dzien', dzisStr()).order('dzien');
+    dniDod = error ? [] : (data || []);
+    document.querySelectorAll('[data-dod]').forEach(el => {
+      const m = dniDod.filter(x => x.instruktor_id === el.dataset.dod);
+      el.innerHTML = m.length ? '<br>+ ' + esc(m.slice(0, 4).map(x => `${DNI_KR[parseD(x.dzien).getDay()]} ${fmtData(x.dzien).slice(0, 5)}`).join(', ') + (m.length > 4 ? ` i ${m.length - 4} więcej` : '')) : '';
+    });
+    return !error;
+  }
+  function rysujDniDod() {
+    const m = dniDod.filter(x => gpInstr && x.instruktor_id === gpInstr.id);
+    $('gp-dod-lista').innerHTML = m.map(x => `<div class="wr"><span>${esc(opisDniaDod(x))}</span><button type="button" data-dodx="${x.id}" title="Usuń">✖</button></div>`).join('');
+    $('gp-dod-lista').querySelectorAll('[data-dodx]').forEach(b => b.onclick = () => zajety(b, async () => {
+      const { error } = await sb.from('instr_dni_dod').delete().eq('id', b.dataset.dodx);
+      if (error) { msg('m-godziny', tlumacz(error)); return; }
+      await ladujDniDod(); rysujDniDod();
+    }));
+  }
+  $('gp-dod-dodaj').onclick = () => {
+    const jut = dodajDni(dzisStr(), 1), t = parseD(jut), dnisob = (6 - t.getDay() + 7) % 7;
+    $('gp-dod-dzien').value = dodajDni(jut, dnisob); $('gp-dod-dzien').min = dzisStr();
+    $('gp-dod-od').value = $('gp-dod-od').value || '08:00'; $('gp-dod-do').value = $('gp-dod-do').value || '14:00';
+    $('gp-dod-powt').checked = false; $('gp-dod-powt-do').classList.add('hidden'); $('gp-dod-powt-do').value = '';
+    $('gp-dod-form').classList.add('on'); $('gp-dod-dodaj').classList.add('hidden');
+  };
+  $('gp-dod-anuluj').onclick = () => { $('gp-dod-form').classList.remove('on'); $('gp-dod-dodaj').classList.remove('hidden'); };
+  $('gp-dod-powt').onchange = () => {
+    const on = $('gp-dod-powt').checked; $('gp-dod-powt-do').classList.toggle('hidden', !on);
+    if (on && !$('gp-dod-powt-do').value && $('gp-dod-dzien').value) $('gp-dod-powt-do').value = dodajDni($('gp-dod-dzien').value, 21);
+  };
+  $('gp-dod-zapisz').onclick = () => zajety($('gp-dod-zapisz'), async () => {
+    const dz = $('gp-dod-dzien').value, a = $('gp-dod-od').value, b = $('gp-dod-do').value;
+    if (!dz) { msg('m-godziny', 'Wybierz dzień.'); return; }
+    if (dz < dzisStr()) { msg('m-godziny', 'Ten dzień już minął.'); return; }
+    if (!a || !b || naMin(b) <= naMin(a)) { msg('m-godziny', 'Godzina „do” musi być później niż „od”.'); return; }
+    const dni = [dz];
+    if ($('gp-dod-powt').checked) {
+      const kon = $('gp-dod-powt-do').value;
+      if (!kon || kon < dz) { msg('m-godziny', 'Wybierz, do kiedy powtarzać.'); return; }
+      for (let d = dodajDni(dz, 7); d <= kon && dni.length < 60; d = dodajDni(d, 7)) dni.push(d);
+    }
+    const w = dni.map(d => ({ szkola_id: profil.szkola_id, instruktor_id: gpInstr.id, dzien: d, godz_od: a, godz_do: b }));
+    const { error } = await sb.from('instr_dni_dod').upsert(w, { onConflict: 'instruktor_id,dzien' });
+    if (error) { msg('m-godziny', /instr_dni_dod/.test(error.message) ? 'Najpierw uruchom w Supabase plik krok29_dodatkowe_dni.sql.' : tlumacz(error)); return; }
+    $('gp-dod-form').classList.remove('on'); $('gp-dod-dodaj').classList.remove('hidden');
+    await ladujDniDod(); rysujDniDod();
+    const bezTyg = !document.querySelector('[data-gd]:checked');
+    msg('m-godziny', `Dodano ${dni.length === 1 ? 'dzień' : dni.length + ' dni'}: ${dni.map(d => fmtData(d).slice(0, 5)).join(', ')}.` +
+      (bezTyg ? ' Kliknij też „Zapisz”, żeby instruktor przyjmował rezerwacje.' : ''), 'ok');
+  });
+
   let gpInstr = null;
   function otworzGodziny(i) {
     gpInstr = i;
@@ -2658,7 +2745,10 @@
         <input type="time" step="900" data-go="${d}" value="${(v && v[0]) || domOd}"><input type="time" step="900" data-gdo="${d}" value="${(v && v[1]) || domDo}"></div>`; }).join('');
     $('gp-przyjmuje').checked = true;
     msg('m-godziny', '');
+    $('gp-dod-form').classList.remove('on'); $('gp-dod-dodaj').classList.remove('hidden');
+    rysujDniDod();
     $('modal-godziny').classList.remove('hidden');
+    ladujDniDod().then(ok => { if (gpInstr === i) rysujDniDod(); });
   }
   $('gp-anuluj').onclick = () => $('modal-godziny').classList.add('hidden');
   $('gp-zapisz').onclick = () => zajety($('gp-zapisz'), async () => {
@@ -2671,13 +2761,13 @@
         if (!a || !b || naMin(b) <= naMin(a)) { msg('m-godziny', `${NAZWY_DNI[d]}: godzina „do” musi być później niż „od”.`); return; }
         g[d] = [a, b];
       }
-      if (!Object.keys(g).length) g = null;
+      if (!Object.keys(g).length && !dniDod.some(x => x.instruktor_id === gpInstr.id)) g = null;
     }
     const { error } = await sb.from('instruktorzy').update({ rez_godziny: g }).eq('id', gpInstr.id);
     if (error) { msg('m-godziny', /rez_godziny/.test(error.message) ? 'Najpierw uruchom w Supabase plik krok23_rezerwacje.sql.' : tlumacz(error)); return; }
     gpInstr.rez_godziny = g;
     $('modal-godziny').classList.add('hidden'); pokazUstRez();
-    msg('m-rez-ust', `${gpInstr.imie_nazwisko}: ${g ? 'godziny zapisane' : 'nie przyjmuje rezerwacji'}.`, 'ok');
+    msg('m-rez-ust', `${gpInstr.imie_nazwisko}: ${g ? (Object.keys(g).length ? 'godziny zapisane' : 'tylko dodatkowe dni pracy') : 'nie przyjmuje rezerwacji'}.`, 'ok');
   });
   // --- biuro: baner z prośbami ---
   async function ladujRezerwacje() {
@@ -2735,8 +2825,10 @@
     if (!data.instruktorzy.some(i => i.id === krInstr)) krInstr = data.instruktorzy[0] && data.instruktorzy[0].id;
     rysujRezKursanta();
   }
+  // godziny instruktora w danym dniu: dodatkowy dzień pracy ma pierwszeństwo, potem zwykły tydzień
+  const godzDnia = (ins, dz) => (ins.dodatkowe && ins.dodatkowe[dz]) || (ins.godziny && ins.godziny[parseD(dz).getDay()]) || null;
   function wolneSloty(ins, dzien, dlMin) {
-    const g = ins.godziny && ins.godziny[parseD(dzien).getDay()]; if (!g) return [];
+    const g = godzDnia(ins, dzien); if (!g) return [];
     const min = Date.now() + krDane.przed_h * 3600000;
     const zaj = ins.zajete.map(([a, b]) => [new Date(a).getTime(), new Date(b).getTime()]);
     const wyn = [];
@@ -2767,13 +2859,13 @@
       if (!krDzien || !dni.includes(krDzien) || (!ile(krDzien) && !krWybrany)) krDzien = dni.find(dz => ile(dz)) || dni[0];
       const sloty = wolneSloty(ins, krDzien, krDl);
       const zwolnione = d.lista.moje.filter(l => l.instruktor_id === ins.id && ile(l.dzien));
-      const pracuje = dz => !!(ins.godziny && ins.godziny[parseD(dz).getDay()]);
+      const pracuje = dz => !!godzDnia(ins, dz);
       srodek = `${d.instruktorzy.length > 1 ? `<label for="kr-instr" style="margin-top:0">Instruktor</label><select id="kr-instr">${d.instruktorzy.map(i => `<option value="${i.id}"${i.id === ins.id ? ' selected' : ''}>${esc(i.nazwa)}${i.prowadzacy ? ' (prowadzący)' : ''}</option>`).join('')}</select>` : `<p class="hint" style="margin:0 0 6px">Instruktor: <b>${esc(ins.nazwa)}</b></p>`}
         ${dlugosci.length > 1 ? `<div class="kr-dl">${dlugosci.map(m => `<button type="button" data-krdl="${m}" class="${m === krDl ? 'on' : ''}">${fmtH(m)} h</button>`).join('')}</div>` : ''}
         ${zwolnione.length ? `<div class="kr-moja" style="background:#f0fdf4;border-color:#86efac"><span>🔔 <b>Zwolnił się termin z Twojej listy:</b> ${zwolnione.map(l => `${DNI_KR[parseD(l.dzien).getDay()]} ${fmtData(l.dzien).slice(0, 5)}`).join(', ')} – wybierz dzień i godzinę poniżej.</span></div>` : ''}
-        <div class="kr-dni">${dni.map(dz => { const t = parseD(dz); return `<button type="button" data-krd="${dz}" class="${dz === krDzien ? 'on' : ''}${ile(dz) ? '' : ' pusty'}"><small>${DNI_KR[t.getDay()]}${naLiscie(dz) ? ' 🔔' : ''}</small><b>${t.getDate()}</b><small>${pad(t.getMonth() + 1)}</small></button>`; }).join('')}</div>
+        <div class="kr-dni">${dni.map(dz => { const t = parseD(dz); return `<button type="button" data-krd="${dz}" class="${dz === krDzien ? 'on' : ''}${ile(dz) ? '' : (pracuje(dz) ? ' pusty' : ' nieprac')}"${pracuje(dz) ? '' : ' title="Instruktor nie pracuje"'}><small>${DNI_KR[t.getDay()]}${naLiscie(dz) ? ' 🔔' : ''}</small><b>${t.getDate()}</b><small>${pad(t.getMonth() + 1)}</small></button>`; }).join('')}</div>
         ${sloty.length ? `<div class="kr-sl">${sloty.map(([a, b]) => `<button type="button" data-krs="${a}">${godzina(new Date(a).toISOString())}–${godzina(new Date(b).toISOString())}</button>`).join('')}</div>`
-          : `<p class="hint">Brak wolnych godzin w tym dniu.</p>${d.lista.wl && pracuje(krDzien) ? (naLiscie(krDzien)
+          : `<p class="hint">${pracuje(krDzien) ? 'Brak wolnych godzin w tym dniu.' : `🚫 ${esc(ins.nazwa)} nie pracuje w ${['niedzielę', 'poniedziałek', 'wtorek', 'środę', 'czwartek', 'piątek', 'sobotę'][parseD(krDzien).getDay()]} ${fmtData(krDzien).slice(0, 5)}.`}</p>${d.lista.wl && pracuje(krDzien) ? (naLiscie(krDzien)
               ? `<div class="kr-moja"><span>🔔 <b>Jesteś na liście rezerwowej</b><br><small>gdy coś się zwolni ${DNI_KR[parseD(krDzien).getDay()]} ${fmtData(krDzien)}, szkoła da Ci znać</small></span><button type="button" data-krl="0">Wypisz</button></div>`
               : `<button type="button" class="btn2" data-krl="1" style="margin-top:6px">🔔 Powiadom mnie, gdy coś się zwolni ${DNI_KR[parseD(krDzien).getDay()]} ${fmtData(krDzien).slice(0, 5)}</button>`) : ''}`}
         <p class="hint" style="margin-top:8px">Pokazane są tylko wolne godziny (${opisDl(krDl)}). Prośbę zatwierdza szkoła – zobaczysz ją wtedy w „Najbliższych jazdach”.</p>`;
@@ -5358,7 +5450,7 @@ function cellTime(v) {
   logoLogowania();
 
   // ===== KOPIA ZAPASOWA =====
-  const KOPIA_TAB = ['instruktorzy', 'kursanci', 'jazdy', 'wolne', 'dokupione', 'wyklady', 'wyklady_obecnosc', 'rezerwacje', 'stawki_instr', 'rez_lista'];
+  const KOPIA_TAB = ['instruktorzy', 'kursanci', 'jazdy', 'wolne', 'dokupione', 'wyklady', 'wyklady_obecnosc', 'rezerwacje', 'stawki_instr', 'rez_lista', 'instr_dni_dod'];
   const kluczK = n => n + '_' + (profil && profil.szkola_id);
   const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (_) { return d; } };
   const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (_) {} };
@@ -5370,7 +5462,7 @@ function cellTime(v) {
       const wiersze = [];
       for (let od = 0; ; od += 1000) {
         const { data, error } = await sb.from(t).select('*').eq('szkola_id', profil.szkola_id).range(od, od + 999);
-        if (error) { if (/^(dokupione|wyklady|wyklady_obecnosc|rezerwacje|stawki_instr|rez_lista)$/.test(t) && new RegExp(t).test(error.message)) break; throw error; }
+        if (error) { if (/^(dokupione|wyklady|wyklady_obecnosc|rezerwacje|stawki_instr|rez_lista|instr_dni_dod)$/.test(t) && new RegExp(t).test(error.message)) break; throw error; }
         wiersze.push(...data); if (data.length < 1000) break;
       }
       dane[t] = wiersze;
