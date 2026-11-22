@@ -99,7 +99,8 @@
   .btn2{width:100%;margin-top:10px}
   .link{background:none;border:none;color:var(--gl);padding:0;margin-top:14px;text-decoration:underline;font-size:14px}
   .tabs{display:flex;gap:8px}
-  .tabs button{flex:1}
+  .tabs button{flex:1 1 0;min-width:0}
+  .tx-k{display:none}
   .tabs button.on{background:var(--g);border-color:var(--g);color:var(--ga);font-weight:600}
   .msg{margin-top:14px;padding:10px 12px;border-radius:8px;font-size:14px;display:none}
   .msg.err{display:block;background:#fdecea;color:var(--r)}
@@ -159,7 +160,8 @@
   .jazda .kto{flex:1;min-width:0}
   .jazda .kto span{font-size:13px;color:var(--m)}
   .jazda{flex-wrap:wrap}
-  .jazda .tele{display:flex;gap:16px;width:100%;padding-left:102px}
+  .jazda .tele{display:flex;flex-wrap:wrap;gap:4px 16px;width:100%;padding-left:102px}
+  @media(max-width:420px){.jazda .tele{padding-left:0}}
   .jazda .tele a{color:var(--gl);font-weight:600;text-decoration:none;white-space:nowrap;font-size:14px}
   .wolne{display:flex;gap:10px;align-items:center;padding:8px 12px;border:1px dashed var(--wr);border-radius:10px;margin-bottom:8px;background:var(--wb);color:var(--wt);font-size:14px}
   .wolne .godz{font-weight:600;min-width:92px;font-variant-numeric:tabular-nums}
@@ -536,6 +538,8 @@
   @media(max-width:520px){#p-biuro-tabs button{font-size:13.5px;padding-left:2px;padding-right:2px}}
   .tabs .ik{font-size:22px;line-height:1;vertical-align:-3px;margin-right:8px}
   @media(max-width:520px){.tabs .ik{display:block;margin:0 auto 3px;font-size:22px}}
+  @media(max-width:420px){#p-biuro-tabs{gap:4px}#p-biuro-tabs button{font-size:12px;letter-spacing:0}}
+  @media(max-width:360px){#p-biuro-tabs .tx-d{display:none}#p-biuro-tabs .tx-k{display:inline}}
   .top-l{display:flex;align-items:center;gap:12px;min-width:0}
   .logo-n{max-height:84px;max-width:240px;object-fit:contain;flex:none}
   @media(max-width:600px){
@@ -1127,7 +1131,7 @@
       <button id="t-kursanci" type="button"><span class="ik">👤</span>Kursanci</button>
       <button id="t-miesiac" type="button"><span class="ik">📅</span>Miesiąc</button>
       <button id="t-wyklady" class="hidden" type="button"><span class="ik">📚</span>Wykłady</button>
-      <button id="t-osoby" type="button"><span class="ik">⚙️</span>Ustawienia</button>
+      <button id="t-osoby" type="button"><span class="ik">⚙️</span><span class="tx-d">Ustawienia</span><span class="tx-k">Opcje</span></button>
     </div>
 
     <!-- Grafik (biuro: edycja, instruktor: podgląd swoich jazd) -->
