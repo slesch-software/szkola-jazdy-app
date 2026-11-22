@@ -362,7 +362,8 @@
   .wysl.zm{color:#c2410c}
   @media (min-width:900px){
     .wrap{max-width:1240px;padding:24px 28px 48px}
-    #tab-kursanci .card,#tab-osoby .card,#tab-miesiac .card,#p-instr-extra .card,#g-ustawienia{max-width:900px}
+    #tab-kursanci .card,#tab-miesiac .card,#p-instr-extra .card,#g-ustawienia{max-width:900px}
+    #tab-osoby .card{max-width:none}   /* Ustawienia na całą szerokość okna */
     .akcje{grid-template-columns:repeat(4,1fr)}
   }
   .kolumny{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(250px,1fr);gap:12px;overflow-x:auto;padding-bottom:6px}
@@ -1537,7 +1538,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.63';
+  const WERSJA = '1.64';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -1547,6 +1548,7 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.64', d: '22.11.2026', p: ['Ustawienia na komputerze zajmują całą szerokość okna.'] },
     { v: '1.63', d: '22.11.2026', p: [
       '🕘 Godziny pracy instruktora ustawiasz w Ustawieniach → Instruktorzy, niezależnie od rezerwacji. Grafik pokazuje dni wolne na szaro, wolne okienka tylko w godzinach pracy i ostrzega przy jeździe poza nimi.',
       'Rezerwacje kursantów: przy każdym instruktorze osobny przełącznik „przyjmuje rezerwacje”.'] },
