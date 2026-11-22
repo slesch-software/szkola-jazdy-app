@@ -355,7 +355,7 @@
   .ls-krok{background:#fff;border:1px solid var(--b);border-radius:12px;padding:16px 16px 16px 60px;position:relative}
   .ls-krok::before{counter-increment:krok;content:counter(krok);position:absolute;left:16px;top:14px;width:32px;height:32px;border-radius:50%;background:var(--g);color:var(--ga);font-weight:800;display:flex;align-items:center;justify-content:center}
   .ls-krok b{font-size:16px}.ls-krok p{margin:6px 0 0;font-size:14.5px;color:#4a545d;line-height:1.5}
-  .ls-kontakt{text-align:center}.ls-kontakt a{color:var(--gl)}
+  .ls-kontakt{text-align:center}.ls-kontakt a:not(.ls-btn){color:var(--gl)}
   .ls-wstecz{background:none;border:none;padding:0 0 14px;color:var(--gl);font:inherit;font-size:14px;cursor:pointer;text-decoration:underline}
   @media(min-width:900px){.ls-hero{grid-template-columns:1fr 1.25fr}.ls-hero h1{font-size:40px}}
   .link-box{margin-top:10px;padding:12px;border:1px solid var(--b);border-radius:10px;background:#f8fafc;font-size:14px}
@@ -744,7 +744,7 @@
   html[data-motyw="ciemny"] .ls-krok{background:#1b2128;border:1px solid var(--b)}
   html[data-motyw="ciemny"] .ls-krok::before{background:var(--g);color:var(--ga)}
   html[data-motyw="ciemny"] .ls-krok p{color:#b0b8c0}
-  html[data-motyw="ciemny"] .ls-kontakt a{color:var(--gl)}
+  html[data-motyw="ciemny"] .ls-kontakt a:not(.ls-btn){color:var(--gl)}
   html[data-motyw="ciemny"] .ls-wstecz{background:none;border:none;color:var(--gl)}
   html[data-motyw="ciemny"] .link-box{border:1px solid var(--b);background:#192128}
   html[data-motyw="ciemny"] .link-box .url{background:#1b2128;border:1px solid var(--b)}
