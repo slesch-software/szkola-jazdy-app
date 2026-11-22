@@ -1662,7 +1662,7 @@
   }
   const dniSlowo = n => n === 1 ? 'dzień' : 'dni';
   function opisAbonamentu(st, sz) {
-    if (st.typ === 'bez') return '♾️ bez limitu';
+    if (st.typ === 'bez') return '♾️ bezterminowo (bez opłat)';
     if (st.typ === 'proba') return `🧪 próbne – zostało ${st.dni} ${dniSlowo(st.dni)} (do ${fmtData(sz.oplacone_do)})`;
     if (st.typ === 'ok') return `✅ opłacone do ${fmtData(sz.oplacone_do)}${st.dni <= 7 ? ` – zostało ${st.dni} ${dniSlowo(st.dni)}` : ''}`;
     if (st.typ === 'karencja') return `⚠️ po terminie (${fmtData(sz.oplacone_do)}) – blokada za ${st.zostalo} ${dniSlowo(st.zostalo)}`;
@@ -1689,7 +1689,7 @@
           <div class="a-abo-stan">Abonament: <b>${esc(opisAbonamentu(stanAbonamentu(x), x))}</b></div>
           ${'limit_instr' in x ? `<label style="margin:6px 0 2px;font-weight:600">Pakiet – aktywnych instruktorów</label>
           <select data-limit="${x.id}" style="max-width:220px">${[0, 1, 2, 3, 4, 5, 6, 8, 10, 15, 20].map(n => `<option value="${n}"${(x.limit_instr || 0) === n ? ' selected' : ''}>${n ? 'do ' + n : 'bez limitu'}</option>`).join('')}</select>` : ''}
-          <label class="przel" style="margin:6px 0"><input type="checkbox" data-abo-bez="${x.id}"${x.bez_limitu ? ' checked' : ''}><span class="suw"></span> Bez limitu</label>
+          <label class="przel" style="margin:6px 0"><input type="checkbox" data-abo-bez="${x.id}"${x.bez_limitu ? ' checked' : ''}><span class="suw"></span> Bezterminowo (bez opłat)</label>
           ${x.bez_limitu ? '' : `<div class="a-abo-btn">
             <button type="button" data-abo="${x.id}" data-ile="1">+1 miesiąc</button>
             <button type="button" data-abo="${x.id}" data-ile="12">+12 miesięcy</button>
