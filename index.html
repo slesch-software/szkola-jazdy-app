@@ -401,6 +401,10 @@
   .wolny-inst .godz{font-weight:700;min-width:92px}
   .wolny-inst.edyt{cursor:pointer}
   .przerwa{font-size:12px;color:var(--m);text-align:center;margin:-2px 0 6px}
+  .nieprac-info{background:#eef0f3;color:#4b5563;font-size:13px;border-radius:8px;padding:6px 10px;margin:0 0 8px}
+  .kol.nieprac{background:repeating-linear-gradient(135deg,#f3f4f6 0 10px,#eceef1 10px 20px)}
+  .znak-poza{display:inline-block;font-size:12px;color:#4b5563;background:#eef0f3;border-radius:6px;padding:1px 6px;margin-top:3px}
+  .rz-i label.przel{margin:0;font-size:13.5px;font-weight:400}
   .tabs.panel button{padding:10px 6px;font-size:15px}
   table.mc{width:100%;border-collapse:collapse;font-size:14px}
   table.mc th,table.mc td{padding:8px 6px;border-bottom:1px solid var(--b);text-align:left}
@@ -1002,8 +1006,8 @@
           <select id="u-rez-instr"><option value="prowadzacy">tylko swojego instruktora prowadzącego</option><option value="wszyscy">wszystkich instruktorów przyjmujących rezerwacje</option></select>
           <label class="przel" style="margin-top:10px"><input id="u-rez-lista" type="checkbox"><span class="suw"></span> Lista rezerwowa – kursant może zapisać się na dzień bez wolnych godzin, a biuro dostaje znak, gdy coś się zwolni</label>
           <button id="u-rez-zapisz" class="btn" type="button">Zapisz zasady</button>
-          <h3 style="font-size:15px;margin:16px 0 4px">Godziny pracy instruktorów</h3>
-          <p class="hint">Z tych godzin program liczy wolne okienka (minus jazdy i wolne). Instruktor bez ustawionych godzin nie przyjmuje rezerwacji.</p>
+          <h3 style="font-size:15px;margin:16px 0 4px">Którzy instruktorzy przyjmują rezerwacje</h3>
+          <p class="hint">Wolne okienka program liczy z godzin pracy instruktora (minus jazdy i wolne). Godziny pracy ustawiasz przyciskiem 🕘 – tu albo w Ustawieniach → Instruktorzy.</p>
           <div id="u-rez-instruktorzy"></div>
           <div id="m-rez-ust" class="msg"></div>
         </div>
@@ -1293,7 +1297,6 @@
         </div>
       </div>
     </div>
-    <label class="przel" style="margin-top:12px"><input id="gp-przyjmuje" type="checkbox"><span class="suw"></span> Przyjmuje rezerwacje od kursantów</label>
     <button id="gp-zapisz" class="btn" type="button">Zapisz</button>
     <button id="gp-anuluj" class="btn2" type="button">Anuluj</button>
     <div id="m-godziny" class="msg"></div>
@@ -1534,7 +1537,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.62';
+  const WERSJA = '1.63';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -1544,6 +1547,9 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.63', d: '22.11.2026', p: [
+      '🕘 Godziny pracy instruktora ustawiasz w Ustawieniach → Instruktorzy, niezależnie od rezerwacji. Grafik pokazuje dni wolne na szaro, wolne okienka tylko w godzinach pracy i ostrzega przy jeździe poza nimi.',
+      'Rezerwacje kursantów: przy każdym instruktorze osobny przełącznik „przyjmuje rezerwacje”.'] },
     { v: '1.62', d: '22.11.2026', p: [
       '➕ Dodatkowe dni pracy instruktora (Ustawienia → Godziny pracy): np. jedna sobota albo niedziela, także co tydzień do wybranej daty – kursanci mogą wtedy prosić o jazdy.',
       'Kursant widzi, w które dni instruktor nie pracuje.'] },
@@ -2646,7 +2652,7 @@
   const DNI_PRAC = [1, 2, 3, 4, 5, 6, 0];
   const NAZWY_DNI = ['niedziela', 'poniedziałek', 'wtorek', 'środa', 'czwartek', 'piątek', 'sobota'];
   const opisDl = v => String(v).split(',').map(m => fmtH(+m) + ' h').join(' / ');
-  const opisGodzPracy = g => { if (!g) return 'nie przyjmuje rezerwacji';
+  const opisGodzPracy = g => { if (!g) return 'godziny pracy nie ustawione';
     const dni = DNI_PRAC.filter(d => g[d]); if (!dni.length) return 'tylko dodatkowe dni';
     const takieSame = dni.every(d => g[d][0] === g[dni[0]][0] && g[d][1] === g[dni[0]][1]);
     return takieSame ? `${dni.map(d => DNI_KR[d]).join(', ')} · ${g[dni[0]][0]}–${g[dni[0]][1]}` : dni.map(d => `${DNI_KR[d]} ${g[d][0]}–${g[d][1]}`).join(', '); };
@@ -2660,18 +2666,30 @@
     $('u-rez-lista').checked = sz.rez_lista_wl !== false; $('u-rez-lista').parentElement.classList.toggle('hidden', !('rez_lista_wl' in sz));
     $('u-rez-max').value = String(sz.rez_max || 2); $('u-rez-dl').value = sz.rez_dlugosc || '120'; $('u-rez-instr').value = sz.rez_instr || 'prowadzacy';
     zwInfo('rez', sz.rez_wl ? 'włączone' : 'wyłączone');
-    $('u-rez-instruktorzy').innerHTML = instruktorzy.filter(i => i.aktywny).map(i => `<div class="rz-i"><span><b>${esc(i.imie_nazwisko)}</b><br><small>${esc(opisGodzPracy(i.rez_godziny))}</small><small class="rz-dod" data-dod="${i.id}"></small></span>
-      <button type="button" data-gp="${i.id}">🕘 Godziny</button></div>`).join('') || '<p class="hint">Brak instruktorów.</p>';
+    const maPrz = instruktorzy.some(i => 'rez_przyjmuje' in i);
+    $('u-rez-instruktorzy').innerHTML = (maPrz ? '' : '<p class="hint">Żeby włączać rezerwacje osobno dla każdego instruktora, uruchom w Supabase plik krok30_godziny_pracy.sql.</p>') +
+      (instruktorzy.filter(i => i.aktywny).map(i => `<div class="rz-i"><span><b>${esc(i.imie_nazwisko)}</b><br><small>🕘 ${esc(opisGodzPracy(i.rez_godziny))}</small><small class="rz-dod" data-dod="${i.id}"></small>
+        ${maPrz ? `<br><label class="przel"><input type="checkbox" data-rprz="${i.id}"${i.rez_przyjmuje ? ' checked' : ''}><span class="suw"></span> przyjmuje rezerwacje</label>` : ''}</span>
+      <button type="button" data-gp="${i.id}">🕘 Godziny</button></div>`).join('') || '<p class="hint">Brak instruktorów.</p>');
     ladujDniDod();
     $('u-rez-instruktorzy').querySelectorAll('[data-gp]').forEach(b => b.onclick = () => otworzGodziny(instruktorzy.find(i => i.id === b.dataset.gp)));
+    $('u-rez-instruktorzy').querySelectorAll('[data-rprz]').forEach(c => c.onchange = async () => {
+      const i = instruktorzy.find(x => x.id === c.dataset.rprz);
+      if (c.checked && !i.rez_godziny && !dniDod.some(x => x.instruktor_id === i.id)) {
+        c.checked = false; msg('m-rez-ust', `${i.imie_nazwisko}: najpierw ustaw godziny pracy (🕘 Godziny) – bez nich kursanci nie zobaczą wolnych terminów.`); return; }
+      const { error } = await sb.from('instruktorzy').update({ rez_przyjmuje: c.checked }).eq('id', i.id);
+      if (error) { c.checked = !c.checked; msg('m-rez-ust', tlumacz(error)); return; }
+      i.rez_przyjmuje = c.checked;
+      msg('m-rez-ust', `${i.imie_nazwisko}: ${c.checked ? 'przyjmuje rezerwacje' : 'nie przyjmuje rezerwacji'}.`, 'ok');
+    });
   }
   $('u-rez').onchange = async () => {
     const v = $('u-rez').checked;
     const { error } = await sb.from('szkoly').update({ rez_wl: v }).eq('id', profil.szkola_id);
     if (error) { $('u-rez').checked = !v; msg('m-rez-ust', /rez_wl/.test(error.message) ? 'Najpierw uruchom w Supabase plik krok23_rezerwacje.sql.' : tlumacz(error)); return; }
     profil.szkoly.rez_wl = v; pokazUstRez(); ladujInstruktorowLista();
-    const bezGodzin = !instruktorzy.some(i => i.aktywny && i.rez_godziny);
-    msg('m-rez-ust', v ? (bezGodzin ? 'Włączone. Teraz ustaw godziny pracy instruktorów – bez nich kursanci nie zobaczą wolnych terminów.' : 'Rezerwacje włączone – kursanci zobaczą je na swoim linku.') : 'Rezerwacje wyłączone.', 'ok');
+    const bezGodzin = !instruktorzy.some(i => i.aktywny && i.rez_godziny && ('rez_przyjmuje' in i ? i.rez_przyjmuje : true));
+    msg('m-rez-ust', v ? (bezGodzin ? 'Włączone. Teraz zaznacz poniżej, którzy instruktorzy przyjmują rezerwacje (i ustaw im godziny pracy) – bez tego kursanci nie zobaczą wolnych terminów.' : 'Rezerwacje włączone – kursanci zobaczą je na swoim linku.') : 'Rezerwacje wyłączone.', 'ok');
   };
   $('u-rez-zapisz').onclick = () => zajety($('u-rez-zapisz'), async () => {
     const d = { rez_dni: +$('u-rez-dni').value, rez_godz_przed: +$('u-rez-przed').value, rez_max: +$('u-rez-max').value, rez_dlugosc: $('u-rez-dl').value, rez_instr: $('u-rez-instr').value };
@@ -2684,21 +2702,22 @@
   let dniDod = [];   // nadchodzące dodatkowe dni pracy w szkole
   const opisDniaDod = x => `${DNI_KR[parseD(x.dzien).getDay()]} ${fmtData(x.dzien).slice(0, 5)} ${String(x.godz_od).slice(0, 5)}–${String(x.godz_do).slice(0, 5)}`;
   async function ladujDniDod() {
-    const { data, error } = await sb.from('instr_dni_dod').select('*').eq('szkola_id', profil.szkola_id).gte('dzien', dzisStr()).order('dzien');
+    const { data, error } = await sb.from('instr_dni_dod').select('*').eq('szkola_id', profil.szkola_id).gte('dzien', dodajDni(dzisStr(), -60)).order('dzien');
     dniDod = error ? [] : (data || []);
+    const dzis = dzisStr(), przyszle = dniDod.filter(x => x.dzien >= dzis);
     document.querySelectorAll('[data-dod]').forEach(el => {
-      const m = dniDod.filter(x => x.instruktor_id === el.dataset.dod);
-      el.innerHTML = m.length ? '<br>+ ' + esc(m.slice(0, 4).map(x => `${DNI_KR[parseD(x.dzien).getDay()]} ${fmtData(x.dzien).slice(0, 5)}`).join(', ') + (m.length > 4 ? ` i ${m.length - 4} więcej` : '')) : '';
+      const m = przyszle.filter(x => x.instruktor_id === el.dataset.dod);
+      el.innerHTML = m.length ? (el.tagName === 'SMALL' ? '<br>+ ' : ' · + ') + esc(m.slice(0, 4).map(x => `${DNI_KR[parseD(x.dzien).getDay()]} ${fmtData(x.dzien).slice(0, 5)}`).join(', ') + (m.length > 4 ? ` i ${m.length - 4} więcej` : '')) : '';
     });
     return !error;
   }
   function rysujDniDod() {
-    const m = dniDod.filter(x => gpInstr && x.instruktor_id === gpInstr.id);
+    const m = dniDod.filter(x => gpInstr && x.instruktor_id === gpInstr.id && x.dzien >= dzisStr());
     $('gp-dod-lista').innerHTML = m.map(x => `<div class="wr"><span>${esc(opisDniaDod(x))}</span><button type="button" data-dodx="${x.id}" title="Usuń">✖</button></div>`).join('');
     $('gp-dod-lista').querySelectorAll('[data-dodx]').forEach(b => b.onclick = () => zajety(b, async () => {
       const { error } = await sb.from('instr_dni_dod').delete().eq('id', b.dataset.dodx);
       if (error) { msg('m-godziny', tlumacz(error)); return; }
-      await ladujDniDod(); rysujDniDod();
+      await ladujDniDod(); rysujDniDod(); if (gDzien) rysujDzien();
     }));
   }
   $('gp-dod-dodaj').onclick = () => {
@@ -2728,10 +2747,10 @@
     const { error } = await sb.from('instr_dni_dod').upsert(w, { onConflict: 'instruktor_id,dzien' });
     if (error) { msg('m-godziny', /instr_dni_dod/.test(error.message) ? 'Najpierw uruchom w Supabase plik krok29_dodatkowe_dni.sql.' : tlumacz(error)); return; }
     $('gp-dod-form').classList.remove('on'); $('gp-dod-dodaj').classList.remove('hidden');
-    await ladujDniDod(); rysujDniDod();
+    await ladujDniDod(); rysujDniDod(); if (gDzien) rysujDzien();
     const bezTyg = !document.querySelector('[data-gd]:checked');
     msg('m-godziny', `Dodano ${dni.length === 1 ? 'dzień' : dni.length + ' dni'}: ${dni.map(d => fmtData(d).slice(0, 5)).join(', ')}.` +
-      (bezTyg ? ' Kliknij też „Zapisz”, żeby instruktor przyjmował rezerwacje.' : ''), 'ok');
+      (bezTyg && !gpInstr.rez_godziny ? ' Kliknij też „Zapisz”.' : ''), 'ok');
   });
 
   let gpInstr = null;
@@ -2739,11 +2758,10 @@
     gpInstr = i;
     const g = i.rez_godziny || {};
     const domOd = i.godz_od || '08:00', domDo = i.godz_do || '18:00';
-    $('gp-kto').textContent = i.imie_nazwisko + ' – w które dni i godziny kursanci mogą prosić o jazdy';
+    $('gp-kto').textContent = i.imie_nazwisko + ' – stały tydzień pracy. Grafik pokaże dni wolne na szaro i ostrzeże przy jeździe poza tymi godzinami; z tych godzin liczą się też rezerwacje kursantów.';
     $('gp-dni').innerHTML = DNI_PRAC.map(d => { const v = g[d] || (i.rez_godziny ? null : (d >= 1 && d <= 5 ? [domOd, domDo] : null));
       return `<div class="gp"><label><input type="checkbox" data-gd="${d}"${v ? ' checked' : ''}> ${NAZWY_DNI[d]}</label>
         <input type="time" step="900" data-go="${d}" value="${(v && v[0]) || domOd}"><input type="time" step="900" data-gdo="${d}" value="${(v && v[1]) || domDo}"></div>`; }).join('');
-    $('gp-przyjmuje').checked = true;
     msg('m-godziny', '');
     $('gp-dod-form').classList.remove('on'); $('gp-dod-dodaj').classList.remove('hidden');
     rysujDniDod();
@@ -2753,7 +2771,7 @@
   $('gp-anuluj').onclick = () => $('modal-godziny').classList.add('hidden');
   $('gp-zapisz').onclick = () => zajety($('gp-zapisz'), async () => {
     let g = null;
-    if ($('gp-przyjmuje').checked) {
+    {
       g = {};
       for (const d of DNI_PRAC) {
         if (!document.querySelector(`[data-gd="${d}"]`).checked) continue;
@@ -2762,12 +2780,16 @@
         g[d] = [a, b];
       }
       if (!Object.keys(g).length && !dniDod.some(x => x.instruktor_id === gpInstr.id)) g = null;
+      if (!g && gpInstr.rez_godziny && !await pytaj(`Wyczyścić godziny pracy instruktora ${gpInstr.imie_nazwisko}?\nGrafik przestanie pokazywać jego dni wolne${gpInstr.rez_przyjmuje ? ', a kursanci nie zobaczą u niego wolnych terminów' : ''}.`)) return;
     }
-    const { error } = await sb.from('instruktorzy').update({ rez_godziny: g }).eq('id', gpInstr.id);
+    const zm = { rez_godziny: g };
+    if (g && gpInstr.godz_od) { zm.godz_od = null; zm.godz_do = null; }   // stare „godziny w grafiku” zastąpione godzinami pracy
+    const { error } = await sb.from('instruktorzy').update(zm).eq('id', gpInstr.id);
     if (error) { msg('m-godziny', /rez_godziny/.test(error.message) ? 'Najpierw uruchom w Supabase plik krok23_rezerwacje.sql.' : tlumacz(error)); return; }
-    gpInstr.rez_godziny = g;
-    $('modal-godziny').classList.add('hidden'); pokazUstRez();
-    msg('m-rez-ust', `${gpInstr.imie_nazwisko}: ${g ? (Object.keys(g).length ? 'godziny zapisane' : 'tylko dodatkowe dni pracy') : 'nie przyjmuje rezerwacji'}.`, 'ok');
+    Object.assign(gpInstr, zm);
+    $('modal-godziny').classList.add('hidden'); pokazUstRez(); ladujInstruktorowLista(); if (gDzien) rysujDzien();
+    const tx = `${gpInstr.imie_nazwisko}: ${g ? (Object.keys(g).length ? 'godziny pracy zapisane' : 'tylko dodatkowe dni pracy') : 'godziny pracy wyczyszczone'}.`;
+    msg('m-rez-ust', tx, 'ok'); msg('m-instruktorzy', tx, 'ok');
   });
   // --- biuro: baner z prośbami ---
   async function ladujRezerwacje() {
@@ -3557,9 +3579,29 @@
     ladujKursantow(); ladujDzien(true);
   }
   const slowoJazd = n => n === 1 ? 'jazda' : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? 'jazdy' : 'jazd');
-  function ustI(id) {
+  // godziny pracy instruktora w danym dniu: [od, do], null = nie pracuje, undefined = godziny nie ustawione
+  function godzPracyDnia(i, dz) {
+    if (!i) return undefined;
+    const x = dniDod.find(d => d.instruktor_id === i.id && d.dzien === dz);
+    if (x) return [hm(x.godz_od), hm(x.godz_do)];
+    if (!i.rez_godziny) return undefined;
+    return i.rez_godziny[parseD(dz).getDay()] || null;
+  }
+  function ustI(id, dz) {
     const u = ust(), i = instruktorzy.find(x => x.id === (id || gInstr));
+    const g = godzPracyDnia(i, dz || gDzien);
+    if (g) return { od: g[0], do: g[1], dl: u.dl, wlasne: true, praca: g };
+    if (g === null) return { od: u.od, do: u.do, dl: u.dl, wlasne: true, nieprac: true };
     return { od: (i && i.godz_od) || u.od, do: (i && i.godz_do) || u.do, dl: u.dl, wlasne: !!(i && i.godz_od) };
+  }
+  const NAZWY_DNI_B = ['niedziele', 'poniedziałki', 'wtorki', 'środy', 'czwartki', 'piątki', 'soboty'];
+  // jazda poza godzinami pracy instruktora (tylko gdy godziny są ustawione)
+  function pozaPraca(idI, poczatek, koniec) {
+    const dz = dzisStr(new Date(poczatek)), i = instruktorzy.find(x => x.id === idI), g = godzPracyDnia(i, dz);
+    if (g === undefined) return '';
+    if (g === null) return `${i.imie_nazwisko} nie pracuje w ${NAZWY_DNI_B[parseD(dz).getDay()]}`;
+    const a = naMin(godzina(poczatek)), b = dzisStr(new Date(koniec)) !== dz ? 1440 : naMin(godzina(koniec));
+    return a < naMin(g[0]) || b > naMin(g[1]) ? `poza godzinami pracy ${i.imie_nazwisko} (${g[0]}–${g[1]})` : '';
   }
   function ust() {
     const s = profil.szkoly || {};
@@ -3613,6 +3655,7 @@
     const { data, error } = await sb.from('instruktorzy').select('*').eq('szkola_id', profil.szkola_id).order('imie_nazwisko');
     if (error) { msg('m-grafik', tlumacz(error)); return; }
     instruktorzy = data;
+    if (profil.rola === 'biuro') await ladujDniDod();
   }
   async function ladujKursantowDoGrafiku() {
     if (profil.rola === 'biuro') {
@@ -3767,6 +3810,7 @@
 
   function wolneOkna(busy, idI) {
     const u = ustI(idI || gInstr), S = naMin(u.od), E = naMin(u.do), len = u.dl, out = [];
+    if (u.nieprac) return out;
     const fill = (a, b) => {
       if (b - a < 60) return;
       for (let x = a; x < b;) { const e = Math.min(x + len, b); if (e - x >= 30) out.push({ od: x, do: e }); x = e; }
@@ -3815,8 +3859,11 @@
         if (p >= 15) elementy.push({ t: odMin(e.j.koniec) + 0.5, p, od: godzina(e.j.koniec), do: godzina(n.j.poczatek) }); });
       elementy.sort((a, b) => a.t - b.t);
     }
-    if (!elementy.length) return '<p class="hint">Brak jazd tego dnia.</p>';
-    return kolNapis(kol) + elementy.map(e => {
+    const uD = edyt ? ustI(idI) : {};
+    const ins = instruktorzy.find(x => x.id === idI);
+    const npInfo = uD.nieprac ? `<div class="nieprac-info">🚫 ${trybKolumn() ? 'Nie pracuje' : esc((ins && ins.imie_nazwisko) || 'Instruktor') + ' nie pracuje'} w ${NAZWY_DNI_B[parseD(gDzien).getDay()]} (godziny pracy)</div>` : '';
+    if (!elementy.length) return npInfo || '<p class="hint">Brak jazd tego dnia.</p>';
+    return npInfo + kolNapis(kol) + elementy.map(e => {
       if (e.p) return `<div class="przerwa">– przerwa ${fmtDur(e.p)} (${e.od}–${e.do}) –</div>`;
       if (e.wi) return `<div class="wolny-inst${edyt ? ' edyt' : ''}" data-wid="${e.wi.id}">
           <span class="godz">${e.wi.godz_od ? hm(e.wi.godz_od) + '–' + hm(e.wi.godz_do) : 'cały dzień'}</span>
@@ -3841,6 +3888,8 @@
       const tel = k && k.telefon
         ? `<div class="tele"><a href="tel:${esc(telLink(k.telefon))}">📞 ${esc(k.telefon)}</a><a href="${esc(smsLink(k, j))}">✉️ SMS</a></div>` : '';
       const kj = kol.get(j.id);
+      const pz = edyt ? pozaPraca(idI, j.poczatek, j.koniec) : '';
+      if (pz) ostrz = `<br><span class="znak-poza">🕘 ${esc(pz)}</span>` + ostrz;
       if (kj) ostrz = kj.map(t => `<span class="znak-kol">⚠️ ${esc(t)}</span>`).join('') .replace(/^/, '<br>') + ostrz;
       return `<div class="jazda ${j.rodzaj}${wstepna(j) ? ' wstepna' : ''}${kj ? ' kolizja' : ''}${edyt ? ' edyt' : ''}" data-id="${j.id}">
           <span class="godz">${godzina(j.poczatek)}–${godzina(j.koniec)}</span>
@@ -3859,7 +3908,7 @@
       $('g-lista').innerHTML = `<div class="kolumny">${akt.map(i => {
         const jz = gWszJazdy.filter(j => j.instruktor_id === i.id), wl = gWszWolne.filter(w => w.instruktor_id === i.id);
         const bw = znacznikWysl(i.id, jz, wl);
-        return `<div class="kol${i.id === gInstr ? ' wyb' : ''}"><h3 data-kol="${i.id}" title="Zaznacz (WhatsApp / druk)">${esc(i.imie_nazwisko)}<small>${sumaTxt(jz)}</small></h3>
+        return `<div class="kol${i.id === gInstr ? ' wyb' : ''}${edyt && ustI(i.id).nieprac ? ' nieprac' : ''}"><h3 data-kol="${i.id}" title="Zaznacz (WhatsApp / druk)">${esc(i.imie_nazwisko)}<small>${sumaTxt(jz)}</small></h3>
           ${bw ? `<div style="margin:-4px 4px 6px">${bw}</div>` : ''}${listaDnia(i.id, jz, wl, edyt)}</div>`;
       }).join('')}</div>`;
       $('g-suma').textContent = sumaTxt(gWszJazdy) ? 'razem: ' + sumaTxt(gWszJazdy) : '';
@@ -4076,6 +4125,9 @@
       if ($('j-nieliczy').checked || maNowe) dane.nie_liczy = $('j-nieliczy').checked;
       const k = await kolizje(dane, edytJazda && edytJazda.id);
       if (k.length && !await pytaj('Uwaga – nakładają się jazdy:\n' + k.join('\n') + '\n\nZapisać mimo to?')) return;
+      const pz = pozaPraca(dane.instruktor_id, dane.poczatek, dane.koniec);
+      const bylo = edytJazda && edytJazda.instruktor_id === dane.instruktor_id && pozaPraca(edytJazda.instruktor_id, edytJazda.poczatek, edytJazda.koniec);
+      if (pz && !bylo && !await pytaj(`Uwaga – ${pz}.\n\nWpisać jazdę mimo to?`, { tak: 'Wpisz mimo to' })) return;
       const w = edytJazda
         ? await sb.from('jazdy').update(dane).eq('id', edytJazda.id)
         : await sb.from('jazdy').insert({ ...dane, szkola_id: profil.szkola_id });
@@ -4139,8 +4191,8 @@
     if (lim) $('p-instr-limit').innerHTML = `📦 Pakiet: do <b>${lim}</b> ${lim === 1 ? 'instruktora' : 'instruktorów'} · aktywnych <b>${akt} z ${lim}</b>${akt >= lim ? ` – limit wykorzystany. Ukryty instruktor się nie liczy. Większy pakiet: ${esc(PROGRAM.email)}, tel. ${esc(PROGRAM.telefon)}.` : ''}`;
     $('p-instruktorzy').innerHTML = instruktorzy.map(i => `<div class="row">
         <div class="who"><b>${esc(i.imie_nazwisko)} ${i.aktywny ? '' : '<span class="pill szary">ukryty</span>'}</b>
-          <span>${i.user_id ? 'ma konto w programie' : 'bez konta'}${i.telefon ? ' · 📞 ' + esc(i.telefon) : ''}${i.godz_od ? ' · 🕘 ' + esc(i.godz_od) + '–' + esc(i.godz_do) : ''}</span></div>
-        <div class="acts">${!i.user_id && i.aktywny ? `<button data-a="zapros" data-id="${i.id}">📩 Zaproś</button>` : ''}${profil.szkoly && profil.szkoly.rozl_wl && kwotyWl() ? `<button data-a="stawki" data-id="${i.id}">💰 Stawki</button>` : ''}<button data-a="nazwa" data-id="${i.id}">Zmień</button>
+          <span>${i.user_id ? 'ma konto w programie' : 'bez konta'}${i.telefon ? ' · 📞 ' + esc(i.telefon) : ''}${i.rez_godziny ? ' · 🕘 ' + esc(opisGodzPracy(i.rez_godziny)) : (i.godz_od ? ' · 🕘 ' + esc(i.godz_od) + '–' + esc(i.godz_do) : '')}<span data-dod="${i.id}"></span></span></div>
+        <div class="acts">${!i.user_id && i.aktywny ? `<button data-a="zapros" data-id="${i.id}">📩 Zaproś</button>` : ''}${profil.szkoly && profil.szkoly.rozl_wl && kwotyWl() ? `<button data-a="stawki" data-id="${i.id}">💰 Stawki</button>` : ''}${i.aktywny ? `<button data-a="godziny" data-id="${i.id}">🕘 Godziny pracy</button>` : ''}<button data-a="nazwa" data-id="${i.id}">Zmień</button>
           <button data-a="ukryj" data-id="${i.id}">${i.aktywny ? 'Ukryj' : 'Przywróć'}</button></div>
         ${i.user_id && 'moze_zglaszac_wolne' in i ? `<div class="uprawn">
           <label><input type="checkbox" data-upr="moze_zglaszac_wolne" data-id="${i.id}"${i.moze_zglaszac_wolne ? ' checked' : ''}> może zgłaszać wolne (biuro zatwierdza)</label>
@@ -4160,24 +4212,13 @@
       const i = instruktorzy.find(x => x.id === b.dataset.id);
       if (b.dataset.a === 'zapros') { pokazZaproszenie(i, b.closest('.row')); return; }
       if (b.dataset.a === 'stawki') { await otworzStawki(i); return; }
+      if (b.dataset.a === 'godziny') { otworzGodziny(i); return; }
       let zm;
       if (b.dataset.a === 'nazwa') {
         const n = prompt('Imię i nazwisko instruktora:', i.imie_nazwisko);
         if (!n || !n.trim()) return;
         const t = prompt('Telefon instruktora (do wysyłki grafiku na WhatsApp):', i.telefon || '');
         zm = { imie_nazwisko: n.trim(), telefon: t === null ? i.telefon : (t.trim() || null) };
-        const u = ust();
-        const g = prompt(`Godziny pracy instruktora, np. 07:00-18:00.\nPuste = jak cała szkoła (${u.od}–${u.do}).`,
-          i.godz_od ? i.godz_od + '-' + i.godz_do : '');
-        if (g !== null) {
-          if (!g.trim()) { zm.godz_od = null; zm.godz_do = null; }
-          else {
-            const m = g.trim().match(/^(\d{1,2})(?::(\d{2}))?\s*[-–]\s*(\d{1,2})(?::(\d{2}))?$/);
-            const od = m && pad(+m[1]) + ':' + (m[2] || '00'), doo = m && pad(+m[3]) + ':' + (m[4] || '00');
-            if (!m || naMin(doo) <= naMin(od) || +m[1] > 23 || +m[3] > 24) { msg('m-instruktorzy', 'Nie rozpoznano godzin – wpisz np. 07:00-18:00.'); return; }
-            zm.godz_od = od; zm.godz_do = doo;
-          }
-        }
       } else {
         if (i.aktywny && !await pytaj(`Ukryć instruktora „${i.imie_nazwisko}” w grafiku? Jego jazdy zostaną zachowane.`)) return;
         zm = { aktywny: !i.aktywny };
