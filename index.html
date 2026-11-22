@@ -210,6 +210,9 @@
   .poj-wr > button{flex:none;width:auto;margin:0}
   .poj-zle{color:var(--r);font-weight:700}.poj-uwaga{color:#b45309;font-weight:700}.poj-czeka{color:#1d4ed8}
   .poj-form{margin:8px 0;padding:10px 12px;border:1px solid var(--b);border-radius:12px;background:#fafafa}
+  .poj-kat{display:flex;flex-wrap:wrap;gap:6px}
+  .poj-kat button{min-width:46px;padding:7px 10px;font-weight:700;font-size:14px;border-radius:9px}
+  .poj-kat button.on{background:var(--g);color:var(--ga);border-color:var(--g)}
   .poj-instr{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:0 18px}
   .poj-form .siatka{grid-template-columns:repeat(2,minmax(0,1fr))}
   .poj-form input{min-width:0}
@@ -675,6 +678,7 @@
   html[data-motyw="ciemny"] .poj-uwaga{color:#f5b585}
   html[data-motyw="ciemny"] .poj-czeka{color:#6f90ec}
   html[data-motyw="ciemny"] .poj-form{border:1px solid var(--b);background:#1b2126}
+  html[data-motyw="ciemny"] .poj-kat button.on{background:var(--g);color:var(--ga);border-color:var(--g)}
   html[data-motyw="ciemny"] .uprawn label{color:var(--m)}
   html[data-motyw="ciemny"] .mw-row{border-top:1px solid var(--b)}
   html[data-motyw="ciemny"] .mw-row:first-child{border-top:none}
@@ -1337,7 +1341,6 @@
             <div id="poj-form" class="poj-form hidden"></div>
             <button id="poj-dodaj" class="btn2" type="button" style="margin-top:8px">➕ Dodaj pojazd</button>
           </div>
-          <datalist id="poj-kat-lista"><option value="B"><option value="A"><option value="A1"><option value="A2"><option value="AM"><option value="B+E"><option value="C"><option value="C+E"><option value="D"><option value="T"></datalist>
           <div id="m-poj" class="msg"></div>
         </div>
         <div class="card" data-zw="rez">
@@ -3588,7 +3591,8 @@
     const v = k => esc((p && p[k]) || '');
     return `<div class="siatka">
         <div><label>Nr rejestracyjny</label><input data-pf="rejestracja" value="${v('rejestracja')}" placeholder="np. LBL 12345" autocomplete="off" style="text-transform:uppercase"></div>
-        <div><label>Kategoria</label><input data-pf="kategoria" list="poj-kat-lista" value="${v('kategoria')}" placeholder="np. B" autocomplete="off"></div>
+        <div style="grid-column:1/-1"><label>Kategoria (można kilka)</label><input type="hidden" data-pf="kategoria" value="${esc(katyPoj((p && p.kategoria) || '').join(', '))}">
+          <div class="poj-kat">${KATY_POJ.map(k => `<button type="button" data-pk="${k}" class="${katyPoj((p && p.kategoria) || '').includes(k) ? 'on' : ''}">${k}</button>`).join('')}</div></div>
         <div><label>Marka</label><input data-pf="marka" value="${v('marka')}" placeholder="np. Toyota" autocomplete="off"></div>
         <div><label>Model</label><input data-pf="model" value="${v('model')}" placeholder="np. Yaris" autocomplete="off"></div>
         <div><label>Przegląd ważny do</label><input type="date" data-pf="przeglad_do" value="${v('przeglad_do')}"></div>
@@ -3598,6 +3602,16 @@
         `<label class="check"><input type="checkbox" data-pi="${i.id}"${p && p.instruktorzy.includes(i.id) ? ' checked' : ''}> ${esc(i.imie_nazwisko)}</label>`).join('') || '<span class="hint">Brak instruktorów.</span>'}</div>` : ''}
       <div class="akcje" style="margin-top:10px"><button type="button" data-pa="zapisz" style="margin:0">💾 Zapisz</button><button type="button" data-pa="anuluj" style="margin:0">Anuluj</button>${zInstr && p ? '<button type="button" data-pa="usun" style="margin:0;color:var(--r)">🗑 Usuń pojazd</button>' : ''}</div>`;
   }
+  // kategorie pojazdu: wybór przyciskami, zapis „B, BE”
+  const KATY_POJ = ['B', 'A', 'C', 'BE', 'CE', 'D', 'AM', 'A1', 'A2', 'B1', 'C1', 'C1E', 'D1', 'D1E', 'DE', 'T'];
+  const katyPoj = t => [...new Set(String(t || '').toUpperCase().replace(/\+/g, '').split(/[\s,;/]+/).filter(Boolean))]
+    .sort((a, b) => (KATY_POJ.indexOf(a) + 1 || 99) - (KATY_POJ.indexOf(b) + 1 || 99));
+  document.addEventListener('click', e => {
+    const b = e.target.closest('.poj-kat [data-pk]'); if (!b) return;
+    b.classList.toggle('on');
+    const box = b.closest('.poj-kat').parentElement;
+    box.querySelector('[data-pf="kategoria"]').value = [...box.querySelectorAll('[data-pk].on')].map(x => x.dataset.pk).join(', ');
+  });
   function czytajFormPoj(box) {
     const d = {};
     box.querySelectorAll('[data-pf]').forEach(x => { d[x.dataset.pf] = x.value.trim() || null; });
