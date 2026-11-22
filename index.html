@@ -114,7 +114,8 @@
   .who{min-width:0;flex:1 1 200px}
   .who b{display:block}
   .who span{font-size:13px;color:var(--m);word-break:break-word}
-  .acts{display:flex;gap:6px;flex-shrink:0;margin-left:auto}
+  .acts{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;flex-shrink:0;margin-left:auto;max-width:100%}
+  @media(max-width:520px){.row .acts{width:100%;margin-left:0;justify-content:stretch}.row .acts button{flex:1 1 auto;padding:8px 10px;font-size:14px;white-space:nowrap}}
   select,textarea{width:100%;padding:12px;border:1px solid var(--b);border-radius:8px;font:inherit;font-size:16px;background:#fff;color:var(--t)}
   textarea{min-height:70px;resize:vertical}
   .tabs.panel{margin-bottom:16px}
