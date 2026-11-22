@@ -3,7 +3,65 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Program dla szkół jazdy</title>
+<!-- ===== SEO ===== -->
+<title>Grafik OSK – program dla szkoły jazdy: grafik jazd, kursanci, instruktorzy</title>
+<meta name="description" content="Program online dla szkół jazdy (OSK): grafik jazd, rejestr kursantów ze skanem PKK, aplikacja dla instruktorów, rezerwacje jazd przez kursantów, egzaminy WORD, SMS i WhatsApp. Działa w przeglądarce, na telefonie i na zegarku Garmin.">
+<link rel="canonical" href="https://grafikosk.pl/">
+<meta name="robots" content="index, follow">
+<meta name="author" content="Slesch – Beniamin Dziura">
+
+<!-- Podgląd linku na Facebooku, WhatsAppie, Messengerze -->
+<meta property="og:type" content="website">
+<meta property="og:locale" content="pl_PL">
+<meta property="og:site_name" content="Grafik OSK">
+<meta property="og:url" content="https://grafikosk.pl/">
+<meta property="og:title" content="Grafik OSK – program dla szkoły jazdy">
+<meta property="og:description" content="Grafik jazd, kursanci, instruktorzy i rezerwacje w jednym programie. Biuro na komputerze, instruktor i kursant na telefonie.">
+<meta property="og:image" content="https://grafikosk.pl/img/og-grafikosk.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+
+<!-- Dane strukturalne dla Google -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "name": "Grafik OSK",
+      "alternateName": "Program dla szkół jazdy",
+      "url": "https://grafikosk.pl/",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Przeglądarka internetowa, Android, iOS, Windows",
+      "inLanguage": "pl",
+      "description": "Program online dla ośrodków szkolenia kierowców: grafik jazd, rejestr kursantów (skan profilu PKK), aplikacja dla instruktorów, rezerwacje jazd przez kursantów, wykłady, rozliczenia instruktorów, przypomnienia SMS i WhatsApp.",
+      "featureList": [
+        "Grafik jazd dla biura i instruktorów",
+        "Rejestr kursantów ze skanem PKK",
+        "Aplikacja na telefon dla instruktora",
+        "Rezerwacja jazd przez kursanta",
+        "Egzaminy WORD i terminy wstępne",
+        "Grafik instruktora na zegarku Garmin (Connect IQ)",
+        "Przypomnienia SMS i WhatsApp",
+        "Wydruki i kopia zapasowa na Dysk Google"
+      ],
+      "publisher": { "@id": "https://grafikosk.pl/#slesch" }
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://grafikosk.pl/#slesch",
+      "name": "Slesch",
+      "founder": { "@type": "Person", "name": "Beniamin Dziura" },
+      "url": "https://grafikosk.pl/",
+      "email": "sleschgsm@wp.pl",
+      "telephone": "+48 504 789 595",
+      "address": { "@type": "PostalAddress", "addressLocality": "Biłgoraj", "addressCountry": "PL" }
+    }
+  ]
+}
+</script>
+<!-- ===== koniec SEO ===== -->
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -235,6 +293,13 @@
   @media(max-width:760px){.ls-telefony figure{flex-basis:72%}.ls-przesun{display:block}}
   .ls-telefony img{width:100%;border-radius:18px;border:6px solid #1d2329;box-shadow:0 8px 24px rgba(20,25,30,.15)}
   .ls-telefony figcaption{font-size:14px;color:var(--m);margin-top:8px}
+  .ls-zegarek{display:grid;grid-template-columns:1fr;gap:22px;align-items:center;background:#fff;border:1px solid var(--b);border-radius:16px;padding:22px}
+  @media(min-width:760px){.ls-zegarek{grid-template-columns:300px 1fr;padding:28px 32px}}
+  .ls-zegarek img{width:100%;max-width:300px;margin:0 auto;display:block;border-radius:14px}
+  .ls-zegarek h2{text-align:left;margin-bottom:10px}
+  .ls-zegarek p{font-size:16px;line-height:1.55;color:#3b444c;margin:0 0 12px}
+  .ls-zegarek ul{margin:0 0 14px;padding-left:20px;color:#3b444c;line-height:1.6}
+  .ls-odznaka{display:inline-block;line-height:0}.ls-odznaka img{height:56px;width:auto;max-width:none;border-radius:0;margin:0}
   .ls-ceny{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:10px}
   .ls-cena{background:#fff;border:1px solid var(--b);border-radius:14px;padding:20px;text-align:center;display:flex;flex-direction:column;gap:4px}
   .ls-cena span{color:var(--m);font-size:14px}
@@ -509,6 +574,7 @@
         <div class="ls-kafel"><b>💬 WhatsApp i SMS</b><p>Grafik dnia do instruktorów jednym kliknięciem, przypomnienia o jeździe dla kursantów.</p></div>
         <div class="ls-kafel"><b>🖨 Wydruki i Excel</b><p>Grafik dnia i tygodnia do druku, karta kursanta, zestawienie godzin instruktorów, eksport do Excela.</p></div>
         <div class="ls-kafel"><b>🔒 Bezpieczeństwo</b><p>Codzienna kopia na Dysk Google, kosz 30 dni, PIN, historia zmian. Instruktor nie widzi PESEL ani PKK.</p></div>
+        <div class="ls-kafel"><b>⌚ Zegarek Garmin</b><p>Instruktor widzi najbliższą jazdę i grafik dnia na zegarku Garmin – Fenix, Forerunner, Venu, Instinct i inne.</p></div>
         <div class="ls-kafel"><b>👥 Cały zespół</b><p>Kilka osób w biurze, każdy instruktor na swoim koncie. Dane szkoły na serwerach w UE.</p></div>
       </div>
     </section>
@@ -523,6 +589,21 @@
       <p class="ls-przesun">← przesuń palcem, żeby zobaczyć pozostałe →</p>
     </section>
 
+    <section class="ls-zegarek">
+      <img src="img/zegarek-garmin.jpg" alt="Aplikacja Grafik OSK na zegarku Garmin – najbliższa jazda" loading="lazy">
+      <div>
+        <h2 class="ls-h2">⌚ Grafik jazd na zegarku Garmin</h2>
+        <p>Instruktor nie musi wyjmować telefonu w aucie. Aplikacja <b>Grafik OSK</b> na zegarek Garmin pokazuje:</p>
+        <ul>
+          <li>najbliższą jazdę – godzinę, ile zostało czasu, kursanta, kategorię, która to godzina kursu i telefon,</li>
+          <li>wszystkie jazdy na dziś i jutro,</li>
+          <li>najbliższą jazdę na liście pod tarczą (glance) – bez otwierania aplikacji.</li>
+        </ul>
+        <p>Grafik odświeża się sam co kilka minut. Działa na zegarkach <b>Fenix 5–9, Epix, Forerunner, Venu, Vivoactive, Instinct, Enduro, MARQ</b> i innych. Aplikacja jest bezpłatna dla szkół korzystających z programu – instruktor instaluje ją ze sklepu Connect IQ i wpisuje kod z programu (Konto → Zegarek Garmin).</p>
+        <div class="ls-cta"><a class="ls-odznaka" href="https://apps.garmin.com/pl-PL/apps/4ba72187-cada-45c3-b35f-bad1b56f46a2" target="_blank" rel="noopener"><img src="img/available-connect-iq-badge.png" alt="Dostępne w sklepie Garmin Connect IQ"></a></div>
+      </div>
+    </section>
+
     <section>
       <h2 class="ls-h2">Najczęstsze pytania</h2>
       <div class="ls-faq">
@@ -530,6 +611,7 @@
         <details><summary>Czy mogę przenieść dane z obecnego grafiku?</summary><p>Tak. Grafik i kursantów można wczytać z Excela, a przy wdrożeniu pomagamy przenieść dane z dotychczasowego programu.</p></details>
         <details><summary>Gdzie są przechowywane dane?</summary><p>Na serwerach w Unii Europejskiej (Frankfurt). Każda szkoła widzi tylko swoje dane, a codzienna kopia trafia na Dysk Google szkoły. Szczegóły w <a href="prywatnosc.html" target="_blank" rel="noopener">polityce prywatności</a>.</p></details>
         <details><summary>Czy kilka osób może pracować naraz?</summary><p>Tak – biuro na kilku komputerach i wszyscy instruktorzy na telefonach. Zmiany widać u wszystkich na bieżąco.</p></details>
+        <details><summary>Czy instruktor może widzieć grafik na zegarku?</summary><p>Tak, na zegarkach Garmin (m.in. Fenix, Forerunner, Venu, Instinct). Instruktor instaluje bezpłatną aplikację „Grafik OSK” ze sklepu Connect IQ, a w programie w „Konto → Zegarek Garmin” kopiuje swój kod i wkleja go w ustawieniach aplikacji. Zegarek tylko odczytuje grafik – niczego w nim nie zmienia.</p></details>
         <details><summary>Ile kosztuje program?</summary><p>Cena zależy od liczby instruktorów w szkole. Napisz albo zadzwoń – przygotujemy ofertę. Pierwsze 30 dni są bezpłatne.</p></details>
         <details><summary>Jak zacząć?</summary><p>Napisz do nas – dostaniesz kod aktywacyjny. Zakładasz konto, wpisujesz kod i nazwę szkoły, a potem zapraszasz instruktorów jednym przyciskiem.</p></details>
       </div>
@@ -1255,6 +1337,12 @@
       <input id="mk-h2" type="password" autocomplete="new-password" minlength="6" required>
       <button class="btn2" type="submit">Zmień hasło</button>
     </form>
+    <div id="mk-zegarek" class="hidden">
+      <h3 style="font-size:16px;margin:22px 0 2px">⌚ Zegarek Garmin</h3>
+      <p class="hint" style="margin-top:2px">Twoje jazdy na dziś i jutro na zegarku. Kod wpisujesz raz w aplikacji Garmin Connect (ustawienia aplikacji „Grafik OSK”). Zegarek tylko odczytuje grafik – niczego nie zmieni.</p>
+      <button type="button" id="mk-zeg-pokaz" class="btn2">⌚ Pokaż kod do zegarka</button>
+      <div id="mk-zeg-box" class="link-box hidden"></div>
+    </div>
     <div id="m-konto" class="msg"></div>
     <button id="mk-zamknij" class="btn2" type="button">Zamknij</button>
   </div>
@@ -1417,7 +1505,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.60';
+  const WERSJA = '1.61';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -1427,6 +1515,8 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.61', d: '22.11.2026', p: [
+      '⌚ Zegarek Garmin: instruktor w „👤 Konto” pobiera kod do zegarka i widzi na nim swoje jazdy na dziś i jutro (aplikacja „Grafik OSK” w sklepie Connect IQ).'] },
     { v: '1.60', d: '22.11.2026', p: [
       '💰 Rozliczenie instruktorów (do włączenia w Ustawieniach): stawki za godzinę dla każdej kategorii, dodatek weekendowy, zestawienie miesiąca z wydrukiem i Excelem. Kwoty można ukryć (same godziny). Instruktor może widzieć swoje, jeśli biuro pozwoli.',
       '🎉 „Zdałem!” – po oznaczeniu zdanego egzaminu program tworzy grafikę z logo szkoły do udostępnienia; kursant widzi ją też na swoim linku.',
@@ -3159,8 +3249,36 @@
     $('mk-tel').value = profil.telefon || '';
     $('mk-h1').value = ''; $('mk-h2').value = '';
     msg('m-konto', '');
+    const ja_i = (instruktorzy || []).find(i => i.user_id === ja.id);
+    $('mk-zegarek').classList.toggle('hidden', !ja_i);
+    $('mk-zeg-box').classList.add('hidden'); $('mk-zeg-box').innerHTML = '';
     $('modal-konto').classList.remove('hidden');
   }
+  // ===== KOD DO ZEGARKA GARMIN (instruktor) =====
+  async function pokazKodZegarka(nowy) {
+    const box = $('mk-zeg-box'); box.classList.remove('hidden');
+    const { data, error } = await sb.rpc('link_zegarka', { p_nowy: !!nowy });
+    if (error) { box.innerHTML = `<p class="hint">${/link_zegarka/.test(error.message) ? 'Biuro musi najpierw uruchomić w Supabase plik krok25_zegarek.sql.' : esc(tlumacz(error))}</p>`; return; }
+    const kod = data.token, czytelny = kod.match(/.{1,4}/g).join(' ');
+    const ost = data.ostatnio ? `ostatnio połączony: ${fmtData(data.ostatnio)} ${godzina(data.ostatnio)}` : 'zegarek jeszcze się nie połączył';
+    box.innerHTML = `<b>Kod do zegarka</b>
+      <div class="url" style="font-size:18px;letter-spacing:1px;text-align:center">${esc(czytelny)}</div>
+      <p class="hint" style="margin:0 0 8px">Garmin Connect → Urządzenie → Aplikacje Connect IQ → Grafik OSK → Ustawienia → „Kod z programu”. Spacje możesz pominąć. · ${esc(ost)}</p>
+      <div class="akcje">
+        <button type="button" id="zg-kopiuj" style="margin:0">📋 Kopiuj kod</button>
+        <button type="button" id="zg-nowy" style="margin:0">♻️ Nowy kod</button>
+        <button type="button" id="zg-wylacz" style="margin:0;color:var(--r)">✖ Wyłącz</button>
+      </div>${nowy ? '<p class="hint" style="margin-top:8px">✅ Utworzono nowy kod – poprzedni już nie działa. Wpisz go w zegarku.</p>' : ''}
+      <p class="hint" style="margin-top:8px">Nie podawaj kodu nikomu – kto go zna, widzi Twój grafik.</p>`;
+    $('zg-kopiuj').onclick = async () => { try { await navigator.clipboard.writeText(kod); $('zg-kopiuj').textContent = '✅ Skopiowano'; } catch (_) { prompt('Skopiuj kod:', kod); } };
+    $('zg-nowy').onclick = async () => { if (await pytaj('Utworzyć nowy kod?\nZegarek z poprzednim kodem przestanie pokazywać jazdy (np. po zgubieniu zegarka).', { tak: 'Nowy kod' })) zajety($('zg-nowy'), () => pokazKodZegarka(true)); };
+    $('zg-wylacz').onclick = async () => {
+      if (!await pytaj('Wyłączyć zegarek?\nZegarek przestanie pokazywać jazdy, dopóki nie utworzysz nowego kodu.', { tak: 'Wyłącz', niebezp: true })) return;
+      const { error } = await sb.rpc('usun_link_zegarka');
+      box.innerHTML = error ? esc(tlumacz(error)) : '<p class="hint">Zegarek wyłączony.</p>';
+    };
+  }
+  $('mk-zeg-pokaz').onclick = () => zajety($('mk-zeg-pokaz'), () => pokazKodZegarka(false));
   const zamknijKonto = () => $('modal-konto').classList.add('hidden');
   document.querySelectorAll('.konto-btn').forEach(b => b.onclick = otworzKonto);
   $('mk-zamknij').onclick = zamknijKonto;

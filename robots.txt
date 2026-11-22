@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+# Osobiste linki kursantów (?k=...) nie mogą trafić do Google
+Disallow: /*?k=
+Disallow: /*&k=
+
+Sitemap: https://grafikosk.pl/sitemap.xml
