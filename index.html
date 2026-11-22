@@ -70,6 +70,7 @@
   .check input{width:auto}
   .modal{position:fixed;inset:0;background:rgba(20,25,30,.45);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:16px;z-index:10}
   #modal-pin{z-index:30}
+  #modal-zdal,#modal-stawki{z-index:20}
   .sheet{background:#fff;border-radius:12px;padding:20px;width:100%;max-width:560px;margin:auto 0}
   .sheet h2{font-size:19px}
   .usun{width:100%;margin-top:10px;color:var(--r)}
@@ -170,6 +171,30 @@
   .kr-moja{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:#fffbeb;border:1px solid #fcd34d;margin:6px 0;font-size:14px}
   .kr-moja.nie{background:#fdf2f2;border-color:#f5c2c0}
   .kr-moja button{padding:5px 10px;font-size:13px;flex:none}
+  #lr-baner .wr{flex-wrap:wrap}
+  .lr-bt{display:flex;gap:6px;flex-wrap:wrap;width:100%}
+  .lr-bt a,.lr-bt button{padding:6px 12px;font-size:13.5px;border:1px solid var(--b);border-radius:9px;background:#fff;color:inherit;text-decoration:none;margin:0;font:inherit;font-size:13.5px;cursor:pointer}
+  .st-pola{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px 12px}
+  .st-pola label{margin:0;display:flex;align-items:center;gap:8px;font-weight:600}
+  .st-pola label span{width:38px;flex:none}
+  .st-pola input{margin:0;min-width:0}
+  .ro-i{border:1px solid var(--b);border-radius:12px;padding:10px 12px;margin:8px 0}
+  .ro-i summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+  .ro-i summary::-webkit-details-marker{display:none}
+  .ro-i .kw{font-weight:800;font-size:17px;white-space:nowrap}
+  .ro-i small{color:var(--m)}
+  .ro-ch{display:inline-block;font-size:12.5px;padding:2px 8px;border-radius:8px;background:#f1f5f9;margin:6px 4px 0 0}
+  .ro-ch.brak{background:#fef2f2;color:#991b1b}
+  .ro-dni{margin-top:8px;border-top:1px solid var(--b);padding-top:6px;font-size:13.5px}
+  .ro-dni div{display:flex;justify-content:space-between;gap:8px;padding:2px 0}
+  .ro-suma{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .ro-suma div{background:#f1f5f9;border-radius:10px;padding:8px 10px;font-size:13px;color:var(--m)}
+  .ro-suma b{display:block;font-size:20px;color:var(--t, #0f172a)}
+  .zd-img{display:block;width:100%;border-radius:12px;border:1px solid var(--b)}
+  .zd-opc{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+  .zd-opc select{width:auto;margin:0}
+  .zd-opc label{margin:0;display:flex;align-items:center;gap:6px;font-weight:600}
+  .zd-opc input[type=checkbox]{width:18px;height:18px;margin:0}
   .wy-gora{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
   .wy-gora .btn{width:auto;margin:0;padding:10px 16px}
   .wy-h{font-size:15px;margin:16px 0 4px}
@@ -688,6 +713,7 @@
       <div id="kopia-baner" class="zmiany hidden"></div>
       <details id="wz-baner" class="wst-baner wz hidden" open></details>
       <details id="rz-baner" class="wst-baner rz hidden" open></details>
+      <details id="lr-baner" class="wst-baner rz hidden" open></details>
       <details id="wst-baner" class="wst-baner hidden"></details>
       <div class="card">
         <div id="g-instr-pasek">
@@ -742,6 +768,15 @@
         <div id="m-mw" class="msg"></div>
         <h3 style="font-size:15px;margin:18px 0 4px">Moje wolne od dziś</h3>
         <div id="mw-lista"><p class="hint">Ładowanie…</p></div>
+      </div>
+      <div id="mr-karta" class="card hidden" data-zw="mrozl">
+        <h2>💰 Moje rozliczenie</h2>
+        <div class="dzien">
+          <button id="mr-prev" type="button" aria-label="Poprzedni miesiąc">‹</button>
+          <div class="dz-opis"><b id="mr-nazwa"></b><span>odbyte jazdy</span></div>
+          <button id="mr-next" type="button" aria-label="Następny miesiąc">›</button>
+        </div>
+        <div id="mr-lista" style="margin-top:10px"></div>
       </div>
       <div class="card">
         <button id="i-powiad" class="btn2" type="button" style="margin:0 0 14px">🔔 Włącz powiadomienia o zmianach</button>
@@ -810,6 +845,16 @@
           </div>
           <div id="m-miesiac" class="msg"></div>
         </div>
+        <div id="ro-karta" class="card hidden">
+          <h2>💰 Rozliczenie instruktorów</h2>
+          <p class="hint" id="ro-opis"></p>
+          <div id="ro-lista" style="margin-top:8px"></div>
+          <div class="akcje" style="margin-top:10px">
+            <button id="ro-druk" type="button" style="margin:0">🖨 Drukuj</button>
+            <button id="ro-xls" type="button" style="margin:0">📗 Excel</button>
+          </div>
+          <div id="m-ro" class="msg"></div>
+        </div>
         <div class="card">
           <h2>⛔ Wolne instruktorów w tym miesiącu</h2>
           <div id="mc-wolne"><p class="hint">Ładowanie…</p></div>
@@ -844,6 +889,13 @@
           <div class="pasek"><input id="u-teoria-h" type="number" min="1" max="200" step="1" style="max-width:120px"><button id="u-teoria-zapisz" type="button">Zapisz</button></div>
           <div id="m-wyklady-ust" class="msg"></div>
         </div>
+        <div class="card" data-zw="rozl">
+          <h2>💰 Rozliczenie instruktorów</h2>
+          <label class="przel" style="margin-top:4px"><input id="u-rozl" type="checkbox"><span class="suw"></span> Liczymy wypłaty instruktorów w programie</label>
+          <p class="hint">Po włączeniu przy każdym instruktorze (Instruktorzy w grafiku → 💰 Stawki) wpisujesz stawki za godzinę dla kategorii i ewentualny dodatek weekendowy. Rozliczenie miesiąca pojawi się w zakładce „Miesiąc”. Instruktor zobaczy swoje tylko wtedy, gdy mu na to pozwolisz.</p>
+          <label class="przel hidden" id="u-rozl-kwoty-box" style="margin-top:8px"><input id="u-rozl-kwoty" type="checkbox"><span class="suw"></span> Pokazuj kwoty i stawki (wyłączone = same godziny)</label>
+          <div id="m-rozl-ust" class="msg"></div>
+        </div>
         <div class="card" data-zw="rez">
           <h2>📅 Rezerwacje kursantów</h2>
           <label class="przel" style="margin-top:4px"><input id="u-rez" type="checkbox"><span class="suw"></span> Kursanci mogą prosić o jazdy przez swój link</label>
@@ -856,6 +908,7 @@
           </div>
           <label for="u-rez-instr">Kursant widzi</label>
           <select id="u-rez-instr"><option value="prowadzacy">tylko swojego instruktora prowadzącego</option><option value="wszyscy">wszystkich instruktorów przyjmujących rezerwacje</option></select>
+          <label class="przel" style="margin-top:10px"><input id="u-rez-lista" type="checkbox"><span class="suw"></span> Lista rezerwowa – kursant może zapisać się na dzień bez wolnych godzin, a biuro dostaje znak, gdy coś się zwolni</label>
           <button id="u-rez-zapisz" class="btn" type="button">Zapisz zasady</button>
           <h3 style="font-size:15px;margin:16px 0 4px">Godziny pracy instruktorów</h3>
           <p class="hint">Z tych godzin program liczy wolne okienka (minus jazdy i wolne). Instruktor bez ustawionych godzin nie przyjmuje rezerwacji.</p>
@@ -1100,6 +1153,29 @@
   </div>
 </div>
 
+<!-- Okno: stawki instruktora -->
+<div id="modal-stawki" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="sheet" style="max-width:460px">
+    <h2 style="margin-top:0">💰 Stawki</h2>
+    <p class="hint" id="st-kto"></p>
+    <div id="st-pola" class="st-pola"></div>
+    <label for="st-weekend" style="margin-top:12px">Dodatek za soboty i niedziele (zł za godzinę)</label>
+    <input id="st-weekend" type="number" min="0" step="0.5" inputmode="decimal" placeholder="puste = bez dodatku" style="max-width:200px">
+    <button id="st-zapisz" class="btn" type="button">Zapisz</button>
+    <button id="st-anuluj" class="btn2" type="button">Anuluj</button>
+    <div id="m-stawki" class="msg"></div>
+  </div>
+</div>
+
+<!-- Okno: grafika „Zdałem!” -->
+<div id="modal-zdal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="sheet" style="max-width:480px">
+    <h2 style="margin-top:0">🎉 Grafika „Zdałem!”</h2>
+    <div id="zd-box"></div>
+    <button id="zd-zamknij" class="btn2" type="button">Zamknij</button>
+  </div>
+</div>
+
 <!-- Okno: godziny pracy instruktora (rezerwacje) -->
 <div id="modal-godziny" class="modal hidden" role="dialog" aria-modal="true">
   <div class="sheet" style="max-width:460px">
@@ -1322,6 +1398,7 @@
       <button id="k-link" class="btn2 hidden" type="button">🔗 Link dla kursanta – podgląd jego jazd</button>
       <div id="k-link-box" class="link-box hidden"></div>
       <p id="k-teoria" class="hint hidden" style="margin-top:10px"></p>
+      <div id="k-zdal-box" class="hidden" style="margin-top:10px"></div>
       <button id="k-usun" class="usun hidden" type="button">Usuń kursanta</button>
       <div id="m-kursant" class="msg"></div>
     </form>
@@ -1340,7 +1417,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.58';
+  const WERSJA = '1.60';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -1350,6 +1427,10 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.60', d: '22.11.2026', p: [
+      '💰 Rozliczenie instruktorów (do włączenia w Ustawieniach): stawki za godzinę dla każdej kategorii, dodatek weekendowy, zestawienie miesiąca z wydrukiem i Excelem. Kwoty można ukryć (same godziny). Instruktor może widzieć swoje, jeśli biuro pozwoli.',
+      '🎉 „Zdałem!” – po oznaczeniu zdanego egzaminu program tworzy grafikę z logo szkoły do udostępnienia; kursant widzi ją też na swoim linku.',
+      '🔔 Lista rezerwowa przy rezerwacjach: kursant zapisuje się na dzień bez wolnych godzin, a biuro widzi, gdy termin się zwolni.'] },
     { v: '1.58', d: '22.11.2026', p: [
       'Start programu Grafik OSK pod adresem grafikosk.pl.',
       'Grafik jazd i rejestr kursantów dla biura, aplikacja „Mój grafik jazd” dla instruktorów i osobisty link dla kursantów.',
@@ -1427,6 +1508,7 @@
   }
   const BLEDY_PL = [
     [/LIMIT_INSTRUKTOROW/, `Limit aktywnych instruktorów w pakiecie Twojej szkoły jest już wykorzystany. Ukryj instruktora, który już nie pracuje, albo zmień pakiet – kontakt: ${PROGRAM.email}, tel. ${PROGRAM.telefon}.`],
+    [/REZ_LISTA_LIMIT/, 'Możesz czekać na liście rezerwowej najwyżej na 5 dni naraz.'],
     [/REZ_ZAJETE/, 'Ten termin został właśnie zajęty – wybierz inną godzinę.'],
     [/REZ_LIMIT/, 'Masz już maksymalną liczbę próśb czekających na potwierdzenie. Poczekaj na odpowiedź szkoły albo anuluj jedną z nich.'],
     [/REZ_TERMIN/, 'Na ten termin jest już za późno albo za wcześnie – wybierz inny.'],
@@ -1852,7 +1934,7 @@
     }
     $('p-instr-extra').classList.toggle('hidden', biuro);
     await startGrafik();
-    if (!biuro) { ladujMojeGodziny(); ladujMojeWolne(); }
+    if (!biuro) { ladujMojeGodziny(); ladujMojeWolne(); ladujMojeRozliczenie(); }
   }
 
   // ----- Zakładki panelu biura -----
@@ -1866,7 +1948,7 @@
   }
   $('t-grafik').onclick = () => { ustawZakladke('grafik'); ladujDzien(); };
   $('t-kursanci').onclick = () => { ustawZakladke('kursanci'); ladujKursantow(); };
-  $('t-osoby').onclick = () => { ustawZakladke('osoby'); ladujOsoby(); ladujInstruktorowLista(); ladujPin(); ladujKosz(); ladujHistorie(); pokazKopie(); pokazLogoUst(); pokazUstawienia(); pokazUstWyklady(); pokazUstRez(); };
+  $('t-osoby').onclick = () => { ustawZakladke('osoby'); ladujOsoby(); ladujInstruktorowLista(); ladujPin(); ladujKosz(); ladujHistorie(); pokazKopie(); pokazLogoUst(); pokazUstawienia(); pokazUstWyklady(); pokazUstRez(); pokazUstRozl(); };
   $('t-miesiac').onclick = () => { ustawZakladke('miesiac'); ladujMiesiac(); };
   $('t-wyklady').onclick = () => { ustawZakladke('wyklady'); ladujWyklady(); };
 
@@ -2034,7 +2116,7 @@
     $('k-usun').classList.toggle('hidden', !k);
     $('k-karta').classList.toggle('hidden', !k);
     $('k-link').classList.toggle('hidden', !k); $('k-link-box').classList.add('hidden'); $('k-link-box').innerHTML = '';
-    pokazTeorieKursanta(k);
+    pokazTeorieKursanta(k); pokazZdal(k);
     msg('m-kursant', '');
     $('modal-kursant').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
@@ -2426,12 +2508,16 @@
           <div class="op"><b>Wykład ${hm(w.od)}–${hm(w.do)}</b>${w.temat ? ' · ' + esc(w.temat) : ''}<br><small>${[w.sala, w.prowadzacy].filter(Boolean).map(esc).join(' · ') || zaIle(t)}</small></div></div>`; }).join('') || '<p class="hint">Brak zaplanowanych wykładów.</p>'}</div>` : ''}
       ${egz ? `<div class="kv-karta" style="border-color:#f5c2c0;background:#fdf2f2"><h2>🎓 Egzamin</h2><b>${DNI[new Date(egz.poczatek).getDay()]} ${fmtData(egz.poczatek)}${egz.godz_egzaminu ? ', godz. ' + hm(egz.godz_egzaminu) : ''}</b> <span class="hint">(${zaIle(new Date(egz.poczatek))})</span>${egz.potwierdzona === false ? '<p class="hint" style="margin-top:4px">Termin wstępny – szkoła potwierdzi go, gdy będzie oficjalny.</p>' : ''}</div>` : ''}
       <div class="kv-karta"><h2>Najbliższe jazdy</h2>${przyszle.map(wiersz).join('') || '<p class="hint">Nie masz teraz zaplanowanych jazd. W sprawie terminów skontaktuj się ze szkołą.</p>'}</div>
+      ${d.zdal ? `<div class="kv-karta" style="border-color:#86efac;background:#f0fdf4"><h2>🎉 Gratulacje – zdany egzamin!</h2><div id="kv-zdal"></div></div>` : ''}
       <div id="kv-rez"></div>
       ${byle.length ? `<details class="kv-karta"><summary style="cursor:pointer;font-weight:600">Ostatnie jazdy</summary>${byle.map(wiersz).join('')}</details>` : ''}
       <button type="button" class="btn2" id="kv-odswiez">↻ Odśwież</button>
       <p class="hint" style="margin-top:12px;text-align:center">Zmiany terminów ustalaj ze szkołą jazdy. Tę stronę możesz dodać do ekranu głównego telefonu (menu przeglądarki → „Dodaj do ekranu głównego”).</p>`;
     $('kv-odswiez').onclick = () => zajety($('kv-odswiez'), pokazKursanta);
     ladujRezKursanta();
+    if (d.zdal && $('kv-zdal')) { zdOpc.plec = null; zdOpc.pierwszy = false;
+      pokazGrafikeZdal($('kv-zdal'), { imie: imieSkrot(d.imie, d.nazwisko), imieSamo: d.imie, kat: katGlowna(d.kategoria), data: fmtData(d.zdal), szkola: d.szkola, logo: d.logo,
+        tekst: `Zdane! 🎉 Dziękuję ${d.szkola || ''}!`, uwaga: 'Pochwal się na Facebooku albo Instagramie – kliknij „Udostępnij”.' }); }
   }
 
   // ===== REZERWACJE KURSANTÓW =====
@@ -2449,6 +2535,7 @@
     $('u-rez').disabled = false;
     $('u-rez').checked = !!sz.rez_wl;
     $('u-rez-dni').value = String(sz.rez_dni || 7); $('u-rez-przed').value = String(sz.rez_godz_przed ?? 24);
+    $('u-rez-lista').checked = sz.rez_lista_wl !== false; $('u-rez-lista').parentElement.classList.toggle('hidden', !('rez_lista_wl' in sz));
     $('u-rez-max').value = String(sz.rez_max || 2); $('u-rez-dl').value = sz.rez_dlugosc || '120'; $('u-rez-instr').value = sz.rez_instr || 'prowadzacy';
     zwInfo('rez', sz.rez_wl ? 'włączone' : 'wyłączone');
     $('u-rez-instruktorzy').innerHTML = instruktorzy.filter(i => i.aktywny).map(i => `<div class="rz-i"><span><b>${esc(i.imie_nazwisko)}</b><br><small>${esc(opisGodzPracy(i.rez_godziny))}</small></span>
@@ -2465,6 +2552,7 @@
   };
   $('u-rez-zapisz').onclick = () => zajety($('u-rez-zapisz'), async () => {
     const d = { rez_dni: +$('u-rez-dni').value, rez_godz_przed: +$('u-rez-przed').value, rez_max: +$('u-rez-max').value, rez_dlugosc: $('u-rez-dl').value, rez_instr: $('u-rez-instr').value };
+    if ('rez_lista_wl' in profil.szkoly) d.rez_lista_wl = $('u-rez-lista').checked;
     const { error } = await sb.from('szkoly').update(d).eq('id', profil.szkola_id);
     if (error) { msg('m-rez-ust', tlumacz(error)); return; }
     Object.assign(profil.szkoly, d); msg('m-rez-ust', 'Zasady zapisane.', 'ok');
@@ -2545,12 +2633,13 @@
     }));
   }
   // --- kursant: wybór terminu ---
-  let krDane = null, krInstr = null, krDzien = null, krDl = null;
+  let krDane = null, krInstr = null, krDzien = null, krDl = null, krWybrany = false;
   async function ladujRezKursanta() {
     const box = $('kv-rez'); if (!box) return;
-    const { data, error } = await sb.rpc('kursant_rezerwacje', { p_token: KURSANT_TOKEN });
+    const [{ data, error }, ls] = await Promise.all([sb.rpc('kursant_rezerwacje', { p_token: KURSANT_TOKEN }), sb.rpc('kursant_lista_moja', { p_token: KURSANT_TOKEN })]);
     if (error || !data) { box.innerHTML = ''; return; }
     krDane = data;
+    krDane.lista = ls.error || !ls.data ? { wl: false, moje: [] } : ls.data;
     const dl = String(data.dlugosc).split(',').map(Number);
     if (!dl.includes(krDl)) krDl = dl[dl.length - 1];
     if (!data.instruktorzy.some(i => i.id === krInstr)) krInstr = data.instruktorzy[0] && data.instruktorzy[0].id;
@@ -2584,19 +2673,31 @@
       const dlugosci = String(d.dlugosc).split(',').map(Number);
       const dni = Array.from({ length: d.dni + 1 }, (_, i) => dodajDni(dzisStr(), i));
       const ile = dz => wolneSloty(ins, dz, krDl).length;
-      if (!krDzien || !dni.includes(krDzien) || !ile(krDzien)) krDzien = dni.find(dz => ile(dz)) || dni[0];
+      const naLiscie = dz => d.lista.moje.some(l => l.dzien === dz && l.instruktor_id === ins.id);
+      if (!krDzien || !dni.includes(krDzien) || (!ile(krDzien) && !krWybrany)) krDzien = dni.find(dz => ile(dz)) || dni[0];
       const sloty = wolneSloty(ins, krDzien, krDl);
+      const zwolnione = d.lista.moje.filter(l => l.instruktor_id === ins.id && ile(l.dzien));
+      const pracuje = dz => !!(ins.godziny && ins.godziny[parseD(dz).getDay()]);
       srodek = `${d.instruktorzy.length > 1 ? `<label for="kr-instr" style="margin-top:0">Instruktor</label><select id="kr-instr">${d.instruktorzy.map(i => `<option value="${i.id}"${i.id === ins.id ? ' selected' : ''}>${esc(i.nazwa)}${i.prowadzacy ? ' (prowadzący)' : ''}</option>`).join('')}</select>` : `<p class="hint" style="margin:0 0 6px">Instruktor: <b>${esc(ins.nazwa)}</b></p>`}
         ${dlugosci.length > 1 ? `<div class="kr-dl">${dlugosci.map(m => `<button type="button" data-krdl="${m}" class="${m === krDl ? 'on' : ''}">${fmtH(m)} h</button>`).join('')}</div>` : ''}
-        <div class="kr-dni">${dni.map(dz => { const t = parseD(dz); return `<button type="button" data-krd="${dz}" class="${dz === krDzien ? 'on' : ''}${ile(dz) ? '' : ' pusty'}"><small>${DNI_KR[t.getDay()]}</small><b>${t.getDate()}</b><small>${pad(t.getMonth() + 1)}</small></button>`; }).join('')}</div>
+        ${zwolnione.length ? `<div class="kr-moja" style="background:#f0fdf4;border-color:#86efac"><span>🔔 <b>Zwolnił się termin z Twojej listy:</b> ${zwolnione.map(l => `${DNI_KR[parseD(l.dzien).getDay()]} ${fmtData(l.dzien).slice(0, 5)}`).join(', ')} – wybierz dzień i godzinę poniżej.</span></div>` : ''}
+        <div class="kr-dni">${dni.map(dz => { const t = parseD(dz); return `<button type="button" data-krd="${dz}" class="${dz === krDzien ? 'on' : ''}${ile(dz) ? '' : ' pusty'}"><small>${DNI_KR[t.getDay()]}${naLiscie(dz) ? ' 🔔' : ''}</small><b>${t.getDate()}</b><small>${pad(t.getMonth() + 1)}</small></button>`; }).join('')}</div>
         ${sloty.length ? `<div class="kr-sl">${sloty.map(([a, b]) => `<button type="button" data-krs="${a}">${godzina(new Date(a).toISOString())}–${godzina(new Date(b).toISOString())}</button>`).join('')}</div>`
-          : '<p class="hint">Brak wolnych godzin w tym dniu – wybierz inny dzień.</p>'}
+          : `<p class="hint">Brak wolnych godzin w tym dniu.</p>${d.lista.wl && pracuje(krDzien) ? (naLiscie(krDzien)
+              ? `<div class="kr-moja"><span>🔔 <b>Jesteś na liście rezerwowej</b><br><small>gdy coś się zwolni ${DNI_KR[parseD(krDzien).getDay()]} ${fmtData(krDzien)}, szkoła da Ci znać</small></span><button type="button" data-krl="0">Wypisz</button></div>`
+              : `<button type="button" class="btn2" data-krl="1" style="margin-top:6px">🔔 Powiadom mnie, gdy coś się zwolni ${DNI_KR[parseD(krDzien).getDay()]} ${fmtData(krDzien).slice(0, 5)}</button>`) : ''}`}
         <p class="hint" style="margin-top:8px">Pokazane są tylko wolne godziny (${opisDl(krDl)}). Prośbę zatwierdza szkoła – zobaczysz ją wtedy w „Najbliższych jazdach”.</p>`;
     }
     box.innerHTML = `<div class="kv-karta"><h2>📅 Zarezerwuj jazdę</h2>${moje}${srodek}</div>`;
     const sel = $('kr-instr'); if (sel) sel.onchange = () => { krInstr = sel.value; krDzien = null; rysujRezKursanta(); };
     box.querySelectorAll('[data-krdl]').forEach(b => b.onclick = () => { krDl = +b.dataset.krdl; rysujRezKursanta(); });
-    box.querySelectorAll('[data-krd]').forEach(b => b.onclick = () => { krDzien = b.dataset.krd; rysujRezKursanta(); });
+    box.querySelectorAll('[data-krd]').forEach(b => b.onclick = () => { krDzien = b.dataset.krd; krWybrany = true; rysujRezKursanta(); });
+    box.querySelectorAll('[data-krl]').forEach(b => b.onclick = () => zajety(b, async () => {
+      const ins = d.instruktorzy.find(i => i.id === krInstr) || d.instruktorzy[0];
+      const { error } = await sb.rpc('kursant_lista', { p_token: KURSANT_TOKEN, p_instr: ins.id, p_dzien: krDzien, p_zapisz: b.dataset.krl === '1' });
+      if (error) await pytaj(tlumacz(error), { tak: 'OK', tylkoOk: true });
+      ladujRezKursanta();
+    }));
     box.querySelectorAll('[data-krs]').forEach(b => b.onclick = () => zajety(b, async () => {
       const a = new Date(+b.dataset.krs), z = new Date(+b.dataset.krs + krDl * 60000);
       const ins = d.instruktorzy.find(i => i.id === krInstr) || d.instruktorzy[0];
@@ -2610,6 +2711,283 @@
       const { error } = await sb.rpc('kursant_anuluj_rezerwacje', { p_token: KURSANT_TOKEN, p_id: b.dataset.kra });
       if (error) await pytaj(tlumacz(error), { tak: 'OK', tylkoOk: true });
       ladujRezKursanta();
+    }));
+  }
+
+  // ===== ROZLICZENIE INSTRUKTORÓW =====
+  const zl = v => (Math.round(v * 100) / 100).toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' zł';
+  const godzTxt = min => fmtH(min) + ' h';
+  const kwotyWl = () => !!(profil && profil.szkoly && profil.szkoly.rozl_kwoty !== false);
+  function pokazUstRozl() {
+    const sz = profil.szkoly || {};
+    if (!('rozl_wl' in sz)) { $('u-rozl').disabled = true; msg('m-rozl-ust', 'Najpierw uruchom w Supabase plik krok27_rozliczenie_zdalem_lista.sql.'); zwInfo('rozl', ''); return; }
+    $('u-rozl').disabled = false; $('u-rozl').checked = !!sz.rozl_wl;
+    $('u-rozl-kwoty-box').classList.toggle('hidden', !sz.rozl_wl || !('rozl_kwoty' in sz));
+    $('u-rozl-kwoty').checked = sz.rozl_kwoty !== false;
+    zwInfo('rozl', sz.rozl_wl ? 'włączone' : 'wyłączone');
+  }
+  $('u-rozl').onchange = async () => {
+    const v = $('u-rozl').checked;
+    const { error } = await sb.from('szkoly').update({ rozl_wl: v }).eq('id', profil.szkola_id);
+    if (error) { $('u-rozl').checked = !v; msg('m-rozl-ust', /rozl_wl/.test(error.message) ? 'Najpierw uruchom w Supabase plik krok27_rozliczenie_zdalem_lista.sql.' : tlumacz(error)); return; }
+    profil.szkoly.rozl_wl = v; pokazUstRozl(); ladujInstruktorowLista();
+    msg('m-rozl-ust', v ? 'Włączone. Teraz wpisz stawki: Instruktorzy w grafiku → 💰 Stawki przy każdym instruktorze.' : 'Rozliczenie wyłączone (stawki zostają zapisane).', 'ok');
+  };
+  $('u-rozl-kwoty').onchange = async () => {
+    const v = $('u-rozl-kwoty').checked;
+    const { error } = await sb.from('szkoly').update({ rozl_kwoty: v }).eq('id', profil.szkola_id);
+    if (error) { $('u-rozl-kwoty').checked = !v; msg('m-rozl-ust', /rozl_kwoty/.test(error.message) ? 'Najpierw uruchom w Supabase plik krok28_rozliczenie_kwoty.sql.' : tlumacz(error)); return; }
+    profil.szkoly.rozl_kwoty = v; ladujInstruktorowLista();
+    msg('m-rozl-ust', v ? 'Kwoty i stawki są widoczne.' : 'Kwoty i stawki ukryte – rozliczenie pokazuje same godziny (wpisane stawki zostają zapisane).', 'ok');
+  };
+  // stawki
+  let stInstr = null;
+  async function otworzStawki(i) {
+    stInstr = i;
+    const { data, error } = await sb.from('stawki_instr').select('*').eq('instruktor_id', i.id).maybeSingle();
+    if (error) { msg('m-instruktorzy', /stawki_instr/.test(error.message) ? 'Najpierw uruchom w Supabase plik krok27_rozliczenie_zdalem_lista.sql.' : tlumacz(error)); return; }
+    const st = (data && data.stawki) || {};
+    $('st-kto').textContent = `${i.imie_nazwisko} – zł za godzinę jazdy w danej kategorii. Puste pole = ta kategoria się nie rozlicza (pokażą się same godziny).`;
+    $('st-pola').innerHTML = Object.keys(GODZ_KAT).map(k => `<label><span>${k}</span><input type="number" min="0" step="0.5" inputmode="decimal" data-st="${k}" value="${st[k] ?? ''}" placeholder="zł/h"></label>`).join('');
+    $('st-weekend').value = data && data.weekend != null ? data.weekend : '';
+    msg('m-stawki', '');
+    $('modal-stawki').classList.remove('hidden');
+  }
+  $('st-anuluj').onclick = () => $('modal-stawki').classList.add('hidden');
+  $('st-zapisz').onclick = () => zajety($('st-zapisz'), async () => {
+    const st = {};
+    for (const el of document.querySelectorAll('#st-pola [data-st]')) {
+      const v = el.value.trim().replace(',', '.'); if (v === '') continue;
+      if (!(+v >= 0)) { msg('m-stawki', `Kategoria ${el.dataset.st}: wpisz liczbę, np. 40.`); return; }
+      st[el.dataset.st] = +v;
+    }
+    const w = $('st-weekend').value.trim().replace(',', '.');
+    if (w !== '' && !(+w >= 0)) { msg('m-stawki', 'Dodatek weekendowy: wpisz liczbę, np. 5.'); return; }
+    const { error } = await sb.from('stawki_instr').upsert({ instruktor_id: stInstr.id, szkola_id: profil.szkola_id, stawki: st, weekend: w === '' ? null : +w, zmieniono: new Date().toISOString() }, { onConflict: 'instruktor_id' });
+    if (error) { msg('m-stawki', tlumacz(error)); return; }
+    $('modal-stawki').classList.add('hidden');
+    msg('m-instruktorzy', `${stInstr.imie_nazwisko}: stawki zapisane.`, 'ok');
+  });
+  // liczenie
+  function policzRozliczenie(jazdy, stawki) {
+    const per = new Map();
+    for (const j of jazdy) {
+      const st = stawki.get(j.instruktor_id) || { stawki: {}, weekend: null };
+      const p = new Date(j.poczatek), dz = dzisStr(p), min = minutyJazdy(j), kat = katGlowna(j.kategoria) || '';
+      const we = p.getDay() === 0 || p.getDay() === 6;
+      const s1 = kat && st.stawki[kat] != null ? +st.stawki[kat] : null;
+      const kw = s1 == null ? null : min / 60 * (s1 + (we && st.weekend ? +st.weekend : 0));
+      const x = per.get(j.instruktor_id) || { id: j.instruktor_id, min: 0, n: 0, kw: 0, brak: new Set(), kat: new Map(), dni: new Map(), weMin: 0 };
+      x.min += min; x.n++; if (kw != null) x.kw += kw; else x.brak.add(kat || 'bez kategorii');
+      if (we) x.weMin += min;
+      const kk = x.kat.get(kat || '—') || { min: 0, kw: 0 }; kk.min += min; if (kw != null) kk.kw += kw; x.kat.set(kat || '—', kk);
+      const dd = x.dni.get(dz) || { min: 0, n: 0, kw: 0, egz: 0 }; dd.min += min; dd.n++; if (kw != null) dd.kw += kw; if (j.rodzaj === 'egzamin') dd.egz++; x.dni.set(dz, dd);
+      per.set(j.instruktor_id, x);
+    }
+    return per;
+  }
+  function htmlRozliczenia(per, nazwaI, otwarte) {
+    const kw = kwotyWl(), zlK = v => kw && v ? ' · ' + zl(v) : '';
+    return [...per.values()].sort((a, b) => nazwaI(a.id).localeCompare(nazwaI(b.id), 'pl')).map(x => `<details class="ro-i"${otwarte ? ' open' : ''}>
+      <summary><span><b>${esc(nazwaI(x.id))}</b><br><small>${godzTxt(x.min)} · ${x.n} ${slowoJazd(x.n)}${x.weMin ? ` · w weekendy ${godzTxt(x.weMin)}` : ''}</small></span><span class="kw">${kw ? (x.kw ? zl(x.kw) : '—') : godzTxt(x.min)}</span></summary>
+      <div>${[...x.kat.entries()].sort().map(([k, v]) => `<span class="ro-ch${kw && x.brak.has(k === '—' ? 'bez kategorii' : k) ? ' brak' : ''}">${k === '—' ? 'bez kategorii' : 'kat. ' + esc(k)} ${godzTxt(v.min)}${zlK(v.kw)}</span>`).join('')}</div>
+      ${kw && x.brak.size ? `<p class="hint" style="margin-top:6px">⚠️ Brak stawki dla: ${[...x.brak].map(esc).join(', ')} – te godziny nie są w kwocie.</p>` : ''}
+      <div class="ro-dni">${[...x.dni.entries()].sort().map(([dz, d]) => `<div><span>${DNI_KR[parseD(dz).getDay()]} ${fmtData(dz).slice(0, 5)}</span><span class="hint" style="margin:0">${d.n} ${slowoJazd(d.n)} · ${godzTxt(d.min)}${d.egz ? ` · ${d.egz} egz.` : ''}${zlK(d.kw)}</span></div>`).join('')}</div>
+    </details>`).join('');
+  }
+  async function pobierzRozliczenie(ym) {
+    const [j, st] = await Promise.all([
+      sb.rpc('rozliczenie_jazd', { p_od: ym + '-01', p_do: dodajMies(ym, 1) + '-01' }),
+      sb.from('stawki_instr').select('instruktor_id, stawki, weekend')]);
+    if (j.error) throw j.error;
+    return { jazdy: j.data || [], stawki: new Map((st.data || []).map(x => [x.instruktor_id, x])) };
+  }
+  let roOstatnie = null;
+  async function ladujRozliczenie() {
+    const ok = profil && profil.rola === 'biuro' && profil.szkoly && profil.szkoly.rozl_wl;
+    $('ro-karta').classList.toggle('hidden', !ok); if (!ok) return;
+    $('ro-lista').innerHTML = '<p class="hint">Liczę…</p>'; msg('m-ro', '');
+    const ym = mcMiesiac;
+    try {
+      const { jazdy, stawki } = await pobierzRozliczenie(ym);
+      if (ym !== mcMiesiac) return;
+      await ladujInstruktorow();
+      const nazwaI = id => (instruktorzy.find(i => i.id === id) || {}).imie_nazwisko || '—';
+      const per = policzRozliczenie(jazdy, stawki);
+      roOstatnie = { ym, per, nazwaI, jazdy, stawki };
+      const sumMin = [...per.values()].reduce((a, x) => a + x.min, 0), sumKw = [...per.values()].reduce((a, x) => a + x.kw, 0);
+      $('ro-opis').textContent = `${nazwaMies(ym)} – odbyte jazdy i egzaminy${ym === dzisStr().slice(0, 7) ? ' do teraz' : ''}. Kliknij instruktora, żeby zobaczyć dni.`;
+      const sumN = [...per.values()].reduce((a, x) => a + x.n, 0);
+      $('ro-lista').innerHTML = per.size ? `<div class="ro-suma"><div>Godzin razem<b>${godzTxt(sumMin)}</b></div>${kwotyWl() ? `<div>Do wypłaty razem<b>${sumKw ? zl(sumKw) : '—'}</b></div>` : `<div>Jazd razem<b>${sumN}</b></div>`}</div>` + htmlRozliczenia(per, nazwaI, false)
+        : '<p class="hint">Brak odbytych jazd w tym miesiącu.</p>';
+      if (!stawki.size && kwotyWl()) $('ro-lista').insertAdjacentHTML('beforeend', '<p class="hint" style="margin-top:8px">Nie ma jeszcze stawek – wpisz je w Ustawieniach → Instruktorzy w grafiku → 💰 Stawki.</p>');
+    } catch (e) { $('ro-lista').innerHTML = `<p class="hint">${/rozliczenie_jazd/.test(e.message || '') ? 'Najpierw uruchom w Supabase plik krok27_rozliczenie_zdalem_lista.sql.' : esc(tlumacz(e))}</p>`; }
+  }
+  $('ro-druk').onclick = () => {
+    const r = roOstatnie; if (!r) return;
+    const wiersze = [...r.per.values()].sort((a, b) => r.nazwaI(a.id).localeCompare(r.nazwaI(b.id), 'pl'));
+    const kw = kwotyWl();
+    drukuj(`<h1 style="font-size:16pt;margin:0 0 4pt">Rozliczenie instruktorów – ${esc(nazwaMies(r.ym))}</h1>
+      <p style="margin:0 0 8pt">${esc((profil.szkoly && profil.szkoly.nazwa) || '')} · odbyte jazdy i egzaminy</p>
+      <table><thead><tr><th>Instruktor</th><th>Jazd</th><th>Godzin</th><th>Kategorie</th><th>Weekend</th>${kw ? '<th>Kwota</th>' : ''}</tr></thead><tbody>
+      ${wiersze.map(x => `<tr><td>${esc(r.nazwaI(x.id))}</td><td>${x.n}</td><td>${fmtH(x.min)}</td><td>${[...x.kat.entries()].sort().map(([k, v]) => `${k === '—' ? 'bez kat.' : esc(k)}: ${fmtH(v.min)} h`).join(', ')}</td><td>${x.weMin ? fmtH(x.weMin) + ' h' : ''}</td>${kw ? `<td>${x.kw ? zl(x.kw) : '—'}${x.brak.size ? ' *' : ''}</td>` : ''}</tr>`).join('')}
+      <tr><td><b>Razem</b></td><td><b>${wiersze.reduce((a, x) => a + x.n, 0)}</b></td><td><b>${fmtH(wiersze.reduce((a, x) => a + x.min, 0))}</b></td><td></td><td></td>${kw ? `<td><b>${zl(wiersze.reduce((a, x) => a + x.kw, 0))}</b></td>` : ''}</tr></tbody></table>
+      ${kw && wiersze.some(x => x.brak.size) ? '<p style="font-size:9pt">* część godzin bez stawki – nie jest w kwocie</p>' : ''}${stopkaDruku()}`);
+  };
+  $('ro-xls').onclick = () => {
+    const r = roOstatnie; if (!r) return;
+    const kw = kwotyWl(), bezK = a => kw ? a : a.slice(0, -1);
+    const sum = [kw ? ['Instruktor', 'Jazd', 'Godzin', 'Godzin w weekendy', 'Kwota (zł)', 'Brak stawki dla'] : ['Instruktor', 'Jazd', 'Godzin', 'Godzin w weekendy']];
+    const kat = [bezK(['Instruktor', 'Kategoria', 'Godzin', 'Kwota (zł)'])];
+    const dni = [bezK(['Instruktor', 'Data', 'Dzień', 'Jazd', 'Godzin', 'Egzaminów', 'Kwota (zł)'])];
+    [...r.per.values()].sort((a, b) => r.nazwaI(a.id).localeCompare(r.nazwaI(b.id), 'pl')).forEach(x => {
+      const w = [r.nazwaI(x.id), x.n, Math.round(x.min / 60 * 100) / 100, Math.round(x.weMin / 60 * 100) / 100];
+      sum.push(kw ? [...w, Math.round(x.kw * 100) / 100, [...x.brak].join(', ')] : w);
+      [...x.kat.entries()].sort().forEach(([k, v]) => kat.push(bezK([r.nazwaI(x.id), k === '—' ? 'bez kategorii' : k, Math.round(v.min / 60 * 100) / 100, Math.round(v.kw * 100) / 100])));
+      [...x.dni.entries()].sort().forEach(([dz, d]) => dni.push(bezK([r.nazwaI(x.id), dz, DNI[parseD(dz).getDay()], d.n, Math.round(d.min / 60 * 100) / 100, d.egz, Math.round(d.kw * 100) / 100])));
+    });
+    pobierzPlik(`rozliczenie-${r.ym}.xlsx`, buildXlsx([
+      { name: 'Podsumowanie', rows: sum, widths: [28, 8, 10, 16, 12, 22] },
+      { name: 'Kategorie', rows: kat, widths: [28, 14, 10, 12] },
+      { name: 'Dni', rows: dni, widths: [28, 12, 13, 8, 10, 11, 12] }
+    ]), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  };
+  // instruktor: moje rozliczenie
+  let mrMiesiac = null;
+  $('mr-prev').onclick = () => { mrMiesiac = dodajMies(mrMiesiac, -1); ladujMojeRozliczenie(); };
+  $('mr-next').onclick = () => { mrMiesiac = dodajMies(mrMiesiac, 1); ladujMojeRozliczenie(); };
+  async function ladujMojeRozliczenie() {
+    const el = $('mr-karta');
+    if (!profil || profil.rola === 'biuro' || !(profil.szkoly && profil.szkoly.rozl_wl)) { el.classList.add('hidden'); return; }
+    if (!mrMiesiac) mrMiesiac = dzisStr().slice(0, 7);
+    const ym = mrMiesiac;
+    let r; try { r = await pobierzRozliczenie(ym); } catch (_) { el.classList.add('hidden'); return; }
+    if (ym !== mrMiesiac) return;
+    el.classList.remove('hidden');
+    $('mr-nazwa').textContent = nazwaMies(ym);
+    const per = policzRozliczenie(r.jazdy, r.stawki), x = [...per.values()][0];
+    const st = [...r.stawki.values()][0];
+    const kw = kwotyWl();
+    $('mr-lista').innerHTML = x ? `<div class="ro-suma"><div>Godzin<b>${godzTxt(x.min)}</b></div>${kw ? `<div>Kwota<b>${x.kw ? zl(x.kw) : '—'}</b></div>` : `<div>Jazd<b>${x.n}</b></div>`}</div>` + htmlRozliczenia(per, () => 'Szczegóły', false)
+      + (st && kw ? `<p class="hint" style="margin-top:8px">Moje stawki: ${Object.entries(st.stawki || {}).map(([k, v]) => `${esc(k)} ${zl(+v)}/h`).join(', ') || 'brak'}${st.weekend ? ` · weekend +${zl(+st.weekend)}/h` : ''}</p>` : '')
+      : '<p class="hint">Brak odbytych jazd w tym miesiącu.</p>';
+    zwInfo('mrozl', x ? (kw && x.kw ? zl(x.kw) : godzTxt(x.min)) : '');
+  }
+
+  // ===== „ZDAŁEM!” =====
+  if (!CanvasRenderingContext2D.prototype.roundRect) CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+    this.moveTo(x + r, y); this.arcTo(x + w, y, x + w, y + h, r); this.arcTo(x + w, y + h, x, y + h, r); this.arcTo(x, y + h, x, y, r); this.arcTo(x, y, x + w, y, r); this.closePath(); };
+  const zdOpc = { plec: null, pierwszy: false };
+  const imieZKoncowka = imie => /a$/i.test(String(imie || '').trim()) && !/^(kuba|barnaba|bonawentura|kosma)$/i.test(String(imie || '').trim()) ? 'k' : 'm';
+  function ladujObraz(src) { return new Promise(res => { if (!src) return res(null); const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = src; }); }
+  async function rysujZdal(d) {
+    const W = 1080, c = document.createElement('canvas'); c.width = W; c.height = W;
+    const x = c.getContext('2d');
+    x.fillStyle = '#0f3d2e'; x.fillRect(0, 0, W, W);
+    let seed = 7; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+    const kol = ['#facc15', '#f87171', '#60a5fa', '#4ade80', '#f472b6', '#ffffff'];
+    for (let i = 0; i < 140; i++) { const cx = rnd() * W, cy = rnd() * 700; if (cx > 110 && cx < W - 110 && cy > 120 && cy < 660) continue; x.save(); x.translate(cx, cy); x.rotate(rnd() * 6.3); x.fillStyle = kol[i % kol.length]; x.globalAlpha = .85; x.fillRect(-9, -4, 18 + rnd() * 10, 8); x.restore(); }
+    x.globalAlpha = 1; x.textAlign = 'center'; x.fillStyle = '#ffffff';
+    const font = (w, px) => `${w} ${px}px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`;
+    x.font = font(900, 190); x.fillText(d.plec === 'k' ? 'ZDAŁAM!' : 'ZDAŁEM!', W / 2, 300);
+    x.fillStyle = '#facc15'; x.font = font(800, 66); x.fillText(`Prawo jazdy${d.kat ? ' kat. ' + d.kat : ''}`, W / 2, 400);
+    x.fillStyle = '#ffffff'; x.font = font(700, 70); x.fillText(d.imie, W / 2, 510);
+    if (d.pierwszy) { const t = 'za pierwszym razem!'; x.font = font(800, 46); const tw = x.measureText(t).width + 70;
+      x.fillStyle = '#facc15'; x.beginPath(); x.roundRect(W / 2 - tw / 2, 552, tw, 78, 39); x.fill(); x.fillStyle = '#0f3d2e'; x.fillText(t, W / 2, 606); }
+    x.fillStyle = 'rgba(255,255,255,.75)'; x.font = font(500, 38); x.fillText(d.data, W / 2, d.pierwszy ? 690 : 610);
+    x.fillStyle = '#ffffff'; x.beginPath(); x.roundRect(90, 750, W - 180, 260, 36); x.fill();
+    const logo = await ladujObraz(d.logo);
+    x.fillStyle = '#475569'; x.font = font(600, 34); x.fillText('Dziękuję za szkolenie!', W / 2, 805);
+    if (logo) { const mw = W - 300, mh = 160, sk = Math.min(mw / logo.naturalWidth, mh / logo.naturalHeight); const lw = logo.naturalWidth * sk, lh = logo.naturalHeight * sk;
+      x.drawImage(logo, W / 2 - lw / 2, 830 + (mh - lh) / 2, lw, lh); }
+    else { x.fillStyle = '#0f172a'; x.font = font(800, 54); let n = d.szkola || 'Szkoła jazdy'; while (x.measureText(n).width > W - 260 && n.length > 4) n = n.slice(0, -2);
+      x.fillText(n, W / 2, 920); }
+    return c;
+  }
+  async function pokazGrafikeZdal(box, dane) {
+    if (zdOpc.plec === null) zdOpc.plec = imieZKoncowka(dane.imieSamo);
+    box.innerHTML = `<div class="zd-opc"><select id="zd-plec"><option value="m">Zdałem!</option><option value="k">Zdałam!</option></select>
+      <label><input type="checkbox" id="zd-pierwszy"> za pierwszym razem</label></div>
+      <img class="zd-img" id="zd-img" alt="Grafika Zdałem">
+      <div class="akcje" style="margin-top:10px"><button type="button" id="zd-dziel" style="margin:0">📤 Udostępnij</button><button type="button" id="zd-pobierz" style="margin:0">⬇️ Pobierz obrazek</button></div>
+      ${dane.uwaga ? `<p class="hint" style="margin-top:8px">${dane.uwaga}</p>` : ''}`;
+    $('zd-plec').value = zdOpc.plec; $('zd-pierwszy').checked = zdOpc.pierwszy;
+    let canvas;
+    const odswiez = async () => { canvas = await rysujZdal({ ...dane, plec: zdOpc.plec, pierwszy: zdOpc.pierwszy }); $('zd-img').src = canvas.toDataURL('image/jpeg', .92); };
+    $('zd-plec').onchange = () => { zdOpc.plec = $('zd-plec').value; odswiez(); };
+    $('zd-pierwszy').onchange = () => { zdOpc.pierwszy = $('zd-pierwszy').checked; odswiez(); };
+    const plik = () => new Promise(res => canvas.toBlob(b => res(new File([b], 'zdalem.jpg', { type: 'image/jpeg' })), 'image/jpeg', .92));
+    $('zd-pobierz').onclick = async () => { const f = await plik(); const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = 'zdalem.jpg'; document.body.appendChild(a); a.click(); a.remove(); };
+    $('zd-dziel').onclick = async () => {
+      const f = await plik();
+      if (navigator.canShare && navigator.canShare({ files: [f] })) { try { await navigator.share({ files: [f], text: dane.tekst || '' }); } catch (_) {} }
+      else $('zd-pobierz').click();
+    };
+    await odswiez();
+  }
+  const imieSkrot = (imie, nazwisko) => `${String(imie || '').trim()} ${String(nazwisko || '').trim().charAt(0)}${nazwisko ? '.' : ''}`.trim();
+  function pokazZdal(k) {
+    const box = $('k-zdal-box');
+    if (!k || !('zdal' in k)) { box.classList.add('hidden'); return; }
+    box.classList.remove('hidden');
+    box.innerHTML = k.zdal ? `<div class="pasek" style="align-items:center;flex-wrap:wrap;gap:8px"><b>🎉 Zdał(a) egzamin ${fmtData(k.zdal)}</b>
+        <button type="button" id="kz-graf" style="margin:0">🖼 Grafika „Zdałem!”</button><button type="button" id="kz-cofnij" style="margin:0">Cofnij</button></div>`
+      : `<button type="button" id="kz-zdal" class="btn2" style="margin:0">🎉 Zdał(a) egzamin praktyczny</button>`;
+    if ($('kz-zdal')) $('kz-zdal').onclick = () => zajety($('kz-zdal'), async () => {
+      const t = await zapytajTekst('Zdany egzamin 🎉', 'Data zdanego egzaminu praktycznego:', fmtData(dzisStr()));
+      if (!t) return;
+      const m = t.trim().match(/^(\d{1,2})[.\-/](\d{1,2})[.\-/](\d{4})$/);
+      if (!m) { msg('m-kursant', 'Nie rozpoznano daty – wpisz np. 22.11.2026.'); return; }
+      const dz = `${m[3]}-${pad(+m[2])}-${pad(+m[1])}`;
+      const { error } = await sb.from('kursanci').update({ zdal: dz }).eq('id', k.id);
+      if (error) { msg('m-kursant', tlumacz(error)); return; }
+      k.zdal = dz; pokazZdal(k); otworzZdal(k);
+    });
+    if ($('kz-graf')) $('kz-graf').onclick = () => otworzZdal(k);
+    if ($('kz-cofnij')) $('kz-cofnij').onclick = () => zajety($('kz-cofnij'), async () => {
+      if (!await pytaj('Cofnąć oznaczenie zdanego egzaminu?')) return;
+      const { error } = await sb.from('kursanci').update({ zdal: null }).eq('id', k.id);
+      if (error) { msg('m-kursant', tlumacz(error)); return; }
+      k.zdal = null; pokazZdal(k);
+    });
+  }
+  function otworzZdal(k) {
+    zdOpc.plec = null; zdOpc.pierwszy = false;
+    const sz = profil.szkoly || {};
+    $('modal-zdal').classList.remove('hidden');
+    pokazGrafikeZdal($('zd-box'), { imie: imieSkrot(k.imie, k.nazwisko), imieSamo: k.imie, kat: katGlowna(k.kategoria), data: fmtData(k.zdal), szkola: sz.nazwa, logo: sz.logo,
+      tekst: `Zdane! 🎉 Dziękuję ${sz.nazwa || ''}!`, uwaga: 'Kursant zobaczy tę grafikę także na swoim osobistym linku i sam może ją udostępnić. Publikując ją na profilu szkoły, zapytaj kursanta o zgodę.' });
+  }
+  $('zd-zamknij').onclick = () => $('modal-zdal').classList.add('hidden');
+
+  // ===== LISTA REZERWOWA (biuro) =====
+  async function ladujListeRez() {
+    const el = $('lr-baner');
+    const sz = profil && profil.szkoly;
+    if (!profil || profil.rola !== 'biuro' || !sz || !sz.rez_wl || sz.rez_lista_wl === false || !('rez_lista_wl' in sz)) { el.classList.add('hidden'); el.innerHTML = ''; return; }
+    const { data, error } = await sb.rpc('lista_rezerwowa');
+    const lista = error ? [] : (data || []).filter(x => x.wolne.length && !x.powiadomiono);
+    if (!lista.length) { el.classList.add('hidden'); el.innerHTML = ''; return; }
+    const tokeny = new Map();
+    await Promise.all([...new Set(lista.map(x => x.kursant_id))].map(async id => { const r = await sb.rpc('link_kursanta', { p_id: id, p_nowy: false }); if (!r.error) tokeny.set(id, r.data); }));
+    const otw = el.classList.contains('hidden') ? true : el.open;
+    const nazwaI = id => (instruktorzy.find(i => i.id === id) || {}).imie_nazwisko || '—';
+    const szk = sz.nazwa || 'szkoła jazdy';
+    el.classList.remove('hidden');
+    el.innerHTML = `<summary>🔔 Lista rezerwowa: zwolnił się termin dla ${lista.length} ${lista.length === 1 ? 'kursanta' : 'kursantów'}</summary>` +
+      lista.map(x => { const d = parseD(x.dzien), godz = x.wolne.slice(0, 3).map(t => godzina(t)).join(', ') + (x.wolne.length > 3 ? '…' : '');
+        const url = tokeny.has(x.kursant_id) ? ADRES + '?k=' + tokeny.get(x.kursant_id) : ADRES;
+        const txt = `Dzień dobry! Tu ${szk}. Zwolnił się termin jazdy: ${DNI[d.getDay()]} ${fmtData(x.dzien)} (np. godz. ${godzina(x.wolne[0])}). Zarezerwuj na swoim linku: ${url}`;
+        return `<div class="wr"><span><b>${esc(x.nazwisko)} ${esc(x.imie)}</b>${x.kategoria ? ` <span class="kat">${esc(x.kategoria)}</span>` : ''}<br>
+          ${DNI_KR[d.getDay()]} ${fmtData(x.dzien)} · ${esc(nazwaI(x.instruktor_id))} · wolne: ${godz}</span>
+          <span class="lr-bt">${x.telefon ? `<a href="sms:${telLink(x.telefon)}?body=${encodeURIComponent(txt)}">📱 SMS</a>
+            <a target="_blank" href="https://wa.me/${waNumer(x.telefon)}?text=${encodeURIComponent(txt)}">💬 WhatsApp</a>` : ''}
+            <button type="button" data-lr="${x.id}">✓ Powiadomiony</button></span></div>`; }).join('');
+    el.open = otw;
+    el.querySelectorAll('[data-lr]').forEach(b => b.onclick = () => zajety(b, async () => {
+      const { error } = await sb.from('rez_lista').update({ powiadomiono: new Date().toISOString() }).eq('id', b.dataset.lr);
+      if (error) { msg('m-grafik', tlumacz(error)); return; }
+      ladujListeRez();
     }));
   }
 
@@ -3017,7 +3395,7 @@
   }
   function widacGrafik() {
     return profil && !$('s-panel').classList.contains('hidden') && !$('tab-grafik').classList.contains('hidden') &&
-      ['modal-jazda', 'modal-kursant', 'modal-wolne', 'modal-wa', 'modal-druk', 'modal-pin', 'modal-konto', 'modal-tekst', 'modal-wyklad', 'modal-obecnosc', 'modal-godziny'].every(id => $(id).classList.contains('hidden'));
+      ['modal-jazda', 'modal-kursant', 'modal-wolne', 'modal-wa', 'modal-druk', 'modal-pin', 'modal-konto', 'modal-tekst', 'modal-wyklad', 'modal-obecnosc', 'modal-godziny', 'modal-stawki', 'modal-zdal'].every(id => $(id).classList.contains('hidden'));
   }
   document.addEventListener('visibilitychange', () => { if (!document.hidden && widacGrafik()) ladujDzien(true); });
 
@@ -3103,7 +3481,7 @@
       if (!cicho) msg('m-grafik', '');
       await ladujWysylki();
       rysujDzien();
-      ladujWstepne(); ladujZgloszenia(); ladujRezerwacje();
+      ladujWstepne(); ladujZgloszenia(); ladujRezerwacje(); ladujListeRez();
       return;
     }
     const od = new Date(gDzien + 'T00:00:00'), doo = new Date(dodajDni(gDzien, 1) + 'T00:00:00');
@@ -3123,7 +3501,7 @@
     }
     await ladujWysylki();
     rysujDzien();
-    ladujWstepne(); ladujZgloszenia(); ladujRezerwacje();
+    ladujWstepne(); ladujZgloszenia(); ladujRezerwacje(); ladujListeRez();
   }
 
   async function ladujWstepne() {
@@ -3552,24 +3930,26 @@
     $('p-instruktorzy').innerHTML = instruktorzy.map(i => `<div class="row">
         <div class="who"><b>${esc(i.imie_nazwisko)} ${i.aktywny ? '' : '<span class="pill szary">ukryty</span>'}</b>
           <span>${i.user_id ? 'ma konto w programie' : 'bez konta'}${i.telefon ? ' · 📞 ' + esc(i.telefon) : ''}${i.godz_od ? ' · 🕘 ' + esc(i.godz_od) + '–' + esc(i.godz_do) : ''}</span></div>
-        <div class="acts">${!i.user_id && i.aktywny ? `<button data-a="zapros" data-id="${i.id}">📩 Zaproś</button>` : ''}<button data-a="nazwa" data-id="${i.id}">Zmień</button>
+        <div class="acts">${!i.user_id && i.aktywny ? `<button data-a="zapros" data-id="${i.id}">📩 Zaproś</button>` : ''}${profil.szkoly && profil.szkoly.rozl_wl && kwotyWl() ? `<button data-a="stawki" data-id="${i.id}">💰 Stawki</button>` : ''}<button data-a="nazwa" data-id="${i.id}">Zmień</button>
           <button data-a="ukryj" data-id="${i.id}">${i.aktywny ? 'Ukryj' : 'Przywróć'}</button></div>
         ${i.user_id && 'moze_zglaszac_wolne' in i ? `<div class="uprawn">
           <label><input type="checkbox" data-upr="moze_zglaszac_wolne" data-id="${i.id}"${i.moze_zglaszac_wolne ? ' checked' : ''}> może zgłaszać wolne (biuro zatwierdza)</label>
           <label><input type="checkbox" data-upr="moze_dodawac_wolne" data-id="${i.id}"${i.moze_dodawac_wolne ? ' checked' : ''}> może sam wpisywać wolne</label>
+          ${'moze_widziec_rozl' in i && profil.szkoly && profil.szkoly.rozl_wl ? `<label><input type="checkbox" data-upr="moze_widziec_rozl" data-id="${i.id}"${i.moze_widziec_rozl ? ' checked' : ''}> może widzieć swoje rozliczenie</label>` : ''}
           ${'moze_zatwierdzac_rez' in i && profil.szkoly && profil.szkoly.rez_wl ? `<label><input type="checkbox" data-upr="moze_zatwierdzac_rez" data-id="${i.id}"${i.moze_zatwierdzac_rez ? ' checked' : ''}> może zatwierdzać prośby kursantów o jazdy (do siebie)</label>` : ''}</div>` : ''}</div>`).join('')
       || '<p class="hint">Brak instruktorów.</p>';
     $('p-instruktorzy').querySelectorAll('input[data-upr]').forEach(c => c.onchange = async () => {
       const { error } = await sb.from('instruktorzy').update({ [c.dataset.upr]: c.checked }).eq('id', c.dataset.id);
       if (error) { c.checked = !c.checked; msg('m-instruktorzy', tlumacz(error)); return; }
       const i = instruktorzy.find(x => x.id === c.dataset.id); if (i) i[c.dataset.upr] = c.checked;
-      msg('m-instruktorzy', `${i ? i.imie_nazwisko : 'Instruktor'}: ${c.checked ? 'włączono' : 'wyłączono'} – ${({ moze_dodawac_wolne: 'samodzielne wpisywanie wolnego', moze_zglaszac_wolne: 'zgłaszanie wolnego', moze_zatwierdzac_rez: 'zatwierdzanie próśb kursantów' })[c.dataset.upr]}.`, 'ok');
+      msg('m-instruktorzy', `${i ? i.imie_nazwisko : 'Instruktor'}: ${c.checked ? 'włączono' : 'wyłączono'} – ${({ moze_dodawac_wolne: 'samodzielne wpisywanie wolnego', moze_zglaszac_wolne: 'zgłaszanie wolnego', moze_zatwierdzac_rez: 'zatwierdzanie próśb kursantów', moze_widziec_rozl: 'podgląd swojego rozliczenia' })[c.dataset.upr]}.`, 'ok');
     });
     if (instruktorzy.some(i => i.user_id) && !instruktorzy.some(i => 'moze_zglaszac_wolne' in i))
       $('p-instruktorzy').insertAdjacentHTML('beforeend', '<p class="hint" style="margin-top:8px">Żeby instruktorzy mogli zgłaszać wolne, uruchom w Supabase plik krok19_wolne_instruktora.sql.</p>');
     $('p-instruktorzy').querySelectorAll('button[data-a]').forEach(b => b.onclick = () => zajety(b, async () => {
       const i = instruktorzy.find(x => x.id === b.dataset.id);
       if (b.dataset.a === 'zapros') { pokazZaproszenie(i, b.closest('.row')); return; }
+      if (b.dataset.a === 'stawki') { await otworzStawki(i); return; }
       let zm;
       if (b.dataset.a === 'nazwa') {
         const n = prompt('Imię i nazwisko instruktora:', i.imie_nazwisko);
@@ -4005,6 +4385,7 @@
   $('mc-next').onclick = () => { mcMiesiac = dodajMies(mcMiesiac, 1); ladujMiesiac(); };
 
   async function ladujMiesiac() {
+    ladujRozliczenie();
     $('mc-nazwa').textContent = nazwaMies(mcMiesiac);
     $('mc-nazwa').style.textTransform = 'capitalize';
     const od = new Date(mcMiesiac + '-01T00:00:00'), doo = new Date(dodajMies(mcMiesiac, 1) + '-01T00:00:00');
@@ -4859,7 +5240,7 @@ function cellTime(v) {
   logoLogowania();
 
   // ===== KOPIA ZAPASOWA =====
-  const KOPIA_TAB = ['instruktorzy', 'kursanci', 'jazdy', 'wolne', 'dokupione', 'wyklady', 'wyklady_obecnosc', 'rezerwacje'];
+  const KOPIA_TAB = ['instruktorzy', 'kursanci', 'jazdy', 'wolne', 'dokupione', 'wyklady', 'wyklady_obecnosc', 'rezerwacje', 'stawki_instr', 'rez_lista'];
   const kluczK = n => n + '_' + (profil && profil.szkola_id);
   const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (_) { return d; } };
   const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (_) {} };
@@ -4871,7 +5252,7 @@ function cellTime(v) {
       const wiersze = [];
       for (let od = 0; ; od += 1000) {
         const { data, error } = await sb.from(t).select('*').eq('szkola_id', profil.szkola_id).range(od, od + 999);
-        if (error) { if (/^(dokupione|wyklady|wyklady_obecnosc|rezerwacje)$/.test(t) && new RegExp(t).test(error.message)) break; throw error; }
+        if (error) { if (/^(dokupione|wyklady|wyklady_obecnosc|rezerwacje|stawki_instr|rez_lista)$/.test(t) && new RegExp(t).test(error.message)) break; throw error; }
         wiersze.push(...data); if (data.length < 1000) break;
       }
       dane[t] = wiersze;
@@ -4931,10 +5312,12 @@ function cellTime(v) {
         for (const t of KOPIA_TAB) {
           let w = (k.dane[t] || []).map(x => ({ ...x, szkola_id: profil.szkola_id }));
           if (t === 'jazdy') w = w.map(x => (x.kursant_id && !kursIds.has(x.kursant_id) ? { ...x, kursant_id: null } : x));
-          if (t === 'dokupione' || t === 'wyklady_obecnosc' || t === 'rezerwacje') w = w.filter(x => kursIds.has(x.kursant_id));
+          if (t === 'dokupione' || t === 'wyklady_obecnosc' || t === 'rezerwacje' || t === 'rez_lista') w = w.filter(x => kursIds.has(x.kursant_id));
           for (let i = 0; i < w.length; i += 500) {
             const cz = w.slice(i, i + 500);
-            const { error } = t === 'wyklady_obecnosc'
+            const { error } = t === 'stawki_instr'
+              ? await sb.from(t).upsert(cz, { onConflict: 'instruktor_id' })
+              : t === 'wyklady_obecnosc'
               ? await sb.from(t).upsert(cz, { onConflict: 'wyklad_id,kursant_id', ignoreDuplicates: true })
               : t === 'dokupione'
               ? await sb.from(t).upsert(cz, { onConflict: 'id', ignoreDuplicates: true })
