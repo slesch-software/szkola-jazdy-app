@@ -127,7 +127,8 @@
   .kursant:hover b{color:var(--gl)}
   .kursant .tel{color:var(--gl);text-decoration:none;font-weight:600;white-space:nowrap}
   .pill.szary{background:#eef0f2;color:var(--m)}
-  .siatka{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+  .siatka{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px}
+  .siatka input,.siatka select{min-width:0}
   .siatka .cala{grid-column:1/-1}
   .check{display:flex;align-items:center;gap:10px;margin-top:16px;font-weight:600;font-size:14px}
   .check input{width:auto}
@@ -209,7 +210,11 @@
   .poj-wr > button{flex:none;width:auto;margin:0}
   .poj-zle{color:var(--r);font-weight:700}.poj-uwaga{color:#b45309;font-weight:700}.poj-czeka{color:#1d4ed8}
   .poj-form{margin:8px 0;padding:10px 12px;border:1px solid var(--b);border-radius:12px;background:#fafafa}
-  .poj-instr{display:flex;flex-wrap:wrap;gap:2px 18px}
+  .poj-instr{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:0 18px}
+  .poj-form .siatka{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .poj-form input{min-width:0}
+  [data-pf="rejestracja"]::placeholder{text-transform:none}
+  @media(max-width:520px){.poj-form .siatka{grid-template-columns:minmax(0,1fr)}}
   .uprawn{display:flex;flex-wrap:wrap;gap:4px 16px;width:100%;margin-top:-2px}
   .uprawn label{display:flex;align-items:center;justify-content:flex-start;gap:8px;font-size:13.5px;font-weight:400;color:var(--m);cursor:pointer;margin:0;width:auto;text-align:left}
   .uprawn input{width:auto;margin:0;flex:none}
@@ -669,7 +674,7 @@
   html[data-motyw="ciemny"] .poj-zle{color:var(--r)}
   html[data-motyw="ciemny"] .poj-uwaga{color:#f5b585}
   html[data-motyw="ciemny"] .poj-czeka{color:#6f90ec}
-  html[data-motyw="ciemny"] .poj-form{border:1px solid var(--b);background:#212121}
+  html[data-motyw="ciemny"] .poj-form{border:1px solid var(--b);background:#1b2126}
   html[data-motyw="ciemny"] .uprawn label{color:var(--m)}
   html[data-motyw="ciemny"] .mw-row{border-top:1px solid var(--b)}
   html[data-motyw="ciemny"] .mw-row:first-child{border-top:none}
@@ -696,7 +701,7 @@
   html[data-motyw="ciemny"] .gp-dod{border-top:1px solid var(--b)}
   html[data-motyw="ciemny"] .gp-dod .wr{border-top:1px dashed var(--b)}
   html[data-motyw="ciemny"] .gp-dod .wr button{color:var(--r);background:#1b2128;border:1px solid var(--b)}
-  html[data-motyw="ciemny"] .gp-dod-form{border:1px solid var(--b);background:#212121}
+  html[data-motyw="ciemny"] .gp-dod-form{border:1px solid var(--b);background:#1b2126}
   html[data-motyw="ciemny"] .kr-sl button{border:1.5px solid #3c8657;background:#15331e;color:#b8f0cd}
   html[data-motyw="ciemny"] .kr-dl button{border:1px solid var(--b);background:#1b2128}
   html[data-motyw="ciemny"] .kr-dl button.on{background:var(--g);color:var(--ga);border-color:var(--g)}
@@ -769,7 +774,7 @@
   html[data-motyw="ciemny"] .wyn{border-top:1px solid var(--b)}
   html[data-motyw="ciemny"] .wyn:first-child{border-top:none}
   html[data-motyw="ciemny"] .wyn a{color:var(--gl)}
-  html[data-motyw="ciemny"] #druk .karta td:first-child{background:#262626}
+  html[data-motyw="ciemny"] #druk .karta td:first-child{background:#1f262d}
   html[data-motyw="ciemny"] #druk .podpisy div{border-top:1px solid #000}
   html[data-motyw="ciemny"] .inst-zakl button.on{background:var(--g);border-color:var(--g);color:var(--ga)}
   html[data-motyw="ciemny"] .dok-wiersz{border-bottom:1px solid var(--b)}
