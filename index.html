@@ -176,6 +176,22 @@
   .jazda.wstepna{border:2px dashed #d97706!important;background:#fffbeb!important}
   .znak-wst{display:inline-block;font-size:12px;font-weight:700;background:#fde68a;color:#92400e;border-radius:6px;padding:1px 7px;margin-left:6px}
   .znak-nl{display:inline-block;font-size:12px;font-weight:600;background:#e5e7eb;color:#374151;border-radius:6px;padding:1px 7px;margin-left:6px}
+  .pk-karta{background:#fff;border:1px solid var(--b);border-left:4px solid var(--ga);border-radius:12px;padding:12px 16px;margin:0 0 12px}
+  .pk-karta > summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:16px}
+  .pk-karta > summary::-webkit-details-marker{display:none}
+  .pk-karta > summary b{color:var(--t)}
+  .pk-karta > summary span{font-size:13px;color:var(--m);white-space:nowrap}
+  .pk-pasek{height:6px;background:#eef0f2;border-radius:3px;margin:10px 0 4px;overflow:hidden}.pk-pasek i{display:block;height:100%;background:#16a34a;border-radius:3px}
+  .pk-lista{list-style:none;margin:8px 0 0;padding:0}
+  .pk-lista li{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid #f0f1f3}
+  .pk-zn{flex:0 0 26px;height:26px;border-radius:50%;border:2px solid var(--b);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--m)}
+  .pk-lista li.ok .pk-zn{background:#16a34a;border-color:#16a34a;color:#fff}
+  .pk-t{flex:1;text-align:left;background:none;border:none;padding:0;margin:0;font:inherit;cursor:pointer;color:var(--t)}
+  .pk-t b{display:block;font-size:14.5px}.pk-t small{display:block;color:var(--m);font-size:12.5px;margin-top:1px}
+  .pk-lista li.ok .pk-t b{color:var(--m);text-decoration:line-through}
+  .pk-r{padding:4px 10px;font-size:12.5px;margin:0;white-space:nowrap}
+  .pk-gotowe{margin:8px 0 0;font-weight:600;color:#15803d}
+  .pk-stopka{margin-top:8px;text-align:right}.pk-stopka .link{background:none;border:none;padding:0;color:var(--m);font-size:13px;cursor:pointer;text-decoration:underline}
   .wst-baner{background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:10px 14px;margin:0 0 12px;font-size:14px}
   .wst-baner summary{cursor:pointer;font-weight:600}
   .wst-baner .wr{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-top:1px solid #fde68a}
@@ -326,6 +342,10 @@
   .ls-faq{max-width:760px;margin:0 auto}
   .ls-faq details{background:#fff;border:1px solid var(--b);border-radius:10px;padding:12px 16px;margin-bottom:8px}
   .ls-faq summary{cursor:pointer;font-weight:600}.ls-faq p{margin:8px 0 0;color:#4a545d;line-height:1.5}
+  .ls-kroki{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;counter-reset:krok;max-width:980px;margin:0 auto}
+  .ls-krok{background:#fff;border:1px solid var(--b);border-radius:12px;padding:16px 16px 16px 60px;position:relative}
+  .ls-krok::before{counter-increment:krok;content:counter(krok);position:absolute;left:16px;top:14px;width:32px;height:32px;border-radius:50%;background:var(--g);color:var(--ga);font-weight:800;display:flex;align-items:center;justify-content:center}
+  .ls-krok b{font-size:16px}.ls-krok p{margin:6px 0 0;font-size:14.5px;color:#4a545d;line-height:1.5}
   .ls-kontakt{text-align:center}.ls-kontakt a{color:var(--gl)}
   .ls-wstecz{background:none;border:none;padding:0 0 14px;color:var(--gl);font:inherit;font-size:14px;cursor:pointer;text-decoration:underline}
   @media(min-width:900px){.ls-hero{grid-template-columns:1fr 1.25fr}.ls-hero h1{font-size:40px}}
@@ -628,6 +648,17 @@
     </section>
 
     <section>
+      <h2 class="ls-h2">Jak zacząć – 4 proste kroki</h2>
+      <div class="ls-kroki">
+        <div class="ls-krok"><b>Poproś o dostęp</b><p>Napisz albo zadzwoń – dostaniesz kod aktywacyjny. Pierwsze 30 dni są bezpłatne.</p></div>
+        <div class="ls-krok"><b>Załóż konto szkoły</b><p>Podajesz e-mail, hasło, kod i nazwę szkoły – i już jesteś w programie.</p></div>
+        <div class="ls-krok"><b>Dodaj instruktorów i kursantów</b><p>Instruktorów zapraszasz SMS-em lub WhatsAppem, kursantów dodajesz najszybciej skanem PKK.</p></div>
+        <div class="ls-krok"><b>Prowadź grafik</b><p>Wpisujesz jazdy, instruktorzy widzą je w telefonie, a kursanci dostają osobisty link.</p></div>
+      </div>
+      <p style="text-align:center;color:var(--m);font-size:14px;margin-top:12px">Po pierwszym zalogowaniu program sam pokaże listę „Pierwsze kroki” – krok po kroku.</p>
+    </section>
+
+    <section>
       <h2 class="ls-h2">Najczęstsze pytania</h2>
       <div class="ls-faq">
         <details><summary>Czy trzeba coś instalować?</summary><p>Nie. Program działa w przeglądarce. Na telefonie można go dodać do ekranu głównego – wtedy otwiera się jak aplikacja.</p></details>
@@ -816,6 +847,7 @@
         <button type="button" class="akt-zob" id="akt-zobacz">Zobacz, co nowego</button>
         <button type="button" class="akt-x" id="akt-zamknij">Zamknij</button>
       </div>
+      <details id="pk-karta" class="pk-karta hidden" open></details>
       <div id="kopia-baner" class="zmiany hidden"></div>
       <details id="wz-baner" class="wst-baner wz hidden" open></details>
       <details id="rz-baner" class="wst-baner rz hidden" open></details>
@@ -987,6 +1019,7 @@
       </div>
 
       <div id="tab-osoby" class="hidden">
+        <p id="pk-pokaz-w" class="hidden" style="margin:0 0 10px;text-align:right"><button type="button" class="stopka-link" id="pk-pokaz">🚀 Pokaż „Pierwsze kroki”</button></p>
         <div class="card" data-zw="szkola">
           <h2>🏫 Nazwa szkoły</h2>
           <label for="u-nazwa">Nazwa szkoły (na górze programu, na wydrukach i obrazku grafiku)</label>
@@ -1565,7 +1598,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.67';
+  const WERSJA = '1.68';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -1577,6 +1610,8 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.68', d: '22.11.2026', p: [
+      'Nowa lista „Pierwsze kroki” dla biura – podpowiada, co zrobić na start (instruktorzy, kursanci, grafik, ustawienia, kopia). Punkty odhaczają się same, listę można ukryć, a w Ustawieniach pokazać z powrotem.'] },
     { v: '1.67', d: '22.11.2026', p: [
       'Grafik OSK ma swoją stronę na Facebooku – link w „O programie” i na stronie głównej.'] },
     { v: '1.66', d: '22.11.2026', p: [
@@ -2086,6 +2121,7 @@
     }
     $('p-instr-extra').classList.toggle('hidden', biuro);
     await startGrafik();
+    if (biuro) pierwszeKroki();
     if (!biuro) { ladujMojeGodziny(); ladujMojeWolne(); ladujMojeRozliczenie(); }
   }
 
@@ -2098,7 +2134,7 @@
       $('tab-' + n).classList.toggle('hidden', z !== n);
     });
   }
-  $('t-grafik').onclick = () => { ustawZakladke('grafik'); ladujDzien(); };
+  $('t-grafik').onclick = () => { ustawZakladke('grafik'); ladujDzien(); pierwszeKroki(); };
   $('t-kursanci').onclick = () => { ustawZakladke('kursanci'); ladujKursantow(); };
   $('t-osoby').onclick = () => { ustawZakladke('osoby'); ladujOsoby(); ladujInstruktorowLista(); ladujPin(); ladujKosz(); ladujHistorie(); pokazKopie(); pokazLogoUst(); pokazUstawienia(); pokazUstWyklady(); pokazUstRez(); pokazUstPoj(); pokazUstRozl(); };
   $('t-miesiac').onclick = () => { ustawZakladke('miesiac'); ladujMiesiac(); };
@@ -2129,6 +2165,7 @@
     if (error) { msg('m-kursanci', tlumacz(error)); return; }
     kursanci = data;
     kursanci.forEach(k => gKursanci.set(k.id, k));
+    if (pkPokazana()) pierwszeKroki();
     postepAll = new Map();
     if (kursanci.length) {
       const r = await sb.rpc('jazdy_kursantow', { p_ids: kursanci.map(k => k.id) });
@@ -2594,6 +2631,7 @@
     const { data, error } = await sb.rpc('link_kursanta', { p_id: k.id, p_nowy: !!nowy });
     const box = $('k-link-box'); box.classList.remove('hidden');
     if (error) { box.innerHTML = `<p class="hint">${/link_kursanta/.test(error.message) ? 'Najpierw uruchom w Supabase plik krok20_link_kursanta.sql.' : esc(tlumacz(error))}</p>`; return; }
+    pkUstaw('link');
     const url = ADRES + '?k=' + data, szk = (profil.szkoly && profil.szkoly.nazwa) || 'szkoła jazdy';
     const txt = `Dzień dobry! Tu ${szk}. Pod tym linkiem sprawdzisz swoje jazdy i godziny kursu: ${url}`;
     box.innerHTML = `<b>Osobisty link: ${esc(k.imie)} ${esc(k.nazwisko)}</b>
@@ -4363,11 +4401,13 @@
         ? await sb.from('jazdy').update(dane).eq('id', edytJazda.id)
         : await sb.from('jazdy').insert({ ...dane, szkola_id: profil.szkola_id });
       if (w.error) { msg('m-jazda', /godz_egzaminu|potwierdzona|nie_liczy/.test(w.error.message) ? 'Najpierw uruchom w Supabase plik krok13_egzamin.sql.' : tlumacz(w.error)); return; }
+      if (!edytJazda && !pkJazdy) pkJazdy = 1;
       zamknijJazde();
       gInstr = dane.instruktor_id; gDzien = dzien;
       try { localStorage.setItem('g_instr_' + profil.szkola_id, gInstr); } catch (_) {}
       wypelnijInstr();
       await ladujDzien();
+      if (pkPokazana()) pierwszeKroki();
     });
   };
   $('j-usun').onclick = () => zajety($('j-usun'), async () => {
@@ -5727,6 +5767,58 @@ function cellTime(v) {
   const kluczK = n => n + '_' + (profil && profil.szkola_id);
   const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (_) { return d; } };
   const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (_) {} };
+
+  // ===== PIERWSZE KROKI (lista startowa dla biura) =====
+  let pkJazdy = 0;
+  const pkFlaga = n => lsGet(kluczK('pk_' + n), '') === '1';
+  function pkUstaw(n, v = '1') { lsSet(kluczK('pk_' + n), v); }
+  const pkPokazana = () => !!profil && profil.rola === 'biuro' && !$('pk-karta').classList.contains('hidden');
+  function pkIdz(tab, zw) {
+    $('t-' + tab).click();
+    setTimeout(() => {
+      const el = zw && document.querySelector(`#tab-${tab} [data-zw="${zw}"]`);
+      if (!el) { window.scrollTo(0, 0); return; }
+      if (!el.classList.contains('zw-otw')) { const n = el.querySelector(':scope > .zw-nag'); if (n) n.click(); }
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 60);
+  }
+  async function pierwszeKroki() {
+    const karta = $('pk-karta');
+    const biuro = !!profil && profil.rola === 'biuro', ukryte = biuro && pkFlaga('ukryte');
+    $('pk-pokaz-w').classList.toggle('hidden', !biuro || !ukryte);
+    if (!biuro || ukryte) { karta.classList.add('hidden'); return; }
+    if (!pkJazdy) {
+      const { count, error } = await sb.from('jazdy').select('id', { count: 'exact', head: true }).eq('szkola_id', profil.szkola_id);
+      if (!error) pkJazdy = count || 0;
+    }
+    const sz = profil.szkoly || {}, ins = instruktorzy || [];
+    const kroki = [
+      { t: 'Dodaj logo szkoły', o: 'nieobowiązkowe – pokaże się w nagłówku i na wydrukach', ok: !!sz.logo, idz: () => pkIdz('osoby', 'logo') },
+      { t: 'Dodaj instruktorów', o: 'Ustawienia → Instruktorzy w grafiku', ok: ins.some(i => i.aktywny), idz: () => pkIdz('osoby', 'instr') },
+      { t: 'Zaproś instruktorów do aplikacji „Mój grafik jazd”', o: 'przycisk „📩 Zaproś” przy instruktorze – SMS lub WhatsApp', ok: ins.some(i => i.user_id && i.user_id !== ja.id), idz: () => pkIdz('osoby', 'instr'), recznie: 'zapros' },
+      { t: 'Dodaj kursantów', o: 'zakładka Kursanci – najszybciej skanem PKK', ok: kursanci.length > 0, idz: () => pkIdz('kursanci') },
+      { t: 'Wpisz pierwsze jazdy w grafiku', o: 'przycisk „+ Jazda” pod grafikiem', ok: pkJazdy > 0,
+        idz: () => { pkIdz('grafik'); setTimeout(() => $('g-dodaj').scrollIntoView({ behavior: 'smooth', block: 'center' }), 120); } },
+      { t: 'Włącz w Ustawieniach to, czego potrzebujesz', o: 'wykłady, rezerwacje kursantów, rozliczenie instruktorów, pojazdy – wszystko można włączyć później', recznie: 'moduly',
+        ok: !!(sz.wyklady_wl || sz.rez_wl || sz.rozl_wl || sz.pojazdy_wl), idz: () => pkIdz('osoby', 'wyklady') },
+      { t: 'Podłącz kopię zapasową na Dysk Google', o: 'Ustawienia → Kopia zapasowa', ok: !!sz.kopia_dysk, idz: () => pkIdz('osoby', 'kopia') },
+      { t: 'Wyślij kursantom osobiste linki', o: 'otwórz kursanta → „🔗 Link dla kursanta”', ok: false, idz: () => pkIdz('kursanci'), recznie: 'link' }
+    ];
+    kroki.forEach(k => { if (k.recznie && pkFlaga(k.recznie)) k.ok = true; });
+    const zrob = kroki.filter(k => k.ok).length, wszystko = zrob === kroki.length;
+    karta.innerHTML = `<summary><b>🚀 Pierwsze kroki w programie</b><span>${zrob} z ${kroki.length}</span></summary>
+      <div class="pk-pasek"><i style="width:${Math.round(zrob / kroki.length * 100)}%"></i></div>
+      ${wszystko ? '<p class="pk-gotowe">🎉 Wszystko gotowe – szkoła jest przygotowana do pracy. Możesz ukryć tę listę.</p>' : '<p class="hint" style="margin:4px 0 0">Kliknij punkt, żeby przejść we właściwe miejsce. Punkty odhaczają się same.</p>'}
+      <ol class="pk-lista">${kroki.map((k, i) => `<li class="${k.ok ? 'ok' : ''}"><span class="pk-zn">${k.ok ? '✓' : i + 1}</span>
+        <button type="button" class="pk-t" data-pk="${i}"><b>${esc(k.t)}</b><small>${esc(k.o)}</small></button>
+        ${!k.ok && k.recznie ? `<button type="button" class="pk-r" data-pkr="${k.recznie}">Zrobione</button>` : ''}</li>`).join('')}</ol>
+      <div class="pk-stopka"><button type="button" class="link" id="pk-ukryj">${wszystko ? 'Ukryj listę' : 'Ukryj – znam program'}</button></div>`;
+    karta.classList.remove('hidden');
+    karta.querySelectorAll('[data-pk]').forEach(b => { b.onclick = () => kroki[+b.dataset.pk].idz(); });
+    karta.querySelectorAll('[data-pkr]').forEach(b => { b.onclick = () => { pkUstaw(b.dataset.pkr); pierwszeKroki(); }; });
+    $('pk-ukryj').onclick = () => { pkUstaw('ukryte'); pierwszeKroki(); };
+  }
+  $('pk-pokaz').onclick = () => { pkUstaw('ukryte', '0'); pkIdz('grafik'); pierwszeKroki(); };
   const slugSzkoly = () => slugNazwy((profil.szkoly && profil.szkoly.nazwa) || 'szkola').slice(0, 40);
 
   async function zbierzKopie() {
