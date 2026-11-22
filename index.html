@@ -56,6 +56,7 @@
       "url": "https://grafikosk.pl/",
       "email": "sleschgsm@wp.pl",
       "telephone": "+48 504 789 595",
+      "sameAs": ["https://www.facebook.com/share/1K5gzSLfPf/"],
       "address": { "@type": "PostalAddress", "addressLocality": "Biłgoraj", "addressCountry": "PL" }
     }
   ]
@@ -642,6 +643,7 @@
     <section class="ls-kontakt">
       <h2 class="ls-h2">Kontakt</h2>
       <p>Slesch – Beniamin Dziura · <a id="ls-mail" href="#"></a><span id="ls-tel"></span></p>
+      <p id="ls-fb"></p>
       <div class="ls-cta" style="justify-content:center">
         <a class="ls-btn" id="ls-proba2" href="#">Poproś o dostęp próbny</a>
         <button type="button" class="ls-btn2" data-do-rejestracji>Mam kod aktywacyjny</button>
@@ -1563,18 +1565,20 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.66';
+  const WERSJA = '1.67';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
     autor: 'Slesch – Beniamin Dziura',
     email: 'sleschgsm@wp.pl',
     telefon: '+48 504 789 595',
-    facebook: 'Benek Benek',   // nazwa widoczna w „O programie”
-    facebookUrl: ''            // link do profilu / strony na Facebooku (puste = sam napis, bez linku)
+    facebook: 'Grafik OSK',   // nazwa widoczna w „O programie” i na stronie głównej
+    facebookUrl: 'https://www.facebook.com/share/1K5gzSLfPf/'            // link do profilu / strony na Facebooku (puste = sam napis, bez linku)
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.67', d: '22.11.2026', p: [
+      'Grafik OSK ma swoją stronę na Facebooku – link w „O programie” i na stronie głównej.'] },
     { v: '1.66', d: '22.11.2026', p: [
       'Start programu Grafik OSK pod adresem grafikosk.pl.',
       'Grafik jazd i rejestr kursantów dla biura, aplikacja „Mój grafik jazd” dla instruktorów i osobisty link dla kursantów.',
@@ -1738,6 +1742,7 @@
     const mail = `mailto:${PROGRAM.email}?subject=${encodeURIComponent(temat)}&body=${encodeURIComponent(tresc)}`;
     $('ls-proba').href = mail; $('ls-proba2').href = mail;
     $('ls-mail').href = 'mailto:' + PROGRAM.email; $('ls-mail').textContent = PROGRAM.email;
+    if (PROGRAM.facebookUrl) $('ls-fb').innerHTML = `<a href="${esc(PROGRAM.facebookUrl)}" target="_blank" rel="noopener">${IKONA_FB} ${esc(PROGRAM.facebook)} na Facebooku</a>`;
     if (PROGRAM.telefon) $('ls-tel').innerHTML = ` · tel. <a href="tel:${PROGRAM.telefon.replace(/\s/g, '')}">${PROGRAM.telefon}</a>`;
   }
 
