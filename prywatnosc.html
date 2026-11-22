@@ -22,7 +22,7 @@
   <a class="powrot" href="./">‹ Wróć do programu</a>
   <div class="card">
     <h1>Polityka prywatności</h1>
-    <p class="sub">Grafik OSK – program dla szkół jazdy (grafikosk.pl) · obowiązuje od 20.11.2026</p>
+    <p class="sub">Grafik OSK – program dla szkół jazdy (grafikosk.pl) · obowiązuje od 22.11.2026</p>
   </div>
 
   <div class="card">
@@ -39,6 +39,7 @@
       <li>kursanci: imię i nazwisko, telefon, e-mail, numer PKK, PESEL, kategoria, rodzaj kursu, godziny kursu, uwagi – w zakresie wpisanym przez szkołę;</li>
       <li>grafik: terminy jazd i egzaminów, wolne instruktorów;</li>
       <li>historia zmian (kto i kiedy zmienił wpis) – przechowywana 30 dni, jeśli szkoła ją włączy;</li>
+      <li>aplikacja na zegarek Garmin (jeśli instruktor ją włączy): osobisty kod zegarka i data ostatniego połączenia – szczegóły w punkcie 6;</li>
       <li>dane techniczne niezbędne do logowania (sesja zapisana w przeglądarce).</li>
     </ul>
   </div>
@@ -58,7 +59,7 @@
       <li><b>Baza danych:</b> Supabase, serwery w Unii Europejskiej (Frankfurt, Niemcy).</li>
       <li><b>Strona programu:</b> GitHub Pages – serwuje tylko pliki programu, nie przechowuje danych kursantów.</li>
       <li><b>Wiadomości e-mail</b> (np. ustawienie hasła) wysyłane są przez Gmail (Google).</li>
-      <li>Każda szkoła widzi wyłącznie swoje dane. Instruktor widzi tylko podstawowe dane swoich kursantów (bez PESEL i numeru PKK). Kursant przez osobisty link widzi tylko swoje jazdy i godziny.</li>
+      <li>Każda szkoła widzi wyłącznie swoje dane. Instruktor widzi tylko podstawowe dane swoich kursantów (bez PESEL i numeru PKK). Kursant przez osobisty link widzi tylko swoje jazdy i godziny. Zegarek instruktora otrzymuje tylko jego jazdy na dziś i jutro (punkt 6).</li>
       <li>Dane nie są sprzedawane ani udostępniane w celach marketingowych.</li>
     </ul>
   </div>
@@ -72,28 +73,42 @@
   </div>
 
   <div class="card">
-    <h2>6. Jak długo przechowujemy dane</h2>
+    <h2>6. Aplikacja na zegarek Garmin</h2>
+    <p>Instruktor może sam włączyć w programie (<b>Konto → Zegarek Garmin</b>) osobisty kod do aplikacji „Grafik OSK” na zegarek Garmin, dostępnej w sklepie Connect IQ.</p>
+    <ul>
+      <li>Zegarek wysyła do programu tylko ten kod. W odpowiedzi otrzymuje jazdy tego instruktora na dziś i jutro: godziny, rodzaj zajęć, imię i nazwisko kursanta, kategorię, liczbę godzin kursu oraz telefon kursanta. PESEL, numer PKK ani e-mail kursanta nie są wysyłane.</li>
+      <li>Dane przechodzą przez aplikację Garmin na telefonie instruktora i są zapisywane wyłącznie w pamięci zegarka. Przy każdym odświeżeniu (co kilka minut) zastępują je nowe, a usunięcie aplikacji z zegarka je kasuje.</li>
+      <li>Aplikacja tylko odczytuje grafik – niczego w nim nie zmienia. Program zapisuje jedynie datę ostatniego połączenia zegarka.</li>
+      <li>Instruktor może w każdej chwili utworzyć nowy kod albo wyłączyć zegarek – zegarek przestaje wtedy pobierać dane.</li>
+      <li>Przy przesyłaniu danych przez telefon i zegarek obowiązują też zasady prywatności firmy Garmin.</li>
+    </ul>
+    <p lang="en" class="sub">Grafik OSK Garmin watch app: the watch sends only the instructor's personal code and receives that instructor's lessons for today and tomorrow. Data is stored only on the watch and overwritten on each refresh; the app never changes the schedule. The code can be regenerated or disabled at any time in the program.</p>
+  </div>
+
+  <div class="card">
+    <h2>7. Jak długo przechowujemy dane</h2>
     <ul>
       <li>dane szkoły – przez okres korzystania z programu; po zakończeniu współpracy są usuwane na prośbę szkoły (szkoła może wcześniej pobrać kopię);</li>
       <li>usunięte wpisy trafiają do kosza i są usuwane na stałe po 30 dniach;</li>
       <li>historia zmian – 30 dni;</li>
+      <li>kod zegarka i data ostatniego połączenia – do wyłączenia zegarka przez instruktora albo usunięcia jego konta; jazdy na zegarku – do następnego odświeżenia lub usunięcia aplikacji;</li>
       <li>kopie na Dysku Google – program zostawia 30 ostatnich kopii; szkoła zarządza nimi na swoim Dysku.</li>
     </ul>
   </div>
 
   <div class="card">
-    <h2>7. Pliki cookies i pamięć przeglądarki</h2>
+    <h2>8. Pliki cookies i pamięć przeglądarki</h2>
     <p>Program nie używa cookies reklamowych ani narzędzi śledzących. W pamięci przeglądarki (localStorage) zapisuje tylko sesję logowania i ustawienia wyglądu (np. zwinięte sekcje, wybrany instruktor).</p>
   </div>
 
   <div class="card">
-    <h2>8. Prawa osób, których dane dotyczą</h2>
+    <h2>9. Prawa osób, których dane dotyczą</h2>
     <p>Przysługuje Ci prawo dostępu do danych, ich sprostowania, usunięcia, ograniczenia przetwarzania, przenoszenia oraz sprzeciwu, a także prawo wniesienia skargi do Prezesa Urzędu Ochrony Danych Osobowych (ul. Stawki 2, 00-193 Warszawa).</p>
     <p>Jeśli jesteś <b>kursantem</b> – w sprawie swoich danych skontaktuj się najpierw ze swoją szkołą jazdy (to ona jest administratorem). Użytkownicy kont i szkoły mogą pisać do dostawcy: <a href="mailto:sleschgsm@wp.pl">sleschgsm@wp.pl</a>.</p>
   </div>
 
   <div class="card">
-    <h2>9. Zmiany polityki</h2>
+    <h2>10. Zmiany polityki</h2>
     <p>O istotnych zmianach tej polityki informujemy w programie (okienko „Co nowego”). Aktualna wersja jest zawsze dostępna pod adresem <a href="https://grafikosk.pl/prywatnosc.html">grafikosk.pl/prywatnosc.html</a>.</p>
   </div>
 </main>
