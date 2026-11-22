@@ -1135,6 +1135,11 @@
       <h2>🔑 Kody aktywacyjne</h2>
       <div id="a-kody"><p class="hint">Ładowanie…</p></div>
     </div>
+    <div class="card">
+      <h2>🗑️ Usunięte szkoły</h2>
+      <p class="hint">Rejestr trwałych usunięć danych (po rezygnacji szkoły). Potwierdzenie możesz wysłać szkole.</p>
+      <div id="a-usuniete"><p class="hint">Ładowanie…</p></div>
+    </div>
   </div>
 
   <!-- Panel -->
@@ -1930,7 +1935,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.70';
+  const WERSJA = '1.71';
   const UMOWA_WERSJA = '1.0';            // wersja Regulaminu + Umowy powierzenia (umowa.html) – zmiana wymusza ponowną akceptację
   const UMOWA_URL = 'umowa.html';
   // ----- informacje o programie -----
@@ -2304,6 +2309,55 @@
     w.document.close();
   }
 
+  // ----- Usuwanie danych szkoły po rezygnacji (krok 30) -----
+  const dniOdBlokady = od => Math.max(0, Math.floor((Date.now() - new Date(od).getTime()) / 86400000));
+  async function usunDaneSzkoly(id, nazwa, od, btn) {
+    const dni = od ? dniOdBlokady(od) : null;
+    if (!await pytaj(`Usunąć TRWALE wszystkie dane szkoły „${nazwa}”?\n\nZostaną usunięci kursanci, jazdy, grafik, wykłady, rezerwacje, rozliczenia, historia i kosz oraz konta biura i instruktorów tej szkoły. Tego nie da się cofnąć.\n\nZostanie tylko wpis o akceptacji umowy i wpis w rejestrze usunięć (bez danych kursantów).`, { tak: 'Dalej', niebezp: true })) return;
+    let wczesniej = false;
+    if (dni !== null && dni < 30) {
+      if (!await pytaj(`Od zablokowania minęło dopiero ${dni} ${dniSlowo(dni)}.\n\nWedług umowy szkoła ma 30 dni na pobranie danych. Usuń wcześniej TYLKO wtedy, gdy szkoła sama o to poprosiła (najlepiej e-mailem).`, { tak: 'Szkoła prosiła – usuń wcześniej', niebezp: true })) return;
+      wczesniej = true;
+    }
+    const wpis = await zapytajTekst('Potwierdź usunięcie', `Wpisz dokładną nazwę szkoły: ${nazwa}`, '');
+    if (wpis === null || wpis === undefined || wpis === false) return;
+    if (String(wpis).trim().toLowerCase() !== String(nazwa).trim().toLowerCase()) { msg('m-admin', 'Nazwa się nie zgadza – nic nie usunięto.'); return; }
+    zajety(btn, async () => {
+      const { data, error } = await sb.rpc('usun_dane_szkoly', { p_id: id, p_nazwa: wpis, p_wczesniej: wczesniej });
+      if (error) { msg('m-admin', /usun_dane_szkoly/.test(error.message || '') ? 'Najpierw uruchom w Supabase plik krok30_usun_szkole.sql.' : tlumacz(error)); return; }
+      await ladujAdmin();
+      msg('m-admin', `Usunięto dane szkoły „${data.nazwa}”: ${data.kursantow ?? '?'} kursantów, ${data.kont} kont, razem ${data.wierszy} wpisów.${data.uwagi ? ' Uwagi: ' + data.uwagi : ''}`, 'ok');
+      drukujUsuniecie(data);
+    });
+  }
+  function drukujUsuniecie(d) {
+    const w = window.open('', '_blank');
+    if (!w) return;
+    w.document.write(`<!DOCTYPE html><html lang="pl"><head><meta charset="utf-8"><title>Potwierdzenie usunięcia danych – ${esc(d.nazwa)}</title>
+      <style>body{font-family:system-ui,Arial,sans-serif;max-width:700px;margin:30px auto;padding:0 18px;line-height:1.5}td{padding:5px 10px;border-bottom:1px solid #ddd;vertical-align:top}td:first-child{color:#555;white-space:nowrap}</style></head><body>
+      <h2>Potwierdzenie usunięcia danych osobowych</h2>
+      <p>Na podstawie § 6 ust. 2 Umowy powierzenia przetwarzania danych osobowych (Załącznik nr 1 do Regulaminu Programu dla szkół jazdy) potwierdzam trwałe usunięcie z Programu danych powierzonych przez Szkołę.</p>
+      <table>
+        <tr><td>Szkoła</td><td>${esc(d.nazwa)}${d.nip ? '<br>NIP ' + esc(d.nip) : ''}</td></tr>
+        <tr><td>Data usunięcia</td><td>${fmtDT(d.usunieto)}</td></tr>
+        <tr><td>Zakres</td><td>kursanci (${d.kursantow ?? '—'}), jazdy, grafik, wykłady, rezerwacje, rozliczenia, historia zmian, kosz, konta użytkowników (${d.kont})</td></tr>
+        <tr><td>Dostawca</td><td>Slesch Beniamin Dziura, ul. Włosiankarska 15/37, 23-400 Biłgoraj, NIP 6020023266</td></tr>
+      </table>
+      <p style="font-size:13px;color:#555">Kopie bezpieczeństwa bazy danych prowadzone przez dostawcę infrastruktury są nadpisywane automatycznie w ciągu kilku dni. Kopie zapasowe zapisane przez Szkołę na jej własnym Dysku Google lub komputerze pozostają pod kontrolą Szkoły.</p>
+      <p style="margin-top:24px"><button onclick="print()">🖨️ Drukuj / zapisz PDF</button></p></body></html>`);
+    w.document.close();
+  }
+  async function ladujUsuniete() {
+    const el = $('a-usuniete'); if (!el) return;
+    const { data, error } = await sb.rpc('lista_usunietych');
+    if (error) { el.innerHTML = '<p class="hint">Dostępne po uruchomieniu krok30_usun_szkole.sql.</p>'; return; }
+    el.innerHTML = (data || []).map((u, i) => `<div class="a-kod"><span><b>${esc(u.nazwa)}</b>${u.nip ? ' · NIP ' + esc(u.nip) : ''}<br>
+        <small class="hint">usunięto ${fmtDT(u.usunieto)} · kursantów: ${u.kursantow ?? '—'} · kont: ${u.kont}${u.uwagi ? ' · ⚠️ ' + esc(u.uwagi) : ''}</small></span>
+        <button type="button" data-usun-potw="${i}" style="padding:5px 10px;font-size:13px">📄 Potwierdzenie</button></div>`).join('')
+      || '<p class="hint">Nie usunięto jeszcze żadnej szkoły.</p>';
+    el.querySelectorAll('[data-usun-potw]').forEach(b => b.onclick = () => drukujUsuniecie(data[+b.dataset.usunPotw]));
+  }
+
   // ----- Panel właściciela programu -----
   let jestWlascicielem = false;
   async function sprawdzWlasciciela() {
@@ -2338,14 +2392,19 @@
   async function ladujAdmin() {
     msg('m-admin', '');
     $('a-wroc').classList.toggle('hidden', !profil);
-    const [sz, kd, pn, um] = await Promise.all([sb.rpc('lista_szkol'), sb.rpc('lista_kodow'), sb.rpc('szkoly_z_pinem'), sb.rpc('umowy_szkol')]);
+    const [sz, kd, pn, um, bl] = await Promise.all([sb.rpc('lista_szkol'), sb.rpc('lista_kodow'), sb.rpc('szkoly_z_pinem'), sb.rpc('umowy_szkol'), sb.rpc('szkoly_blokady')]);
+    const blokady = new Map(bl.error ? [] : (bl.data || []).map(b => [String(b.szkola_id), b.zablokowana_od]));
     const umowy = new Map(um.error ? [] : (um.data || []).map(u => [String(u.szkola_id), u]));
     const zPinem = new Set(pn.error ? [] : (pn.data || []).map(r => typeof r === 'string' ? r : Object.values(r)[0]));
     if (sz.error) { $('a-szkoly').innerHTML = `<p class="msg err" style="display:block">${esc(tlumacz(sz.error))}</p>`; }
     else $('a-szkoly').innerHTML = sz.data.map(x => `<div class="a-szk${x.aktywna ? '' : ' zabl'}">
         <h3><span>${esc(x.nazwa)} ${x.aktywna ? '' : '<span class="pill" style="background:var(--r);color:#fff">zablokowana</span>'}</span>
           <span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">${zPinem.has(x.id) ? `<button type="button" data-reset-pin="${x.id}" data-nazwa="${esc(x.nazwa)}">🔓 Zresetuj PIN</button>` : ''}
-          <button type="button" data-blok="${x.id}" data-akt="${x.aktywna ? 1 : 0}" data-nazwa="${esc(x.nazwa)}">${x.aktywna ? '⛔ Zablokuj' : '✅ Odblokuj'}</button></span></h3>
+          <button type="button" data-blok="${x.id}" data-akt="${x.aktywna ? 1 : 0}" data-nazwa="${esc(x.nazwa)}">${x.aktywna ? '⛔ Zablokuj' : '✅ Odblokuj'}</button>
+          ${x.aktywna ? '' : `<button type="button" data-usun-szk="${esc(String(x.id))}" data-nazwa="${esc(x.nazwa)}" style="color:var(--r)">🗑️ Usuń trwale dane</button>`}</span></h3>
+        ${x.aktywna || bl.error ? '' : (od => `<div class="hint" style="margin:-2px 0 6px">${od
+            ? `Zablokowana od ${fmtDT(od)} – ${dniOdBlokady(od)} ${dniSlowo(dniOdBlokady(od))}${dniOdBlokady(od) >= 30 ? ' · można usunąć dane' : ` · dane można usunąć za ${30 - dniOdBlokady(od)} ${dniSlowo(30 - dniOdBlokady(od))}`}`
+            : 'Data blokady nieznana (zablokowana przed wersją 1.71)'}</div>`)(blokady.get(String(x.id)))}
         <div class="dane">Biuro: ${esc(x.biuro || '—')}<br>
           Konta: ${x.osob} · instruktorzy: ${x.instruktorow}${x.limit_instr ? ` / ${x.limit_instr}` : ''} · kursanci: ${x.kursantow} · jazdy (30 dni): ${x.jazd_30dni}<br>
           Ostatnie logowanie: ${fmtDT(x.ostatnie_logowanie)} · w programie od: ${fmtData(x.utworzono)} · kod szkoły: <b>${esc(x.kod_zaproszenia)}</b><br>
@@ -2374,6 +2433,7 @@
       ladujAdmin();
     }));
     $('a-szkoly').querySelectorAll('[data-umowa]').forEach(b => b.onclick = () => { const u = umowy.get(b.dataset.umowa); if (u) drukujPotwierdzenie(u); });
+    $('a-szkoly').querySelectorAll('[data-usun-szk]').forEach(b => b.onclick = () => usunDaneSzkoly(b.dataset.usunSzk, b.dataset.nazwa, blokady.get(b.dataset.usunSzk), b));
     const szkolaAbo = id => (sz.data || []).find(x => x.id === id);
     const zapiszAbo = async (x, zmiana) => {
       const n = { oplacone_do: x.oplacone_do, bez_limitu: x.bez_limitu, proba: x.proba, ...zmiana };
@@ -2420,6 +2480,7 @@
       await ladujAdmin();
       msg('m-admin', `PIN szkoły „${b.dataset.nazwa}” wyłączony. Przekaż biuru, żeby ustawiło nowy (Ustawienia → PIN).`, 'ok');
     }));
+    ladujUsuniete();
     if (kd.error) { $('a-kody').innerHTML = `<p class="msg err" style="display:block">${esc(tlumacz(kd.error))}</p>`; return; }
     $('a-kody').innerHTML = kd.data.map(k => `<div class="a-kod"><span><b>${esc(k.kod)}</b>${k.uwagi ? ' · ' + esc(k.uwagi) : ''}<br>
         <small class="hint">${k.uzyto ? `✅ użyty ${fmtDT(k.uzyto)} – ${esc(k.szkola || '')}` : `czeka na użycie · utworzony ${fmtDT(k.utworzono)}`}</small></span>
