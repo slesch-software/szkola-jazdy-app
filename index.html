@@ -182,6 +182,13 @@
   .wst-baner button{padding:5px 10px;font-size:13px}
   .wst-baner.wz{background:#eef6ff;border-color:#93c5fd}.wst-baner.wz .wr{border-color:#bfdbfe}
   .wst-baner .wr .bt{display:flex;gap:6px;flex:none}
+  .wst-baner.zle{background:#fef2f2;border-color:#fca5a5}.wst-baner.zle .wr{border-color:#fecaca}
+  .wst-baner .wr input[type=date]{margin:0;width:auto;padding:4px 6px;font-size:13px}
+  .poj-wr{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:9px 0;border-top:1px solid var(--b);font-size:14.5px;line-height:1.45}
+  .poj-wr > button{flex:none;width:auto;margin:0}
+  .poj-zle{color:var(--r);font-weight:700}.poj-uwaga{color:#b45309;font-weight:700}.poj-czeka{color:#1d4ed8}
+  .poj-form{margin:8px 0;padding:10px 12px;border:1px solid var(--b);border-radius:12px;background:#fafafa}
+  .poj-instr{display:flex;flex-wrap:wrap;gap:2px 18px}
   .uprawn{display:flex;flex-wrap:wrap;gap:4px 16px;width:100%;margin-top:-2px}
   .uprawn label{display:flex;align-items:center;justify-content:flex-start;gap:8px;font-size:13.5px;font-weight:400;color:var(--m);cursor:pointer;margin:0;width:auto;text-align:left}
   .uprawn input{width:auto;margin:0;flex:none}
@@ -811,6 +818,7 @@
       <details id="wz-baner" class="wst-baner wz hidden" open></details>
       <details id="rz-baner" class="wst-baner rz hidden" open></details>
       <details id="lr-baner" class="wst-baner rz hidden" open></details>
+      <details id="poj-baner" class="wst-baner hidden" open></details>
       <details id="wst-baner" class="wst-baner hidden"></details>
       <div class="card">
         <div id="g-instr-pasek">
@@ -865,6 +873,11 @@
         <div id="m-mw" class="msg"></div>
         <h3 style="font-size:15px;margin:18px 0 4px">Moje wolne od dziś</h3>
         <div id="mw-lista"><p class="hint">Ładowanie…</p></div>
+      </div>
+      <div id="mp-karta" class="card hidden" data-zw="mpoj">
+        <h2>🚗 Mój pojazd</h2>
+        <div id="mp-lista"></div>
+        <div id="m-mp" class="msg"></div>
       </div>
       <div id="mr-karta" class="card hidden" data-zw="mrozl">
         <h2>💰 Moje rozliczenie</h2>
@@ -992,6 +1005,18 @@
           <p class="hint">Po włączeniu przy każdym instruktorze (Instruktorzy w grafiku → 💰 Stawki) wpisujesz stawki za godzinę dla kategorii i ewentualny dodatek weekendowy. Rozliczenie miesiąca pojawi się w zakładce „Miesiąc”. Instruktor zobaczy swoje tylko wtedy, gdy mu na to pozwolisz.</p>
           <label class="przel hidden" id="u-rozl-kwoty-box" style="margin-top:8px"><input id="u-rozl-kwoty" type="checkbox"><span class="suw"></span> Pokazuj kwoty i stawki (wyłączone = same godziny)</label>
           <div id="m-rozl-ust" class="msg"></div>
+        </div>
+        <div class="card" data-zw="poj">
+          <h2>🚗 Pojazdy OSK</h2>
+          <label class="przel" style="margin-top:4px"><input id="u-poj" type="checkbox"><span class="suw"></span> Prowadzimy listę pojazdów (przegląd i OC)</label>
+          <p class="hint">Wpisujesz auta szkoły i zaznaczasz, którzy instruktorzy nimi jeżdżą. 7 dni przed końcem przeglądu lub OC nad grafikiem pojawia się przypomnienie – po zrobieniu klikasz „✓ Zrobione” i wpisujesz nową datę. Instruktor widzi swoje auta w „🚗 Mój pojazd”; czy zmienia dane sam, czy zatwierdza je biuro, ustawiasz przy instruktorze (Instruktorzy w grafiku).</p>
+          <div id="poj-box" class="hidden">
+            <div id="poj-lista"></div>
+            <div id="poj-form" class="poj-form hidden"></div>
+            <button id="poj-dodaj" class="btn2" type="button" style="margin-top:8px">➕ Dodaj pojazd</button>
+          </div>
+          <datalist id="poj-kat-lista"><option value="B"><option value="A"><option value="A1"><option value="A2"><option value="AM"><option value="B+E"><option value="C"><option value="C+E"><option value="D"><option value="T"></datalist>
+          <div id="m-poj" class="msg"></div>
         </div>
         <div class="card" data-zw="rez">
           <h2>📅 Rezerwacje kursantów</h2>
@@ -1538,7 +1563,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.64';
+  const WERSJA = '1.65';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -1548,6 +1573,9 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.65', d: '22.11.2026', p: [
+      '🚗 Pojazdy OSK (do włączenia w Ustawieniach): numer rejestracyjny, marka, model, termin przeglądu i OC, przypisani instruktorzy. 7 dni przed terminem przypomnienie nad grafikiem z przyciskiem „✓ Zrobione”.',
+      'Instruktor ma kartę „🚗 Mój pojazd” – może uzupełnić dane i wpisać nową datę przeglądu lub OC (sam albo do zatwierdzenia przez biuro).'] },
     { v: '1.64', d: '22.11.2026', p: ['Ustawienia na komputerze zajmują całą szerokość okna.'] },
     { v: '1.63', d: '22.11.2026', p: [
       '🕘 Godziny pracy instruktora ustawiasz w Ustawieniach → Instruktorzy, niezależnie od rezerwacji. Grafik pokazuje dni wolne na szaro, wolne okienka tylko w godzinach pracy i ostrzega przy jeździe poza nimi.',
@@ -2078,7 +2106,7 @@
   }
   $('t-grafik').onclick = () => { ustawZakladke('grafik'); ladujDzien(); };
   $('t-kursanci').onclick = () => { ustawZakladke('kursanci'); ladujKursantow(); };
-  $('t-osoby').onclick = () => { ustawZakladke('osoby'); ladujOsoby(); ladujInstruktorowLista(); ladujPin(); ladujKosz(); ladujHistorie(); pokazKopie(); pokazLogoUst(); pokazUstawienia(); pokazUstWyklady(); pokazUstRez(); pokazUstRozl(); };
+  $('t-osoby').onclick = () => { ustawZakladke('osoby'); ladujOsoby(); ladujInstruktorowLista(); ladujPin(); ladujKosz(); ladujHistorie(); pokazKopie(); pokazLogoUst(); pokazUstawienia(); pokazUstWyklady(); pokazUstRez(); pokazUstPoj(); pokazUstRozl(); };
   $('t-miesiac').onclick = () => { ustawZakladke('miesiac'); ladujMiesiac(); };
   $('t-wyklady').onclick = () => { ustawZakladke('wyklady'); ladujWyklady(); };
 
@@ -3197,6 +3225,213 @@
     }));
   }
 
+  // ===== POJAZDY OSK =====
+  const pojWl = () => !!(profil && profil.szkoly && profil.szkoly.pojazdy_wl);
+  let pojazdy = [], mojePoj = null, pojBanerT = 0;
+  const POJ_POLA = { rejestracja: 'nr rej.', marka: 'marka', model: 'model', kategoria: 'kategoria', przeglad_do: 'przegląd do', oc_do: 'OC do' };
+  const nazwaPoj = p => [p.marka, p.model].filter(Boolean).join(' ');
+  const dniDo = d => Math.round((parseD(d) - parseD(dzisStr())) / 86400000);
+  const slDni = n => n === 1 ? 'dzień' : 'dni';
+  function terminTxt(d) {
+    if (!d) return '—';
+    const n = dniDo(d);
+    return fmtData(d) + (n < 0 ? ` – minął ${-n} ${slDni(-n)} temu!` : n === 0 ? ' – dziś!' : n <= 7 ? ` – za ${n} ${slDni(n)}` : '');
+  }
+  const terminKl = d => !d ? '' : dniDo(d) < 0 ? 'poj-zle' : dniDo(d) <= 7 ? 'poj-uwaga' : '';
+  const plusRok = d => { const t = parseD(d); t.setFullYear(t.getFullYear() + 1); return dzisStr(t); };
+  // podpowiedź nowej daty: przegląd – rok od dziś, OC – rok od końca starej polisy
+  const nowaData = (p, pole) => pole === 'oc_do' && p.oc_do && dniDo(p.oc_do) >= -30 ? plusRok(p.oc_do) : plusRok(dzisStr());
+  const opisZmian = d => Object.entries(d || {}).map(([k, v]) => `${POJ_POLA[k] || k}: ${v ? (/_do$/.test(k) ? fmtData(v) : v) : '—'}`).join(', ');
+
+  function formPoj(p, zInstr) {
+    const v = k => esc((p && p[k]) || '');
+    return `<div class="siatka">
+        <div><label>Nr rejestracyjny</label><input data-pf="rejestracja" value="${v('rejestracja')}" placeholder="np. LBL 12345" autocomplete="off" style="text-transform:uppercase"></div>
+        <div><label>Kategoria</label><input data-pf="kategoria" list="poj-kat-lista" value="${v('kategoria')}" placeholder="np. B" autocomplete="off"></div>
+        <div><label>Marka</label><input data-pf="marka" value="${v('marka')}" placeholder="np. Toyota" autocomplete="off"></div>
+        <div><label>Model</label><input data-pf="model" value="${v('model')}" placeholder="np. Yaris" autocomplete="off"></div>
+        <div><label>Przegląd ważny do</label><input type="date" data-pf="przeglad_do" value="${v('przeglad_do')}"></div>
+        <div><label>OC ważne do</label><input type="date" data-pf="oc_do" value="${v('oc_do')}"></div>
+      </div>
+      ${zInstr ? `<label>Instruktorzy, którzy jeżdżą tym pojazdem</label><div class="poj-instr">${instruktorzy.filter(i => i.aktywny || (p && p.instruktorzy.includes(i.id))).map(i =>
+        `<label class="check"><input type="checkbox" data-pi="${i.id}"${p && p.instruktorzy.includes(i.id) ? ' checked' : ''}> ${esc(i.imie_nazwisko)}</label>`).join('') || '<span class="hint">Brak instruktorów.</span>'}</div>` : ''}
+      <div class="akcje" style="margin-top:10px"><button type="button" data-pa="zapisz" style="margin:0">💾 Zapisz</button><button type="button" data-pa="anuluj" style="margin:0">Anuluj</button>${zInstr && p ? '<button type="button" data-pa="usun" style="margin:0;color:var(--r)">🗑 Usuń pojazd</button>' : ''}</div>`;
+  }
+  function czytajFormPoj(box) {
+    const d = {};
+    box.querySelectorAll('[data-pf]').forEach(x => { d[x.dataset.pf] = x.value.trim() || null; });
+    if (d.rejestracja) d.rejestracja = d.rejestracja.toUpperCase().replace(/\s+/g, ' ');
+    return d;
+  }
+
+  // --- biuro: ustawienia ---
+  function pokazUstPoj() {
+    const sz = profil.szkoly || {};
+    if (!('pojazdy_wl' in sz)) { $('u-poj').disabled = true; msg('m-poj', 'Najpierw uruchom w Supabase plik krok31_pojazdy.sql.'); zwInfo('poj', ''); return; }
+    $('u-poj').disabled = false; $('u-poj').checked = !!sz.pojazdy_wl;
+    $('poj-box').classList.toggle('hidden', !sz.pojazdy_wl);
+    zwInfo('poj', sz.pojazdy_wl ? 'włączone' : 'wyłączone');
+    if (sz.pojazdy_wl) ladujPojazdy();
+  }
+  $('u-poj').onchange = async () => {
+    const v = $('u-poj').checked;
+    const { error } = await sb.from('szkoly').update({ pojazdy_wl: v }).eq('id', profil.szkola_id);
+    if (error) { $('u-poj').checked = !v; msg('m-poj', /pojazdy_wl/.test(error.message) ? 'Najpierw uruchom w Supabase plik krok31_pojazdy.sql.' : tlumacz(error)); return; }
+    profil.szkoly.pojazdy_wl = v; pokazUstPoj(); ladujInstruktorowLista(); ladujPojBaner(true);
+    msg('m-poj', v ? 'Włączone – dodaj pojazdy szkoły.' : 'Wyłączone (dane pojazdów zostają).', 'ok');
+  };
+  async function ladujPojazdy() {
+    const { data, error } = await sb.from('pojazdy').select('*').eq('szkola_id', profil.szkola_id).order('rejestracja');
+    if (error) { msg('m-poj', tlumacz(error)); return; }
+    pojazdy = data; rysujPojazdy();
+  }
+  function rysujPojazdy() {
+    if (pojazdy.length) zwInfo('poj', `${pojazdy.length} ${pojazdy.length === 1 ? 'pojazd' : (pojazdy.length % 10 >= 2 && pojazdy.length % 10 <= 4 && (pojazdy.length % 100 < 10 || pojazdy.length % 100 >= 20) ? 'pojazdy' : 'pojazdów')}`);
+    $('poj-lista').innerHTML = pojazdy.map(p => {
+      const ins = p.instruktorzy.map(id => (instruktorzy.find(i => i.id === id) || {}).imie_nazwisko).filter(Boolean);
+      return `<div class="poj-wr"><div><b>${esc(p.rejestracja)}</b> ${esc(nazwaPoj(p))}${p.kategoria ? ` <span class="kat">${esc(p.kategoria)}</span>` : ''}<br>
+          <small class="${terminKl(p.przeglad_do)}">Przegląd: ${esc(terminTxt(p.przeglad_do))}</small> · <small class="${terminKl(p.oc_do)}">OC: ${esc(terminTxt(p.oc_do))}</small><br>
+          <small>👤 ${ins.length ? esc(ins.join(', ')) : 'bez instruktora'}</small></div>
+        <button type="button" data-pe="${p.id}">✏️ Zmień</button></div>`;
+    }).join('') || '<p class="hint">Nie dodano jeszcze pojazdów.</p>';
+    $('poj-lista').querySelectorAll('[data-pe]').forEach(b => b.onclick = () => otworzPoj(pojazdy.find(x => x.id === b.dataset.pe)));
+  }
+  function otworzPoj(p) {
+    const box = $('poj-form');
+    box.innerHTML = `<h3 style="font-size:15px;margin:0 0 4px">${p ? '✏️ ' + esc(p.rejestracja) : '➕ Nowy pojazd'}</h3>` + formPoj(p, true);
+    box.classList.remove('hidden'); $('poj-dodaj').classList.add('hidden');
+    const zamknij = () => { box.classList.add('hidden'); box.innerHTML = ''; $('poj-dodaj').classList.remove('hidden'); };
+    box.querySelector('[data-pa="anuluj"]').onclick = zamknij;
+    box.querySelector('[data-pa="zapisz"]').onclick = e => zajety(e.target, async () => {
+      const d = czytajFormPoj(box);
+      if (!d.rejestracja) { msg('m-poj', 'Wpisz numer rejestracyjny.'); return; }
+      d.instruktorzy = [...box.querySelectorAll('[data-pi]:checked')].map(x => x.dataset.pi);
+      const { error } = p ? await sb.from('pojazdy').update(d).eq('id', p.id)
+        : await sb.from('pojazdy').insert({ ...d, szkola_id: profil.szkola_id });
+      if (error) { msg('m-poj', tlumacz(error)); return; }
+      zamknij(); msg('m-poj', `Zapisano: ${d.rejestracja}.`, 'ok');
+      await ladujPojazdy(); ladujPojBaner(true);
+    });
+    const us = box.querySelector('[data-pa="usun"]');
+    if (us) us.onclick = () => zajety(us, async () => {
+      if (!await pytaj(`Usunąć pojazd ${p.rejestracja} z listy?`, { tak: 'Usuń', niebezp: true })) return;
+      const { error } = await sb.from('pojazdy').delete().eq('id', p.id);
+      if (error) { msg('m-poj', tlumacz(error)); return; }
+      zamknij(); msg('m-poj', `Usunięto: ${p.rejestracja}.`, 'ok');
+      await ladujPojazdy(); ladujPojBaner(true);
+    });
+    box.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    const pierwsze = box.querySelector('[data-pf="rejestracja"]'); if (pierwsze && !p) pierwsze.focus();
+  }
+  $('poj-dodaj').onclick = () => otworzPoj(null);
+
+  // zapis nowej daty przeglądu / OC (biuro – od razu; instruktor – sam albo do zatwierdzenia)
+  async function zapiszPojazd(p, dane) {
+    if (profil.rola === 'biuro') {
+      const { error } = await sb.from('pojazdy').update(dane).eq('id', p.id);
+      if (error) throw error; return 'zapisano';
+    }
+    const { data, error } = await sb.rpc('pojazd_zmien', { p_id: p.id, p_dane: dane });
+    if (error) throw error; return data;
+  }
+
+  // --- przypomnienia nad grafikiem (biuro i instruktor) ---
+  async function ladujPojBaner(wymus) {
+    const el = $('poj-baner');
+    const ukryj = () => { el.classList.add('hidden'); el.innerHTML = ''; };
+    if (!profil || !pojWl()) { ukryj(); if (profil && profil.rola !== 'biuro') { mojePoj = null; rysujMojePojazdy(); } return; }
+    if (!wymus && Date.now() - pojBanerT < 60000) return;
+    pojBanerT = Date.now();
+    const biuro = profil.rola === 'biuro';
+    let lista, zmiany = [];
+    if (biuro) {
+      const [a, b] = await Promise.all([sb.from('pojazdy').select('*').eq('szkola_id', profil.szkola_id).order('rejestracja'),
+        sb.from('pojazdy_zmiany').select('*').eq('szkola_id', profil.szkola_id).order('utworzono')]);
+      if (a.error) { ukryj(); return; }
+      lista = a.data; zmiany = b.error ? [] : b.data;
+    } else {
+      const r = await sb.rpc('moje_pojazdy');
+      mojePoj = r.error || !r.data ? null : r.data; rysujMojePojazdy();
+      if (!mojePoj) { ukryj(); return; }
+      lista = mojePoj.pojazdy;
+    }
+    const term = [];
+    lista.forEach(p => [['przeglad_do', 'przegląd'], ['oc_do', 'OC']].forEach(([pole, nazwa]) => {
+      if (p[pole] && dniDo(p[pole]) <= 7) term.push({ p, pole, nazwa, czeka: !!(p.czeka && p.czeka[pole]) }); }));
+    if (!term.length && !zmiany.length) { ukryj(); return; }
+    const otw = el.classList.contains('hidden') ? true : el.open;
+    el.classList.remove('hidden');
+    el.classList.toggle('zle', term.some(t => dniDo(t.p[t.pole]) < 0));
+    const nI = id => (instruktorzy.find(i => i.id === id) || {}).imie_nazwisko || 'Instruktor';
+    el.innerHTML = `<summary>🚗 Pojazdy: ${[term.length ? `${term.length} ${term.length === 1 ? 'termin do pilnowania' : 'terminy do pilnowania'}` : '',
+        zmiany.length ? `${zmiany.length} ${zmiany.length === 1 ? 'zmiana' : 'zmiany'} od instruktorów do zatwierdzenia` : ''].filter(Boolean).join(' · ')}</summary>` +
+      term.map((t, ix) => { const n = dniDo(t.p[t.pole]);
+        return `<div class="wr"><span>${n < 0 ? '❌' : '⚠️'} <b>${esc(t.p.rejestracja)}</b> ${esc(nazwaPoj(t.p))} – ${t.nazwa} ${n < 0 ? 'minął' : 'kończy się'} ${fmtData(t.p[t.pole])}${n < 0 ? '!' : n === 0 ? ' (dziś)' : ` (za ${n} ${slDni(n)})`}</span>
+          <span class="bt" data-tix="${ix}">${t.czeka ? '<small class="poj-czeka">⏳ nowa data czeka na biuro</small>' : '<button type="button" data-zr="1">✓ Zrobione</button>'}</span></div>`; }).join('') +
+      zmiany.map(z => { const p = lista.find(x => x.id === z.pojazd_id);
+        return `<div class="wr"><span>✏️ <b>${esc(nI(z.instruktor_id))}</b> zmienia dane <b>${esc(p ? p.rejestracja : '?')}</b>: ${esc(opisZmian(z.dane))}</span>
+          <span class="bt"><button type="button" data-zok="${z.id}">✓ Zatwierdź</button><button type="button" data-zno="${z.id}" title="Odrzuć">✖</button></span></div>`; }).join('');
+    el.open = otw;
+    el.querySelectorAll('[data-tix]').forEach(sp => { const b = sp.querySelector('[data-zr]'); if (!b) return;
+      b.onclick = () => { const t = term[+sp.dataset.tix];
+        sp.innerHTML = `<input type="date" value="${nowaData(t.p, t.pole)}" title="Nowa data – ${t.nazwa} ważny do"><button type="button">Zapisz</button>`;
+        const zap = sp.querySelector('button');
+        zap.onclick = () => zajety(zap, async () => {
+          const nd = sp.querySelector('input').value;
+          if (!nd) return;
+          try {
+            const r = await zapiszPojazd(t.p, { [t.pole]: nd });
+            msg(biuro ? 'm-grafik' : 'm-mp', r === 'czeka' ? `${t.p.rejestracja}: nowa data wysłana – zatwierdzi ją biuro.` : `${t.p.rejestracja}: ${t.nazwa} ważny do ${fmtData(nd)}.`, 'ok');
+          } catch (err) { msg('m-grafik', tlumacz(err)); return; }
+          if (biuro && !$('poj-box').classList.contains('hidden')) ladujPojazdy();
+          ladujPojBaner(true);
+        });
+      }; });
+    el.querySelectorAll('[data-zok],[data-zno]').forEach(b => b.onclick = () => zajety(b, async () => {
+      const z = zmiany.find(x => x.id === (b.dataset.zok || b.dataset.zno));
+      if (b.dataset.zok) {
+        const d = { ...z.dane }; if (d.rejestracja) d.rejestracja = d.rejestracja.toUpperCase(); else delete d.rejestracja;
+        const { error } = await sb.from('pojazdy').update(d).eq('id', z.pojazd_id);
+        if (error) { msg('m-grafik', tlumacz(error)); return; }
+      }
+      const { error } = await sb.from('pojazdy_zmiany').delete().eq('id', z.id);
+      if (error) { msg('m-grafik', tlumacz(error)); return; }
+      if (!$('poj-box').classList.contains('hidden')) ladujPojazdy();
+      ladujPojBaner(true);
+    }));
+  }
+
+  // --- instruktor: Mój pojazd ---
+  function rysujMojePojazdy() {
+    const el = $('mp-karta');
+    if (!mojePoj || profil.rola === 'biuro') { el.classList.add('hidden'); return; }
+    el.classList.remove('hidden');
+    const ps = mojePoj.pojazdy;
+    const pilne = ps.some(p => [p.przeglad_do, p.oc_do].some(d => d && dniDo(d) <= 7));
+    zwInfo('mpoj', (pilne ? '⚠️ ' : '') + (ps.length === 1 ? ps[0].rejestracja : ps.length ? ps.length + ' pojazdy' : ''));
+    $('mp-lista').innerHTML = ps.length ? ps.map(p => `<div class="poj-wr"><div><b>${esc(p.rejestracja)}</b> ${esc(nazwaPoj(p))}${p.kategoria ? ` <span class="kat">${esc(p.kategoria)}</span>` : ''}<br>
+          <small class="${terminKl(p.przeglad_do)}">Przegląd: ${esc(terminTxt(p.przeglad_do))}</small><br>
+          <small class="${terminKl(p.oc_do)}">OC: ${esc(terminTxt(p.oc_do))}</small>
+          ${p.czeka ? `<br><small class="poj-czeka">⏳ Czeka na zatwierdzenie biura: ${esc(opisZmian(p.czeka))}</small>` : ''}</div>
+        <button type="button" data-mpe="${p.id}">✏️ Zmień</button></div><div class="poj-form hidden" data-mpf="${p.id}"></div>`).join('') +
+        `<p class="hint" style="margin-top:8px">${mojePoj.sam ? 'Twoje zmiany zapisują się od razu.' : 'Twoje zmiany zatwierdza biuro.'}</p>`
+      : '<p class="hint">Biuro nie przypisało Ci jeszcze pojazdu.</p>';
+    $('mp-lista').querySelectorAll('[data-mpe]').forEach(b => b.onclick = () => {
+      const p = ps.find(x => x.id === b.dataset.mpe), box = $('mp-lista').querySelector(`[data-mpf="${p.id}"]`);
+      box.innerHTML = formPoj(p, false); box.classList.remove('hidden'); b.classList.add('hidden');
+      box.querySelector('[data-pa="anuluj"]').onclick = () => { box.classList.add('hidden'); box.innerHTML = ''; b.classList.remove('hidden'); };
+      box.querySelector('[data-pa="zapisz"]').onclick = e => zajety(e.target, async () => {
+        const d = czytajFormPoj(box);
+        if (!d.rejestracja) { msg('m-mp', 'Wpisz numer rejestracyjny.'); return; }
+        const zm = {}; Object.keys(d).forEach(k => { if ((d[k] || null) !== (p[k] || null)) zm[k] = d[k]; });
+        if (!Object.keys(zm).length) { msg('m-mp', 'Nic się nie zmieniło.'); return; }
+        let r; try { r = await zapiszPojazd(p, zm); } catch (err) { msg('m-mp', tlumacz(err)); return; }
+        msg('m-mp', r === 'czeka' ? 'Wysłano do biura – zmiany pojawią się po zatwierdzeniu.' : 'Zapisano.', 'ok');
+        ladujPojBaner(true);
+      });
+    });
+  }
+
   // ===== WYKŁADY (TEORIA) =====
   const wyklWl = () => !!(profil && profil.szkoly && profil.szkoly.wyklady_wl);
   const minWykl = w => naMin(hm(w.godz_do)) - naMin(hm(w.godz_od));
@@ -3736,7 +3971,7 @@
       if (!cicho) msg('m-grafik', '');
       await ladujWysylki();
       rysujDzien();
-      ladujWstepne(); ladujZgloszenia(); ladujRezerwacje(); ladujListeRez();
+      ladujWstepne(); ladujZgloszenia(); ladujRezerwacje(); ladujListeRez(); ladujPojBaner();
       return;
     }
     const od = new Date(gDzien + 'T00:00:00'), doo = new Date(dodajDni(gDzien, 1) + 'T00:00:00');
@@ -3756,7 +3991,7 @@
     }
     await ladujWysylki();
     rysujDzien();
-    ladujWstepne(); ladujZgloszenia(); ladujRezerwacje(); ladujListeRez();
+    ladujWstepne(); ladujZgloszenia(); ladujRezerwacje(); ladujListeRez(); ladujPojBaner();
   }
 
   async function ladujWstepne() {
@@ -4200,13 +4435,14 @@
           <label><input type="checkbox" data-upr="moze_zglaszac_wolne" data-id="${i.id}"${i.moze_zglaszac_wolne ? ' checked' : ''}> może zgłaszać wolne (biuro zatwierdza)</label>
           <label><input type="checkbox" data-upr="moze_dodawac_wolne" data-id="${i.id}"${i.moze_dodawac_wolne ? ' checked' : ''}> może sam wpisywać wolne</label>
           ${'moze_widziec_rozl' in i && profil.szkoly && profil.szkoly.rozl_wl ? `<label><input type="checkbox" data-upr="moze_widziec_rozl" data-id="${i.id}"${i.moze_widziec_rozl ? ' checked' : ''}> może widzieć swoje rozliczenie</label>` : ''}
-          ${'moze_zatwierdzac_rez' in i && profil.szkoly && profil.szkoly.rez_wl ? `<label><input type="checkbox" data-upr="moze_zatwierdzac_rez" data-id="${i.id}"${i.moze_zatwierdzac_rez ? ' checked' : ''}> może zatwierdzać prośby kursantów o jazdy (do siebie)</label>` : ''}</div>` : ''}</div>`).join('')
+          ${'moze_zatwierdzac_rez' in i && profil.szkoly && profil.szkoly.rez_wl ? `<label><input type="checkbox" data-upr="moze_zatwierdzac_rez" data-id="${i.id}"${i.moze_zatwierdzac_rez ? ' checked' : ''}> może zatwierdzać prośby kursantów o jazdy (do siebie)</label>` : ''}
+          ${'pojazd_sam' in i && pojWl() ? `<label><input type="checkbox" data-upr="pojazd_sam" data-id="${i.id}"${i.pojazd_sam ? ' checked' : ''}> może sam zmieniać dane pojazdu (bez tego zatwierdza biuro)</label>` : ''}</div>` : ''}</div>`).join('')
       || '<p class="hint">Brak instruktorów.</p>';
     $('p-instruktorzy').querySelectorAll('input[data-upr]').forEach(c => c.onchange = async () => {
       const { error } = await sb.from('instruktorzy').update({ [c.dataset.upr]: c.checked }).eq('id', c.dataset.id);
       if (error) { c.checked = !c.checked; msg('m-instruktorzy', tlumacz(error)); return; }
       const i = instruktorzy.find(x => x.id === c.dataset.id); if (i) i[c.dataset.upr] = c.checked;
-      msg('m-instruktorzy', `${i ? i.imie_nazwisko : 'Instruktor'}: ${c.checked ? 'włączono' : 'wyłączono'} – ${({ moze_dodawac_wolne: 'samodzielne wpisywanie wolnego', moze_zglaszac_wolne: 'zgłaszanie wolnego', moze_zatwierdzac_rez: 'zatwierdzanie próśb kursantów', moze_widziec_rozl: 'podgląd swojego rozliczenia' })[c.dataset.upr]}.`, 'ok');
+      msg('m-instruktorzy', `${i ? i.imie_nazwisko : 'Instruktor'}: ${c.checked ? 'włączono' : 'wyłączono'} – ${({ moze_dodawac_wolne: 'samodzielne wpisywanie wolnego', moze_zglaszac_wolne: 'zgłaszanie wolnego', moze_zatwierdzac_rez: 'zatwierdzanie próśb kursantów', moze_widziec_rozl: 'podgląd swojego rozliczenia', pojazd_sam: 'samodzielna zmiana danych pojazdu' })[c.dataset.upr]}.`, 'ok');
     });
     if (instruktorzy.some(i => i.user_id) && !instruktorzy.some(i => 'moze_zglaszac_wolne' in i))
       $('p-instruktorzy').insertAdjacentHTML('beforeend', '<p class="hint" style="margin-top:8px">Żeby instruktorzy mogli zgłaszać wolne, uruchom w Supabase plik krok19_wolne_instruktora.sql.</p>');
@@ -5493,7 +5729,7 @@ function cellTime(v) {
   logoLogowania();
 
   // ===== KOPIA ZAPASOWA =====
-  const KOPIA_TAB = ['instruktorzy', 'kursanci', 'jazdy', 'wolne', 'dokupione', 'wyklady', 'wyklady_obecnosc', 'rezerwacje', 'stawki_instr', 'rez_lista', 'instr_dni_dod'];
+  const KOPIA_TAB = ['instruktorzy', 'kursanci', 'jazdy', 'wolne', 'dokupione', 'wyklady', 'wyklady_obecnosc', 'rezerwacje', 'stawki_instr', 'rez_lista', 'instr_dni_dod', 'pojazdy'];
   const kluczK = n => n + '_' + (profil && profil.szkola_id);
   const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (_) { return d; } };
   const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (_) {} };
@@ -5505,7 +5741,7 @@ function cellTime(v) {
       const wiersze = [];
       for (let od = 0; ; od += 1000) {
         const { data, error } = await sb.from(t).select('*').eq('szkola_id', profil.szkola_id).range(od, od + 999);
-        if (error) { if (/^(dokupione|wyklady|wyklady_obecnosc|rezerwacje|stawki_instr|rez_lista|instr_dni_dod)$/.test(t) && new RegExp(t).test(error.message)) break; throw error; }
+        if (error) { if (/^(dokupione|wyklady|wyklady_obecnosc|rezerwacje|stawki_instr|rez_lista|instr_dni_dod|pojazdy)$/.test(t) && new RegExp(t).test(error.message)) break; throw error; }
         wiersze.push(...data); if (data.length < 1000) break;
       }
       dane[t] = wiersze;
