@@ -1563,36 +1563,23 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.65';
+  const WERSJA = '1.66';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
     autor: 'Slesch – Beniamin Dziura',
     email: 'sleschgsm@wp.pl',
-    telefon: '+48 504 789 595'
+    telefon: '+48 504 789 595',
+    facebook: 'Benek Benek',   // nazwa widoczna w „O programie”
+    facebookUrl: ''            // link do profilu / strony na Facebooku (puste = sam napis, bez linku)
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
-    { v: '1.65', d: '22.11.2026', p: [
-      '🚗 Pojazdy OSK (do włączenia w Ustawieniach): numer rejestracyjny, marka, model, termin przeglądu i OC, przypisani instruktorzy. 7 dni przed terminem przypomnienie nad grafikiem z przyciskiem „✓ Zrobione”.',
-      'Instruktor ma kartę „🚗 Mój pojazd” – może uzupełnić dane i wpisać nową datę przeglądu lub OC (sam albo do zatwierdzenia przez biuro).'] },
-    { v: '1.64', d: '22.11.2026', p: ['Ustawienia na komputerze zajmują całą szerokość okna.'] },
-    { v: '1.63', d: '22.11.2026', p: [
-      '🕘 Godziny pracy instruktora ustawiasz w Ustawieniach → Instruktorzy, niezależnie od rezerwacji. Grafik pokazuje dni wolne na szaro, wolne okienka tylko w godzinach pracy i ostrzega przy jeździe poza nimi.',
-      'Rezerwacje kursantów: przy każdym instruktorze osobny przełącznik „przyjmuje rezerwacje”.'] },
-    { v: '1.62', d: '22.11.2026', p: [
-      '➕ Dodatkowe dni pracy instruktora (Ustawienia → Godziny pracy): np. jedna sobota albo niedziela, także co tydzień do wybranej daty – kursanci mogą wtedy prosić o jazdy.',
-      'Kursant widzi, w które dni instruktor nie pracuje.'] },
-    { v: '1.61', d: '22.11.2026', p: [
-      '⌚ Zegarek Garmin: instruktor w „👤 Konto” pobiera kod do zegarka i widzi na nim swoje jazdy na dziś i jutro (aplikacja „Grafik OSK” w sklepie Connect IQ).'] },
-    { v: '1.60', d: '22.11.2026', p: [
-      '💰 Rozliczenie instruktorów (do włączenia w Ustawieniach): stawki za godzinę dla każdej kategorii, dodatek weekendowy, zestawienie miesiąca z wydrukiem i Excelem. Kwoty można ukryć (same godziny). Instruktor może widzieć swoje, jeśli biuro pozwoli.',
-      '🎉 „Zdałem!” – po oznaczeniu zdanego egzaminu program tworzy grafikę z logo szkoły do udostępnienia; kursant widzi ją też na swoim linku.',
-      '🔔 Lista rezerwowa przy rezerwacjach: kursant zapisuje się na dzień bez wolnych godzin, a biuro widzi, gdy termin się zwolni.'] },
-    { v: '1.58', d: '22.11.2026', p: [
+    { v: '1.66', d: '22.11.2026', p: [
       'Start programu Grafik OSK pod adresem grafikosk.pl.',
       'Grafik jazd i rejestr kursantów dla biura, aplikacja „Mój grafik jazd” dla instruktorów i osobisty link dla kursantów.',
-      'Do włączenia w Ustawieniach: wykłady (teoria) z listą obecności oraz rezerwacje jazd przez kursantów.',
+      'Do włączenia w Ustawieniach: wykłady (teoria), rezerwacje jazd przez kursantów z listą rezerwową, rozliczenie instruktorów i pojazdy OSK.',
+      'Grafik na zegarku Garmin, grafika „Zdałem!” dla kursantów.',
       'Codzienna kopia zapasowa do pliku i na Dysk Google, kosz 30 dni, PIN i historia zmian.',
       'Wysyłka grafiku przez WhatsApp i SMS, wydruki oraz eksport do Excela.'] }
   ];
@@ -1611,6 +1598,7 @@
 
   $('wersja').textContent = WERSJA;
   // ===== CO NOWEGO / O PROGRAMIE =====
+  const IKONA_FB = '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="vertical-align:-4px"><circle cx="12" cy="12" r="12" fill="#1877F2"/><path fill="#fff" d="M13.4 19.5v-6.3h2.1l.3-2.5h-2.4V9.1c0-.7.2-1.2 1.2-1.2h1.3V5.7c-.2 0-1-.1-1.9-.1-1.9 0-3.2 1.2-3.2 3.3v1.8H8.7v2.5h2.1v6.3z"/></svg>';
   function pokazInfo(t) {
     $('mi-t1').classList.toggle('on', t === 'nowosci'); $('mi-t2').classList.toggle('on', t === 'o');
     $('mi-nowosci').classList.toggle('hidden', t !== 'nowosci'); $('mi-o').classList.toggle('hidden', t !== 'o');
@@ -1626,6 +1614,7 @@
         <div class="o-wiersz"><span>Twórca</span><b>${esc(PROGRAM.autor)}</b></div>
         <div class="o-wiersz"><span>E-mail</span><a href="mailto:${PROGRAM.email}">${esc(PROGRAM.email)}</a></div>
         ${tel}
+        ${PROGRAM.facebook ? `<div class="o-wiersz"><span>Facebook</span>${PROGRAM.facebookUrl ? `<a href="${esc(PROGRAM.facebookUrl)}" target="_blank" rel="noopener" class="o-fb">${IKONA_FB} ${esc(PROGRAM.facebook)}</a>` : `<span class="o-fb">${IKONA_FB} ${esc(PROGRAM.facebook)}</span>`}</div>` : ''}
         ${profil && profil.szkoly ? `<div class="o-wiersz"><span>Twoja szkoła</span><span>${esc(profil.szkoly.nazwa)}</span></div>` : ''}
         <button id="mi-zglos" class="btn" type="button" style="margin-top:14px">✉️ Zgłoś problem / pomysł</button>
         <p class="hint" style="margin-top:8px">Otworzy się wiadomość e-mail z numerem wersji i nazwą szkoły – opisz, co się stało albo co warto dodać.</p>
