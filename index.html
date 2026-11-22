@@ -1046,6 +1046,12 @@
           <label for="i-kod-akt">Kod aktywacyjny</label>
           <input id="i-kod-akt" autocapitalize="characters" autocomplete="off" placeholder="SZK-…">
           <p class="hint">Kod aktywacyjny otrzymasz od dostawcy programu. Po założeniu szkoły zostaniesz jej biurem.</p>
+          <label for="i-szkola-adres">Adres szkoły (siedziba firmy)</label>
+          <input id="i-szkola-adres" autocomplete="street-address" placeholder="ulica, nr, kod, miejscowość">
+          <label for="i-szkola-nip">NIP</label>
+          <input id="i-szkola-nip" inputmode="numeric" autocomplete="off" placeholder="10 cyfr">
+          <label class="check" style="align-items:flex-start"><input id="i-umowa-ok" type="checkbox" style="margin-top:3px">
+            <span>Akceptuję <a href="umowa.html" target="_blank" rel="noopener">Regulamin wraz z Umową powierzenia przetwarzania danych osobowych</a> (wersja 1.0). Oświadczam, że jestem uprawniony(-a) do reprezentowania szkoły.</span></label>
         </div>
         <button id="kod-przycisk" class="btn" type="submit">Dołącz</button>
       </form>
@@ -1061,6 +1067,28 @@
     <div class="top-l" style="margin-bottom:14px"><img id="kv-logo" class="logo-n hidden" alt="">
       <div><h1 id="kv-szkola" style="font-size:20px"></h1><p class="sub" id="kv-kto" style="margin:0"></p></div></div>
     <div id="kv-tresc"><p class="hint">Ładowanie…</p></div>
+  </div>
+
+  <!-- Akceptacja Regulaminu i Umowy powierzenia -->
+  <div id="s-umowa" class="hidden">
+    <h1>📄 Regulamin i umowa powierzenia</h1>
+    <div class="card">
+      <p id="um-wstep" style="margin-top:0"></p>
+      <iframe id="um-ramka" title="Regulamin i Umowa powierzenia" style="width:100%;height:46vh;min-height:280px;border:1px solid var(--gy);border-radius:10px;background:#fff"></iframe>
+      <p class="hint" style="margin:6px 0 0"><a id="um-otworz" href="umowa.html" target="_blank" rel="noopener">Otwórz w nowym oknie / wydrukuj</a></p>
+      <form id="f-umowa">
+        <label for="um-nazwa">Pełna nazwa szkoły (firmy)</label><input id="um-nazwa" required autocomplete="organization">
+        <label for="um-adres">Adres (siedziba firmy)</label><input id="um-adres" required autocomplete="street-address" placeholder="ulica, nr, kod, miejscowość">
+        <label for="um-nip">NIP</label><input id="um-nip" required inputmode="numeric" autocomplete="off" placeholder="10 cyfr">
+        <label for="um-osoba">Imię i nazwisko osoby akceptującej</label><input id="um-osoba" required autocomplete="name">
+        <label class="check" style="align-items:flex-start"><input id="um-ok" type="checkbox" style="margin-top:3px">
+          <span>Akceptuję Regulamin wraz z Umową powierzenia przetwarzania danych osobowych (wersja <span id="um-wer"></span>). Oświadczam, że jestem uprawniony(-a) do reprezentowania szkoły.</span></label>
+        <button class="btn" type="submit">Akceptuję</button>
+      </form>
+      <div id="m-umowa" class="msg"></div>
+      <button id="um-pozniej" class="btn2" type="button">Później (przypomnę przy następnym uruchomieniu)</button>
+      <button class="btn2 wyloguj" type="button">Wyloguj</button>
+    </div>
   </div>
 
   <div id="s-czeka" class="hidden">
@@ -1500,6 +1528,8 @@
     <button type="button" class="stopka-link" id="f-o">O programie</button>
     <span class="stopka-kropka">·</span>
     <a class="stopka-link" href="prywatnosc.html" target="_blank" rel="noopener">Prywatność</a>
+    <span class="stopka-kropka">·</span>
+    <a class="stopka-link" href="umowa.html" target="_blank" rel="noopener">Regulamin</a>
   </footer>
 
 <div id="modal-info" class="modal hidden" role="dialog" aria-modal="true">
@@ -1900,7 +1930,9 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.69';
+  const WERSJA = '1.70';
+  const UMOWA_WERSJA = '1.0';            // wersja Regulaminu + Umowy powierzenia (umowa.html) – zmiana wymusza ponowną akceptację
+  const UMOWA_URL = 'umowa.html';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -1912,26 +1944,15 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
-    { v: '1.69', d: '22.11.2026', p: [
-      '🌙 Ciemny wygląd programu – w „👤 Konto” wybierasz: jasny, ciemny albo jak w telefonie. Wydruki zostają jasne.'] },
-    { v: '1.68', d: '22.11.2026', p: [
-      'Nowa lista „Pierwsze kroki” dla biura – podpowiada, co zrobić na start (instruktorzy, kursanci, grafik, ustawienia, kopia). Punkty odhaczają się same, listę można ukryć, a w Ustawieniach pokazać z powrotem.'] },
-    { v: '1.67', d: '22.11.2026', p: [
-      'Grafik OSK ma swoją stronę na Facebooku – link w „O programie” i na stronie głównej.'] },
-    { v: '1.66', d: '22.11.2026', p: [
-      'Start programu Grafik OSK pod adresem grafikosk.pl.',
-      'Grafik jazd i rejestr kursantów dla biura, aplikacja „Mój grafik jazd” dla instruktorów i osobisty link dla kursantów.',
-      'Do włączenia w Ustawieniach: wykłady (teoria), rezerwacje jazd przez kursantów z listą rezerwową, rozliczenie instruktorów i pojazdy OSK.',
-      'Grafik na zegarku Garmin, grafika „Zdałem!” dla kursantów.',
-      'Codzienna kopia zapasowa do pliku i na Dysk Google, kosz 30 dni, PIN i historia zmian.',
-      'Wysyłka grafiku przez WhatsApp i SMS, wydruki oraz eksport do Excela.'] }
+    { v: '1.70', d: '22.11.2026', p: [
+      'Regulamin i umowa powierzenia danych (RODO) do zaakceptowania w programie przez biuro – link „Regulamin” na dole strony.'] }
   ];
   // ======================
 
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   const ADRES = location.origin + location.pathname;
   const $ = id => document.getElementById(id);
-  const EKRANY = ['s-start', 's-ladowanie', 's-login', 's-haslo', 's-kod', 's-czeka', 's-panel', 's-admin', 's-kursant'];
+  const EKRANY = ['s-start', 's-ladowanie', 's-login', 's-haslo', 's-kod', 's-umowa', 's-czeka', 's-panel', 's-admin', 's-kursant'];
   const KURSANT_TOKEN = new URLSearchParams(location.search).get('k');   // osobisty link kursanta
 
   let tryb = 'login';
@@ -1972,9 +1993,11 @@
         ${tel}
         ${PROGRAM.facebook ? `<div class="o-wiersz"><span>Facebook</span>${PROGRAM.facebookUrl ? `<a href="${esc(PROGRAM.facebookUrl)}" target="_blank" rel="noopener" class="o-fb">${IKONA_FB} ${esc(PROGRAM.facebook)}</a>` : `<span class="o-fb">${IKONA_FB} ${esc(PROGRAM.facebook)}</span>`}</div>` : ''}
         ${profil && profil.szkoly ? `<div class="o-wiersz"><span>Twoja szkoła</span><span>${esc(profil.szkoly.nazwa)}</span></div>` : ''}
+        <div class="o-wiersz"><span>Regulamin i umowa</span><span><a href="${UMOWA_URL}" target="_blank" rel="noopener">wersja ${esc(UMOWA_WERSJA)}</a>${mojaUmowa ? ` · zaakceptowano ${fmtDT(mojaUmowa.kiedy)} (${esc(mojaUmowa.osoba)}) · <a href="#" id="mi-potw">potwierdzenie</a>` : ''}</span></div>
         <button id="mi-zglos" class="btn" type="button" style="margin-top:14px">✉️ Zgłoś problem / pomysł</button>
         <p class="hint" style="margin-top:8px">Otworzy się wiadomość e-mail z numerem wersji i nazwą szkoły – opisz, co się stało albo co warto dodać.</p>
       </div>`;
+      if ($('mi-potw')) $('mi-potw').onclick = e => { e.preventDefault(); drukujPotwierdzenie(mojaUmowa); };
       $('mi-zglos').onclick = () => {
         const tem = `${PROGRAM.nazwa} ${WERSJA} – zgłoszenie${profil && profil.szkoly ? ' – ' + profil.szkoly.nazwa : ''}`;
         const tresc = `Dzień dobry,\n\n(opisz problem albo pomysł)\n\n\n---\nWersja programu: ${WERSJA}\nSzkoła: ${(profil && profil.szkoly && profil.szkoly.nazwa) || '-'}\nKonto: ${(ja && ja.email) || '-'} (${(profil && profil.rola) || '-'})\nUrządzenie: ${navigator.userAgent}`;
@@ -2206,13 +2229,80 @@
         const nazwa = $('i-szkola-nazwa').value.trim(), kod = $('i-kod-akt').value.trim();
         if (!nazwa) { msg('m-kod', 'Wpisz nazwę szkoły.'); return; }
         if (!kod) { msg('m-kod', 'Wpisz kod aktywacyjny.'); return; }
+        const adres = $('i-szkola-adres').value.trim(), nip = $('i-szkola-nip').value.replace(/\D/g, '');
+        if (!adres) { msg('m-kod', 'Wpisz adres szkoły.'); return; }
+        if (nip.length !== 10) { msg('m-kod', 'NIP musi mieć 10 cyfr.'); return; }
+        if (!$('i-umowa-ok').checked) { msg('m-kod', 'Zaznacz akceptację Regulaminu i Umowy powierzenia.'); return; }
         if (!await pytaj(`Założyć szkołę „${nazwa}”?\n\nZostaniesz jej biurem. Nazwę możesz później zmienić.`, { tak: 'Załóż szkołę' })) return;
         ({ error } = await sb.rpc('zaloz_szkole', { p_kod: kod, p_nazwa: nazwa, p_imie_nazwisko: imie }));
+        if (!error) {   // szkoła założona – od razu zapis akceptacji umowy (gdyby się nie udało, program poprosi o nią po zalogowaniu)
+          await sb.rpc('akceptuj_umowe', { p_wersja: UMOWA_WERSJA, p_nazwa: nazwa, p_adres: adres, p_nip: nip, p_osoba: imie, p_urzadzenie: navigator.userAgent });
+        }
       }
       if (error) { msg('m-kod', /zaloz_szkole/.test(error.message || '') ? 'Zakładanie szkół nie jest jeszcze włączone (brak kroku 15 w bazie).' : tlumacz(error)); return; }
       odswiez();
     });
   };
+
+  // ----- Regulamin i Umowa powierzenia (krok 29) -----
+  let mojaUmowa = null;          // ostatnia akceptacja szkoły (dla biura); null = brak lub krok 29 nieuruchomiony
+  let umowaPozniej = false;      // „Później” – tylko do następnego uruchomienia programu
+  async function sprawdzUmowe() {
+    mojaUmowa = null;
+    if (!profil || profil.rola !== 'biuro') return true;
+    const { data, error } = await sb.rpc('moja_umowa');
+    if (error) return true;      // krok 29 nie uruchomiony – nie blokujemy pracy
+    mojaUmowa = (data && data[0]) || null;
+    if (mojaUmowa && mojaUmowa.wersja === UMOWA_WERSJA) return true;
+    if (umowaPozniej) return true;
+    $('um-wstep').textContent = mojaUmowa
+      ? `Regulamin i Umowa powierzenia zostały zaktualizowane (wersja ${UMOWA_WERSJA}). Przeczytaj nową wersję i zaakceptuj ją w imieniu szkoły.`
+      : `Szkoła „${(profil.szkoly && profil.szkoly.nazwa) || ''}” korzysta z programu na podstawie Regulaminu i Umowy powierzenia przetwarzania danych osobowych (RODO). Przeczytaj je i zaakceptuj w imieniu szkoły.`;
+    $('um-wer').textContent = UMOWA_WERSJA;
+    $('um-ramka').src = UMOWA_URL;
+    $('um-nazwa').value = (mojaUmowa && mojaUmowa.nazwa) || (profil.szkoly && profil.szkoly.nazwa) || '';
+    $('um-adres').value = (mojaUmowa && mojaUmowa.adres) || '';
+    $('um-nip').value = (mojaUmowa && mojaUmowa.nip) || '';
+    $('um-osoba').value = profil.imie_nazwisko || '';
+    $('um-ok').checked = false;
+    msg('m-umowa', '');
+    pokaz('s-umowa');
+    return false;
+  }
+  $('f-umowa').onsubmit = e => {
+    e.preventDefault();
+    zajety(e.submitter || $('f-umowa').querySelector('button'), async () => {
+      const nip = $('um-nip').value.replace(/\D/g, '');
+      if (nip.length !== 10) { msg('m-umowa', 'NIP musi mieć 10 cyfr.'); return; }
+      if (!$('um-ok').checked) { msg('m-umowa', 'Zaznacz akceptację Regulaminu i Umowy powierzenia.'); return; }
+      const { error } = await sb.rpc('akceptuj_umowe', { p_wersja: UMOWA_WERSJA, p_nazwa: $('um-nazwa').value, p_adres: $('um-adres').value,
+        p_nip: nip, p_osoba: $('um-osoba').value, p_urzadzenie: navigator.userAgent });
+      if (error) { msg('m-umowa', tlumacz(error)); return; }
+      odswiez();
+    });
+  };
+  $('um-pozniej').onclick = () => { umowaPozniej = true; odswiez(); };
+  function opisUmowy(u) {
+    return u ? `wersja ${esc(u.wersja)} · ${fmtDT(u.kiedy)} · ${esc(u.osoba)}${u.email ? ' (' + esc(u.email) + ')' : ''}` : '';
+  }
+  function drukujPotwierdzenie(u, szkolaNazwa) {
+    const w = window.open('', '_blank');
+    if (!w) return;
+    w.document.write(`<!DOCTYPE html><html lang="pl"><head><meta charset="utf-8"><title>Potwierdzenie akceptacji – ${esc(u.nazwa)}</title>
+      <style>body{font-family:system-ui,Arial,sans-serif;max-width:700px;margin:30px auto;padding:0 18px;line-height:1.5}td{padding:5px 10px;border-bottom:1px solid #ddd;vertical-align:top}td:first-child{color:#555;white-space:nowrap}</style></head><body>
+      <h2>Potwierdzenie zawarcia umowy w formie elektronicznej</h2>
+      <p>Regulamin korzystania z Programu dla szkół jazdy wraz z Załącznikiem nr 1 – Umową powierzenia przetwarzania danych osobowych.</p>
+      <table>
+        <tr><td>Dostawca</td><td>Slesch Beniamin Dziura, ul. Włosiankarska 15/37, 23-400 Biłgoraj, NIP 6020023266, REGON 180207589</td></tr>
+        <tr><td>Szkoła</td><td>${esc(u.nazwa)}<br>${esc(u.adres)}<br>NIP ${esc(u.nip)}</td></tr>
+        <tr><td>Zaakceptował(a)</td><td>${esc(u.osoba)}${u.email ? '<br>' + esc(u.email) : ''}</td></tr>
+        <tr><td>Data i godzina</td><td>${fmtDT(u.kiedy)}</td></tr>
+        <tr><td>Wersja dokumentu</td><td>${esc(u.wersja)}</td></tr>
+        <tr><td>Treść</td><td>${esc(ADRES.replace(/\/?$/, '/') + UMOWA_URL)}</td></tr>
+      </table>
+      <p style="margin-top:24px"><button onclick="print()">🖨️ Drukuj / zapisz PDF</button></p></body></html>`);
+    w.document.close();
+  }
 
   // ----- Panel właściciela programu -----
   let jestWlascicielem = false;
@@ -2248,7 +2338,8 @@
   async function ladujAdmin() {
     msg('m-admin', '');
     $('a-wroc').classList.toggle('hidden', !profil);
-    const [sz, kd, pn] = await Promise.all([sb.rpc('lista_szkol'), sb.rpc('lista_kodow'), sb.rpc('szkoly_z_pinem')]);
+    const [sz, kd, pn, um] = await Promise.all([sb.rpc('lista_szkol'), sb.rpc('lista_kodow'), sb.rpc('szkoly_z_pinem'), sb.rpc('umowy_szkol')]);
+    const umowy = new Map(um.error ? [] : (um.data || []).map(u => [String(u.szkola_id), u]));
     const zPinem = new Set(pn.error ? [] : (pn.data || []).map(r => typeof r === 'string' ? r : Object.values(r)[0]));
     if (sz.error) { $('a-szkoly').innerHTML = `<p class="msg err" style="display:block">${esc(tlumacz(sz.error))}</p>`; }
     else $('a-szkoly').innerHTML = sz.data.map(x => `<div class="a-szk${x.aktywna ? '' : ' zabl'}">
@@ -2258,7 +2349,9 @@
         <div class="dane">Biuro: ${esc(x.biuro || '—')}<br>
           Konta: ${x.osob} · instruktorzy: ${x.instruktorow}${x.limit_instr ? ` / ${x.limit_instr}` : ''} · kursanci: ${x.kursantow} · jazdy (30 dni): ${x.jazd_30dni}<br>
           Ostatnie logowanie: ${fmtDT(x.ostatnie_logowanie)} · w programie od: ${fmtData(x.utworzono)} · kod szkoły: <b>${esc(x.kod_zaproszenia)}</b><br>
-          PIN: ${pn.error ? '?' : zPinem.has(x.id) ? '🔒 włączony' : 'wyłączony'}</div>
+          PIN: ${pn.error ? '?' : zPinem.has(x.id) ? '🔒 włączony' : 'wyłączony'}<br>
+          Umowa: ${um.error ? '? (uruchom krok29_umowa.sql)' : (u => !u ? '<b style="color:var(--r)">⚠️ brak akceptacji</b>'
+            : `${u.wersja === UMOWA_WERSJA ? '✅' : '⚠️ starsza wersja –'} ${opisUmowy(u)} · NIP ${esc(u.nip)} <button type="button" data-umowa="${esc(String(x.id))}" style="padding:3px 8px;font-size:12px">📄 Potwierdzenie</button>`)(umowy.get(String(x.id)))}</div>
         ${'bez_limitu' in x ? `<div class="a-abo">
           <div class="a-abo-stan">Abonament: <b>${esc(opisAbonamentu(stanAbonamentu(x), x))}</b></div>
           ${'limit_instr' in x ? `<label style="margin:6px 0 2px;font-weight:600">Pakiet – aktywnych instruktorów</label>
@@ -2280,6 +2373,7 @@
       if (error) { msg('m-admin', tlumacz(error)); return; }
       ladujAdmin();
     }));
+    $('a-szkoly').querySelectorAll('[data-umowa]').forEach(b => b.onclick = () => { const u = umowy.get(b.dataset.umowa); if (u) drukujPotwierdzenie(u); });
     const szkolaAbo = id => (sz.data || []).find(x => x.id === id);
     const zapiszAbo = async (x, zmiana) => {
       const n = { oplacone_do: x.oplacone_do, bez_limitu: x.bez_limitu, proba: x.proba, ...zmiana };
@@ -2410,6 +2504,8 @@
       pokaz('s-czeka');
       return;
     }
+
+    if (!await sprawdzUmowe()) return;
 
     $('p-szkola').textContent = (profil.szkoly && profil.szkoly.nazwa) || '';
     ustawLogo();
