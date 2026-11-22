@@ -210,6 +210,13 @@
   @media(max-width:760px){.ls-telefony figure{flex-basis:72%}.ls-przesun{display:block}}
   .ls-telefony img{width:100%;border-radius:18px;border:6px solid #1d2329;box-shadow:0 8px 24px rgba(20,25,30,.15)}
   .ls-telefony figcaption{font-size:14px;color:var(--m);margin-top:8px}
+  .ls-zegarek{display:grid;grid-template-columns:1fr;gap:22px;align-items:center;background:#fff;border:1px solid var(--b);border-radius:16px;padding:22px}
+  @media(min-width:760px){.ls-zegarek{grid-template-columns:300px 1fr;padding:28px 32px}}
+  .ls-zegarek img{width:100%;max-width:300px;margin:0 auto;display:block;border-radius:14px}
+  .ls-zegarek h2{text-align:left;margin-bottom:10px}
+  .ls-zegarek p{font-size:16px;line-height:1.55;color:#3b444c;margin:0 0 12px}
+  .ls-zegarek ul{margin:0 0 14px;padding-left:20px;color:#3b444c;line-height:1.6}
+  .ls-odznaka{display:inline-block;line-height:0}.ls-odznaka img{height:56px;width:auto;max-width:none;border-radius:0;margin:0}
   .ls-ceny{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:10px}
   .ls-cena{background:#fff;border:1px solid var(--b);border-radius:14px;padding:20px;text-align:center;display:flex;flex-direction:column;gap:4px}
   .ls-cena span{color:var(--m);font-size:14px}
@@ -484,6 +491,7 @@
         <div class="ls-kafel"><b>💬 WhatsApp i SMS</b><p>Grafik dnia do instruktorów jednym kliknięciem, przypomnienia o jeździe dla kursantów.</p></div>
         <div class="ls-kafel"><b>🖨 Wydruki i Excel</b><p>Grafik dnia i tygodnia do druku, karta kursanta, zestawienie godzin instruktorów, eksport do Excela.</p></div>
         <div class="ls-kafel"><b>🔒 Bezpieczeństwo</b><p>Codzienna kopia na Dysk Google, kosz 30 dni, PIN, historia zmian. Instruktor nie widzi PESEL ani PKK.</p></div>
+        <div class="ls-kafel"><b>⌚ Zegarek Garmin</b><p>Instruktor widzi najbliższą jazdę i grafik dnia na zegarku Garmin – Fenix, Forerunner, Venu, Instinct i inne.</p></div>
         <div class="ls-kafel"><b>👥 Cały zespół</b><p>Kilka osób w biurze, każdy instruktor na swoim koncie. Dane szkoły na serwerach w UE.</p></div>
       </div>
     </section>
@@ -498,6 +506,21 @@
       <p class="ls-przesun">← przesuń palcem, żeby zobaczyć pozostałe →</p>
     </section>
 
+    <section class="ls-zegarek">
+      <img src="img/zegarek-garmin.jpg" alt="Aplikacja Grafik OSK na zegarku Garmin – najbliższa jazda" loading="lazy">
+      <div>
+        <h2 class="ls-h2">⌚ Grafik jazd na zegarku Garmin</h2>
+        <p>Instruktor nie musi wyjmować telefonu w aucie. Aplikacja <b>Grafik OSK</b> na zegarek Garmin pokazuje:</p>
+        <ul>
+          <li>najbliższą jazdę – godzinę, ile zostało czasu, kursanta, kategorię, która to godzina kursu i telefon,</li>
+          <li>wszystkie jazdy na dziś i jutro,</li>
+          <li>najbliższą jazdę na liście pod tarczą (glance) – bez otwierania aplikacji.</li>
+        </ul>
+        <p>Grafik odświeża się sam co kilka minut. Działa na zegarkach <b>Fenix 5–9, Epix, Forerunner, Venu, Vivoactive, Instinct, Enduro, MARQ</b> i innych. Aplikacja jest bezpłatna dla szkół korzystających z programu – instruktor instaluje ją ze sklepu Connect IQ i wpisuje kod z programu (Konto → Zegarek Garmin).</p>
+        <div class="ls-cta"><a class="ls-odznaka" href="https://apps.garmin.com/pl-PL/apps/4ba72187-cada-45c3-b35f-bad1b56f46a2" target="_blank" rel="noopener"><img src="img/connect-iq-badge.png" alt="Dostępne w sklepie Garmin Connect IQ"></a></div>
+      </div>
+    </section>
+
     <section>
       <h2 class="ls-h2">Najczęstsze pytania</h2>
       <div class="ls-faq">
@@ -505,6 +528,7 @@
         <details><summary>Czy mogę przenieść dane z obecnego grafiku?</summary><p>Tak. Grafik i kursantów można wczytać z Excela, a przy wdrożeniu pomagamy przenieść dane z dotychczasowego programu.</p></details>
         <details><summary>Gdzie są przechowywane dane?</summary><p>Na serwerach w Unii Europejskiej (Frankfurt). Każda szkoła widzi tylko swoje dane, a codzienna kopia trafia na Dysk Google szkoły. Szczegóły w <a href="prywatnosc.html" target="_blank" rel="noopener">polityce prywatności</a>.</p></details>
         <details><summary>Czy kilka osób może pracować naraz?</summary><p>Tak – biuro na kilku komputerach i wszyscy instruktorzy na telefonach. Zmiany widać u wszystkich na bieżąco.</p></details>
+        <details><summary>Czy instruktor może widzieć grafik na zegarku?</summary><p>Tak, na zegarkach Garmin (m.in. Fenix, Forerunner, Venu, Instinct). Instruktor instaluje bezpłatną aplikację „Grafik OSK” ze sklepu Connect IQ, a w programie w „Konto → Zegarek Garmin” kopiuje swój kod i wkleja go w ustawieniach aplikacji. Zegarek tylko odczytuje grafik – niczego w nim nie zmienia.</p></details>
         <details><summary>Ile kosztuje program?</summary><p>Cena zależy od liczby instruktorów w szkole. Napisz albo zadzwoń – przygotujemy ofertę. Pierwsze 30 dni są bezpłatne.</p></details>
         <details><summary>Jak zacząć?</summary><p>Napisz do nas – dostaniesz kod aktywacyjny. Zakładasz konto, wpisujesz kod i nazwę szkoły, a potem zapraszasz instruktorów jednym przyciskiem.</p></details>
       </div>
@@ -1345,7 +1369,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.57';
+  const WERSJA = '1.58';
   // ----- informacje o programie -----
   const PROGRAM = {
     nazwa: 'Program dla szkół jazdy',
@@ -1355,6 +1379,7 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.58', d: '22.11.2026', p: ['Strona startowa: informacja o aplikacji Grafik OSK na zegarki Garmin.'] },
     { v: '1.57', d: '21.11.2026', p: ['⌚ Zegarek Garmin: instruktor w „👤 Konto” pobiera kod do zegarka i widzi na nim swoje jazdy na dziś i jutro.'] },
     { v: '1.56', d: '21.11.2026', p: ['Większe logo szkoły na górze programu i na ekranie logowania.', 'Podpowiedź, w jakim rozmiarze najlepiej wgrać logo; przezroczyste tło logo jest zachowywane.'] },
     { v: '1.54', d: '21.11.2026', p: [
