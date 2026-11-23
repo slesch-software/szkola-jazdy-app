@@ -565,10 +565,12 @@
   .kto-podp button{background:none;border:none;padding:0;font:inherit;color:var(--gl);text-decoration:underline;cursor:pointer}
   .logo-l{display:block;max-height:110px;max-width:min(280px,100%);object-fit:contain;margin:0 auto 10px}
   .logo-pod{max-height:90px;max-width:240px;object-fit:contain;border:1px solid var(--b);border-radius:8px;padding:6px;background:#fff}
+  @page{margin:0}   /* bez marginesów strony przeglądarka nie drukuje swoich nagłówków (data, tytuł, adres, numer strony) */
   @media print{
+    body{margin:0!important;padding:0!important}
     body>*:not(#druk){display:none!important}
     html,body{background:#fff!important}
-    #druk{display:block;font-family:Arial,sans-serif;color:#000;font-size:12pt;padding:0 4px}
+    #druk{display:block;font-family:Arial,sans-serif;color:#000;font-size:12pt;padding:12mm 12mm 10mm;-webkit-box-decoration-break:clone;box-decoration-break:clone}
     #druk h1{font-size:16pt;margin:0 0 2pt}
     #druk h2{font-size:13pt;margin:0 0 10pt;font-weight:400}
     #druk table{width:100%;border-collapse:collapse;margin-bottom:12pt}
@@ -1950,7 +1952,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.72';
+  const WERSJA = '1.73';
   const UMOWA_WERSJA = '1.0';            // wersja Regulaminu + Umowy powierzenia (umowa.html) – zmiana wymusza ponowną akceptację
   const UMOWA_URL = 'umowa.html';
   // ----- informacje o programie -----
@@ -1964,6 +1966,7 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.73', d: '23.11.2026', p: ['Wydruki bez dopisków przeglądarki na górze i na dole kartki (data, tytuł strony, adres, numer strony).'] },
     { v: '1.72', d: '23.11.2026', p: [
       'Grafik: zaplanowany egzamin w zielonej ramce, szeroki pasek przewijania instruktorów na górze (ze strzałkami), a automatyczne odświeżanie nie cofa już przewiniętej listy.',
       'Kursanci i Miesiąc na komputerze na całą szerokość – przyciski nie wychodzą poza ramkę.'] },
