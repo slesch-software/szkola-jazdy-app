@@ -152,7 +152,8 @@
   .dz-akcje .link{margin:0}
   .dz-akcje .licznik{margin:0}
   .jazda{display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--b);border-left:5px solid var(--gy);border-radius:10px;margin-bottom:8px;background:#fff}
-  .jazda.egzamin{border-left-color:#c77700;background:#fffaf0}
+  .jazda.egzamin{border:2px solid #16a34a;border-left:6px solid #16a34a;background:#f0fdf4}
+  .jazda.egzamin .godz{color:#15803d}
   .jazda.inne{border-left-color:#8a96a3;background:#f7f8f9}
   .jazda.edyt{cursor:pointer}
   .jazda.edyt:hover{border-color:var(--gy)}
@@ -384,6 +385,7 @@
   .kv-jazda.wst .kv-data{background:#fff4e0;color:#8a4b00;border:2px dashed #d97706}
   .kv-jazda .op{font-size:15px;line-height:1.45}
   .kv-jazda .op small{color:var(--m);font-size:13px}
+  .k-filtry{flex-wrap:wrap}
   .k-filtry #k-csv{margin-left:auto;white-space:nowrap}
   .k-filtry select,.k-filtry button{padding:9px 10px;font-size:15px}
   #k-lista .k-dl b{display:inline;font-weight:600}
@@ -410,11 +412,19 @@
   .wysl.zm{color:#c2410c}
   @media (min-width:900px){
     .wrap{max-width:1240px;padding:24px 28px 48px}
-    #tab-kursanci .card,#tab-miesiac .card,#p-instr-extra .card,#g-ustawienia{max-width:900px}
+    #p-instr-extra .card,#g-ustawienia{max-width:900px}
     #tab-osoby .card{max-width:none}   /* Ustawienia na całą szerokość okna */
     .akcje{grid-template-columns:repeat(4,1fr)}
   }
   .kolumny{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(250px,1fr);gap:12px;overflow-x:auto;padding-bottom:6px}
+  .kol-gora{display:flex;align-items:center;gap:8px;margin:0 0 10px}
+  .kol-gora button{flex:none;width:40px;height:34px;padding:0;font-size:20px;font-weight:800;line-height:1}
+  .kol-pasek{flex:1;overflow-x:auto;overflow-y:hidden;height:20px;border-radius:10px;background:var(--bg);border:1px solid var(--b)}
+  .kol-pasek > div{height:1px}
+  .kol-pasek::-webkit-scrollbar,.kolumny::-webkit-scrollbar{height:16px}
+  .kol-pasek::-webkit-scrollbar-thumb,.kolumny::-webkit-scrollbar-thumb{background:#9aa4ae;border-radius:10px;border:3px solid transparent;background-clip:padding-box}
+  .kol-pasek::-webkit-scrollbar-thumb:hover,.kolumny::-webkit-scrollbar-thumb:hover{background-color:#6b7580}
+  .kol-pasek{scrollbar-width:auto;scrollbar-color:#9aa4ae transparent}
   .kol{background:var(--bg);border:1px solid var(--b);border-radius:12px;padding:8px;min-width:0}
   .kol.wyb{border-color:var(--gy);box-shadow:0 0 0 2px var(--g2)}
   .kol h3{font-size:15px;margin:2px 4px 8px;display:flex;justify-content:space-between;gap:6px;cursor:pointer}
@@ -641,7 +651,8 @@
   html[data-motyw="ciemny"] .dzien>button:hover{background:var(--g);color:var(--ga);border-color:var(--g)}
   html[data-motyw="ciemny"] .dz-opis span{color:#abb3bf}
   html[data-motyw="ciemny"] .jazda{border:1px solid var(--b);border-left:5px solid var(--gy);background:#1b2128}
-  html[data-motyw="ciemny"] .jazda.egzamin{border-left-color:#c77700;background:#362910}
+  html[data-motyw="ciemny"] .jazda.egzamin{border:2px solid #16a34a;border-left:6px solid #16a34a;background:#15331e}
+  html[data-motyw="ciemny"] .jazda.egzamin .godz{color:#a5f0c1}
   html[data-motyw="ciemny"] .jazda.inne{border-left-color:#8a96a3;background:#202225}
   html[data-motyw="ciemny"] .jazda.edyt:hover{border-color:var(--gy)}
   html[data-motyw="ciemny"] .jazda .kto span{color:var(--m)}
@@ -777,6 +788,9 @@
   html[data-motyw="ciemny"] .kolejka tr.nast td{background:var(--wb)}
   html[data-motyw="ciemny"] .wysl.ok{color:var(--ok)}
   html[data-motyw="ciemny"] .wysl.zm{color:#f49d7a}
+  html[data-motyw="ciemny"] .kol-pasek{background:var(--bg);border:1px solid var(--b)}
+  html[data-motyw="ciemny"] .kol-pasek::-webkit-scrollbar-thumb,html[data-motyw="ciemny"] .kolumny::-webkit-scrollbar-thumb{background:#4d5257;border:3px solid transparent}
+  html[data-motyw="ciemny"] .kol-pasek::-webkit-scrollbar-thumb:hover,html[data-motyw="ciemny"] .kolumny::-webkit-scrollbar-thumb:hover{background-color:#6b7580}
   html[data-motyw="ciemny"] .kol{background:var(--bg);border:1px solid var(--b)}
   html[data-motyw="ciemny"] .kol.wyb{border-color:var(--gy)}
   html[data-motyw="ciemny"] .kol h3 small{color:var(--m)}
@@ -868,6 +882,7 @@
   html[data-motyw="ciemny"] [style*="background:#f0fdf4"]{background:#15331e!important}
   html[data-motyw="ciemny"] [style*="background:#fdecea"]{background:#381915!important}
   html[data-motyw="ciemny"] [style*="background:#fdf2f2"]{background:#311515!important}
+  html[data-motyw="ciemny"] [style*="background:#fff"]{background:#1b2128!important}
   html[data-motyw="ciemny"] [style*="border-color:#86efac"]{border-color:#3c8657!important}
   html[data-motyw="ciemny"] [style*="border-color:#f5c2c0"]{border-color:#6a3432!important}
   html[data-motyw="ciemny"] [style*="color:#555"]{color:#b7b7b7!important}
@@ -1935,7 +1950,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.71';
+  const WERSJA = '1.72';
   const UMOWA_WERSJA = '1.0';            // wersja Regulaminu + Umowy powierzenia (umowa.html) – zmiana wymusza ponowną akceptację
   const UMOWA_URL = 'umowa.html';
   // ----- informacje o programie -----
@@ -1949,6 +1964,9 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.72', d: '23.11.2026', p: [
+      'Grafik: zaplanowany egzamin w zielonej ramce, szeroki pasek przewijania instruktorów na górze (ze strzałkami), a automatyczne odświeżanie nie cofa już przewiniętej listy.',
+      'Kursanci i Miesiąc na komputerze na całą szerokość – przyciski nie wychodzą poza ramkę.'] },
     { v: '1.70', d: '22.11.2026', p: [
       'Regulamin i umowa powierzenia danych (RODO) do zaakceptowania w programie przez biuro – link „Regulamin” na dole strony.'] }
   ];
@@ -4659,12 +4677,14 @@
     if (trybKolumn()) {
       wszJ = gWszJazdy; wszW = gWszWolne;
       const akt = instruktorzy.filter(i => i.aktywny);
-      $('g-lista').innerHTML = `<div class="kolumny">${akt.map(i => {
+      const stare = $('g-lista').querySelector('.kolumny'), sl = stare ? stare.scrollLeft : (gKolScroll || 0), sy = window.scrollY;
+      $('g-lista').innerHTML = `<div class="kol-gora hidden"><button type="button" class="kg-l" aria-label="Przewiń w lewo">‹</button><div class="kol-pasek"><div></div></div><button type="button" class="kg-p" aria-label="Przewiń w prawo">›</button></div><div class="kolumny">${akt.map(i => {
         const jz = gWszJazdy.filter(j => j.instruktor_id === i.id), wl = gWszWolne.filter(w => w.instruktor_id === i.id);
         const bw = znacznikWysl(i.id, jz, wl);
         return `<div class="kol${i.id === gInstr ? ' wyb' : ''}${edyt && ustI(i.id).nieprac ? ' nieprac' : ''}"><h3 data-kol="${i.id}" title="Zaznacz (WhatsApp / druk)">${esc(i.imie_nazwisko)}<small>${sumaTxt(jz)}</small></h3>
           ${bw ? `<div style="margin:-4px 4px 6px">${bw}</div>` : ''}${listaDnia(i.id, jz, wl, edyt)}</div>`;
       }).join('')}</div>`;
+      podepnijPasekKolumn(sl, sy);
       $('g-suma').textContent = sumaTxt(gWszJazdy) ? 'razem: ' + sumaTxt(gWszJazdy) : '';
       $('g-lista').querySelectorAll('h3[data-kol]').forEach(h => h.onclick = () => {
         gInstr = h.dataset.kol;
@@ -4688,6 +4708,25 @@
       otworzJazde(null, { od: el.dataset.od, do: el.dataset.do, instr: el.dataset.instr }));
     $('g-lista').querySelectorAll('.wolny-inst.edyt').forEach(el => el.onclick = () =>
       otworzWolne(wszW.find(w => w.id === el.dataset.wid)));
+  }
+
+  // górny pasek przewijania kolumn + zapamiętanie miejsca przy odświeżaniu
+  let gKolScroll = 0;
+  function podepnijPasekKolumn(sl, sy) {
+    const k = $('g-lista').querySelector('.kolumny'), g = $('g-lista').querySelector('.kol-gora');
+    if (!k || !g) return;
+    const pas = g.querySelector('.kol-pasek'), wn = pas.firstElementChild;
+    const ustaw = () => { wn.style.width = k.scrollWidth + 'px'; g.classList.toggle('hidden', k.scrollWidth <= k.clientWidth + 2); };
+    ustaw();
+    let blok = false;
+    pas.onscroll = () => { if (blok) { blok = false; return; } blok = true; k.scrollLeft = pas.scrollLeft; };
+    k.onscroll = () => { gKolScroll = k.scrollLeft; if (blok) { blok = false; return; } blok = true; pas.scrollLeft = k.scrollLeft; };
+    const krok = () => { const c = k.querySelector('.kol'); return c ? c.getBoundingClientRect().width + 12 : 260; };
+    g.querySelector('.kg-l').onclick = () => k.scrollBy({ left: -krok(), behavior: 'smooth' });
+    g.querySelector('.kg-p').onclick = () => k.scrollBy({ left: krok(), behavior: 'smooth' });
+    k.scrollLeft = sl; pas.scrollLeft = k.scrollLeft; gKolScroll = k.scrollLeft;
+    if (sy && Math.abs(window.scrollY - sy) > 2) window.scrollTo(0, sy);
+    if (!window.__kolResize) { window.__kolResize = true; window.addEventListener('resize', () => { const kk = $('g-lista').querySelector('.kolumny'), gg = $('g-lista').querySelector('.kol-gora'); if (kk && gg) { gg.querySelector('.kol-pasek').firstElementChild.style.width = kk.scrollWidth + 'px'; gg.classList.toggle('hidden', kk.scrollWidth <= kk.clientWidth + 2); } }); }
   }
 
   function pokazPrzelacznik() {
