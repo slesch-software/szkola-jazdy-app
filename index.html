@@ -562,6 +562,26 @@
   .szybkie{display:flex;gap:6px;justify-content:center;margin:10px 0 12px}
   .szybkie button{padding:9px 20px;font-size:16px;font-weight:700;border-radius:99px;border:1px solid var(--b);background:#fff;cursor:pointer;color:var(--t);line-height:1.2}
   .szybkie button small{color:#4b5563;margin-left:6px;font-size:14.5px;font-weight:500}
+  .szybkie{flex-wrap:wrap}
+  .szybkie .not-btn{background:#fffbeb;border-color:#fcd34d;color:#92400e}
+  .szybkie .not-btn.on{background:#fde68a}
+  .not-licz{display:inline-block;min-width:22px;padding:1px 7px;margin-left:6px;border-radius:99px;background:#dc2626;color:#fff;font-size:13px;line-height:20px}
+  .notatki{border:1px solid #fcd34d;background:#fffbeb;border-radius:12px;padding:10px 12px;margin:0 0 12px}
+  .not-i{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px dashed #fcd34d}
+  .not-i:last-child{border-bottom:none}
+  .not-i input[type=checkbox]{width:22px;height:22px;margin:2px 0 0;flex:none}
+  .not-i .tx{flex:1;min-width:0;overflow-wrap:anywhere;font-size:15px}
+  .not-i .tx > span:not(.not-data){white-space:pre-wrap}
+  .not-i .tx small{display:block;color:var(--m);font-size:12.5px;margin-top:2px;white-space:normal}
+  .not-i.zrob .tx > span{text-decoration:line-through;color:var(--m)}
+  .not-i .op{display:flex;gap:4px;flex:none}
+  .not-i .op button{padding:4px 8px;font-size:13px;margin:0}
+  .not-zal{font-weight:700;color:#b45309;margin:2px 0 4px;font-size:14px}
+  .not-data{display:inline-block;font-size:12px;font-weight:700;background:#fde68a;color:#92400e;border-radius:6px;padding:0 6px;margin-right:6px}
+  .not-instr{display:flex;flex-wrap:wrap;gap:6px}
+  .not-instr button{padding:6px 10px;font-size:13.5px;border-radius:99px;margin:0}
+  .not-instr button.on{background:var(--g);color:var(--ga);border-color:var(--g)}
+  .not-pusto{color:var(--m);font-size:14px;margin:2px 0 8px}
   .szybkie button.on{background:var(--g);color:var(--ga);border-color:var(--g);font-weight:600}
   .szybkie button.on small{color:var(--ga)}
   @media(max-width:520px){.szybkie button{padding:8px 14px;font-size:15px}.szybkie button small{display:none}.dz-opis b{font-size:19px}.dz-opis span{font-size:14px}}
@@ -892,6 +912,18 @@
   html[data-motyw="ciemny"] #mq-tak.niebezp{background:var(--r);border-color:var(--r);color:#fff}
   html[data-motyw="ciemny"] .szybkie button{border:1px solid var(--b);background:#1b2128;color:var(--t)}
   html[data-motyw="ciemny"] .szybkie button small{color:#abb3bf}
+  html[data-motyw="ciemny"] .szybkie .not-btn{background:#393111;border-color:#a48b39;color:#f5bc99}
+  html[data-motyw="ciemny"] .szybkie .not-btn.on{background:#7d6c26}
+  html[data-motyw="ciemny"] .not-licz{background:#dc2626;color:#fff}
+  html[data-motyw="ciemny"] .notatki{border:1px solid #a48b39;background:#393111}
+  html[data-motyw="ciemny"] .not-i{border-bottom:1px dashed #a48b39}
+  html[data-motyw="ciemny"] .not-i:last-child{border-bottom:none}
+  html[data-motyw="ciemny"] .not-i .tx small{color:var(--m)}
+  html[data-motyw="ciemny"] .not-i.zrob .tx > span{color:var(--m)}
+  html[data-motyw="ciemny"] .not-zal{color:#f5b585}
+  html[data-motyw="ciemny"] .not-data{background:#7d6c26;color:#f5bc99}
+  html[data-motyw="ciemny"] .not-instr button.on{background:var(--g);color:var(--ga);border-color:var(--g)}
+  html[data-motyw="ciemny"] .not-pusto{color:var(--m)}
   html[data-motyw="ciemny"] .szybkie button.on{background:var(--g);color:var(--ga);border-color:var(--g)}
   html[data-motyw="ciemny"] .szybkie button.on small{color:var(--ga)}
   html[data-motyw="ciemny"] .kto-kafel{background:#1b2128;border:2px solid var(--b);color:inherit}
@@ -1250,6 +1282,20 @@
           <button type="button" data-szyb="0">Dziś</button>
           <button type="button" data-szyb="1">Jutro<small></small></button>
           <button type="button" data-szyb="2">Pojutrze<small></small></button>
+          <button type="button" id="g-not-btn" class="not-btn hidden" aria-expanded="false">📝 Notatki<span id="g-not-licz" class="not-licz hidden"></span></button>
+        </div>
+        <div id="g-notatki" class="notatki hidden">
+          <div id="not-lista"></div>
+          <div id="not-form" class="hidden">
+            <textarea id="not-tresc" rows="2" maxlength="1000" placeholder="Co trzeba zrobić tego dnia… np. zadzwonić do WORD w sprawie terminu"></textarea>
+            <label class="przel" style="margin:6px 0"><input id="not-dla" type="checkbox"><span class="suw"></span> Do zrobienia przez instruktora</label>
+            <div id="not-instr" class="not-instr hidden"></div>
+            <div class="akcje" style="margin-top:6px">
+              <button id="not-zapisz" class="btn" type="button" style="margin:0">Dodaj notatkę</button>
+              <button id="not-anuluj" type="button" class="hidden" style="margin:0">Anuluj zmianę</button>
+            </div>
+            <div id="m-not" class="msg"></div>
+          </div>
         </div>
         <div class="dz-akcje">
           <span><button id="g-dzis" class="link hidden" type="button">Dziś</button>
@@ -2012,7 +2058,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.74';
+  const WERSJA = '1.75';
   const UMOWA_WERSJA = '1.0';            // wersja Regulaminu + Umowy powierzenia (umowa.html) – zmiana wymusza ponowną akceptację
   const UMOWA_URL = 'umowa.html';
   // ----- informacje o programie -----
@@ -2026,6 +2072,7 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.75', d: '24.11.2026', p: ['📝 Notatki dnia w grafiku – wspólne dla biura, z odhaczaniem „zrobione”. Można je przypisać jednemu lub kilku instruktorom – wtedy widzą je w swojej aplikacji. Niezrobione sprawy z wcześniejszych dni przypominają się na dzisiejszym grafiku.'] },
     { v: '1.74', d: '23.11.2026', p: [
       '↕ Własna kolejność instruktorów – Ustawienia → Instruktorzy w grafiku → „Zmień kolejność” (albo skrót „↕ kolejność” w grafiku). Każda osoba ustawia ją dla siebie.',
       '🎓 Wynik egzaminu prosto w grafiku: ✅ zdał / ❌ nie zdał – wpisuje biuro albo instruktor w swojej aplikacji. Plakietki u kursantów, nowe filtry i statystyka zdawalności w zakładce Miesiąc.',
@@ -4649,6 +4696,7 @@
   async function ladujDzien(cicho) {
     if (!profil) return;
     pokazNaglowek();
+    ladujNotatki();
     if (!gInstr) {
       $('g-lista').innerHTML = profil.rola === 'biuro'
         ? '<p class="hint">Nie ma jeszcze instruktorów w grafiku. Dodaj ich w zakładce „Ustawienia” → „Instruktorzy w grafiku”.</p>'
@@ -4900,6 +4948,91 @@
     $('g-lista').querySelectorAll('.wolny-inst.edyt').forEach(el => el.onclick = () =>
       otworzWolne(wszW.find(w => w.id === el.dataset.wid)));
   }
+
+  // ===== NOTATKI DNIA (wspólne dla biura, opcjonalnie dla wybranych instruktorów) =====
+  let gNot = [], notOtw = null, notDzien = null, notBrak = false, notEdyt = null, notWyb = new Set();
+  const notBiuro = () => profil && profil.rola === 'biuro';
+  async function ladujNotatki() {
+    if (!profil || notBrak) return;
+    const dz = gDzien, dzis = dzisStr();
+    const { data, error } = await sb.from('notatki').select('*').eq('szkola_id', profil.szkola_id)
+      .or(`dzien.eq.${dz},and(dzien.lt.${dzis},zrobione.eq.false)`).order('dzien').order('utworzono');
+    if (error) { if (/notatki/.test(error.message)) notBrak = true; $('g-not-btn').classList.add('hidden'); $('g-notatki').classList.add('hidden'); return; }
+    if (dz !== gDzien) return;
+    if (notDzien !== dz) { notDzien = dz; notOtw = null; notEdyt = null; }
+    gNot = data || [];
+    rysujNotatki();
+  }
+  function rysujNotatki() {
+    const dzis = dzisStr(), dnia = gNot.filter(n => n.dzien === gDzien), zal = gDzien === dzis ? gNot.filter(n => n.dzien < dzis && !n.zrobione) : [];
+    const niezr = dnia.filter(n => !n.zrobione).length + zal.length;
+    const widac = notBiuro() || dnia.length || zal.length;
+    $('g-not-btn').classList.toggle('hidden', !widac);
+    $('g-not-licz').classList.toggle('hidden', !niezr); $('g-not-licz').textContent = niezr;
+    const otw = !!widac && (notOtw === null ? niezr > 0 : notOtw);
+    $('g-not-btn').classList.toggle('on', otw); $('g-not-btn').setAttribute('aria-expanded', otw);
+    $('g-notatki').classList.toggle('hidden', !otw);
+    if (!otw) return;
+    const nazwaI = id => (instruktorzy.find(i => i.id === id) || {}).imie_nazwisko || '?';
+    const wiersz = (n, zData) => `<div class="not-i${n.zrobione ? ' zrob' : ''}">
+      <input type="checkbox" data-nz="${n.id}"${n.zrobione ? ' checked' : ''} aria-label="Zrobione">
+      <div class="tx">${zData ? `<span class="not-data">${fmtData(n.dzien).slice(0, 5)}</span>` : ''}<span>${esc(n.tresc)}</span>
+        <small>${[n.instruktorzy && n.instruktorzy.length ? (notBiuro() ? '👤 dla: ' + n.instruktorzy.map(id => esc(nazwaI(id))).join(', ') : '📌 od biura') : '',
+          n.zrobione ? `✓ zrobione${n.zrobil ? ': ' + esc(n.zrobil) : ''}${n.zrobione_kiedy ? ', ' + fmtData(dzisStr(new Date(n.zrobione_kiedy))).slice(0, 5) + ' ' + godzina(n.zrobione_kiedy) : ''}` : (n.autor && notBiuro() ? 'wpisał(a): ' + esc(n.autor) : '')].filter(Boolean).join(' · ')}</small></div>
+      ${notBiuro() ? `<div class="op"><button type="button" data-ne="${n.id}" aria-label="Zmień">✏️</button><button type="button" data-nu="${n.id}" aria-label="Usuń">🗑</button></div>` : ''}</div>`;
+    $('not-lista').innerHTML = (zal.length ? `<div class="not-zal">⚠️ Niezrobione z wcześniejszych dni (${zal.length})</div>` + zal.map(n => wiersz(n, true)).join('') + '<div style="height:8px"></div>' : '')
+      + (dnia.length ? dnia.map(n => wiersz(n, false)).join('') : `<p class="not-pusto">Brak notatek na ten dzień.${notBiuro() ? ' Dopisz poniżej, co trzeba zrobić.' : ''}</p>`);
+    $('not-form').classList.toggle('hidden', !notBiuro());
+    $('not-lista').querySelectorAll('[data-nz]').forEach(c => c.onchange = async () => {
+      const { error } = await sb.rpc('odhacz_notatke', { p_id: c.dataset.nz, p_zrobione: c.checked });
+      if (error) { c.checked = !c.checked; msg('m-grafik', tlumacz(error)); return; }
+      ladujNotatki();
+    });
+    $('not-lista').querySelectorAll('[data-ne]').forEach(b => b.onclick = () => edytujNotatke(gNot.find(n => n.id === b.dataset.ne)));
+    $('not-lista').querySelectorAll('[data-nu]').forEach(b => b.onclick = () => zajety(b, async () => {
+      const n = gNot.find(x => x.id === b.dataset.nu);
+      if (!await pytaj(`Usunąć notatkę?\n„${n.tresc.slice(0, 80)}”`, { tak: 'Usuń', niebezp: true })) return;
+      const { error } = await sb.from('notatki').delete().eq('id', n.id);
+      if (error) { msg('m-grafik', tlumacz(error)); return; }
+      ladujNotatki();
+    }));
+  }
+  function rysujWyborInstr() {
+    const akt = instruktorzy.filter(i => i.aktywny);
+    $('not-instr').innerHTML = akt.map(i => `<button type="button" data-ni="${i.id}" class="${notWyb.has(i.id) ? 'on' : ''}">${esc(i.imie_nazwisko)}</button>`).join('')
+      + (akt.length > 1 ? `<button type="button" data-ni="*">${akt.every(i => notWyb.has(i.id)) ? 'odznacz wszystkich' : 'wszyscy'}</button>` : '');
+    $('not-instr').querySelectorAll('[data-ni]').forEach(b => b.onclick = () => {
+      if (b.dataset.ni === '*') { const all = akt.every(i => notWyb.has(i.id)); akt.forEach(i => all ? notWyb.delete(i.id) : notWyb.add(i.id)); }
+      else notWyb.has(b.dataset.ni) ? notWyb.delete(b.dataset.ni) : notWyb.add(b.dataset.ni);
+      rysujWyborInstr();
+    });
+  }
+  function czyscFormNot() {
+    notEdyt = null; notWyb = new Set(); $('not-tresc').value = ''; $('not-dla').checked = false;
+    $('not-instr').classList.add('hidden'); $('not-zapisz').textContent = 'Dodaj notatkę'; $('not-anuluj').classList.add('hidden'); msg('m-not', '');
+  }
+  function edytujNotatke(n) {
+    if (!n) return;
+    notEdyt = n; notWyb = new Set(n.instruktorzy || []);
+    $('not-tresc').value = n.tresc; $('not-dla').checked = notWyb.size > 0;
+    $('not-instr').classList.toggle('hidden', !notWyb.size); rysujWyborInstr();
+    $('not-zapisz').textContent = 'Zapisz zmianę'; $('not-anuluj').classList.remove('hidden');
+    $('not-tresc').focus();
+  }
+  $('g-not-btn').onclick = () => { const otw = !$('g-notatki').classList.contains('hidden'); notOtw = !otw; rysujNotatki(); if (notOtw && notBiuro() && !gNot.some(n => n.dzien === gDzien)) $('not-tresc').focus(); };
+  $('not-dla').onchange = () => { $('not-instr').classList.toggle('hidden', !$('not-dla').checked); if ($('not-dla').checked) rysujWyborInstr(); };
+  $('not-anuluj').onclick = czyscFormNot;
+  $('not-zapisz').onclick = () => zajety($('not-zapisz'), async () => {
+    const t = $('not-tresc').value.trim();
+    if (!t) { msg('m-not', 'Wpisz treść notatki.'); return; }
+    const dla = $('not-dla').checked ? [...notWyb] : [];
+    if ($('not-dla').checked && !dla.length) { msg('m-not', 'Zaznacz, którzy instruktorzy mają to zrobić.'); return; }
+    const { error } = notEdyt
+      ? await sb.from('notatki').update({ tresc: t, instruktorzy: dla }).eq('id', notEdyt.id)
+      : await sb.from('notatki').insert({ szkola_id: profil.szkola_id, dzien: gDzien, tresc: t, instruktorzy: dla });
+    if (error) { msg('m-not', /notatki/.test(error.message) ? 'Najpierw uruchom w Supabase plik krok33_notatki.sql.' : tlumacz(error)); return; }
+    czyscFormNot(); notOtw = true; ladujNotatki();
+  });
 
   // górny pasek przewijania kolumn + zapamiętanie miejsca przy odświeżaniu
   let gKolScroll = 0;
@@ -6551,7 +6684,7 @@ function cellTime(v) {
   logoLogowania();
 
   // ===== KOPIA ZAPASOWA =====
-  const KOPIA_TAB = ['instruktorzy', 'kursanci', 'jazdy', 'wolne', 'dokupione', 'wyklady', 'wyklady_obecnosc', 'rezerwacje', 'stawki_instr', 'rez_lista', 'instr_dni_dod', 'pojazdy'];
+  const KOPIA_TAB = ['instruktorzy', 'kursanci', 'jazdy', 'wolne', 'dokupione', 'wyklady', 'wyklady_obecnosc', 'rezerwacje', 'stawki_instr', 'rez_lista', 'instr_dni_dod', 'pojazdy', 'notatki'];
   const kluczK = n => n + '_' + (profil && profil.szkola_id);
   const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (_) { return d; } };
   const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (_) {} };
@@ -6615,7 +6748,7 @@ function cellTime(v) {
       const wiersze = [];
       for (let od = 0; ; od += 1000) {
         const { data, error } = await sb.from(t).select('*').eq('szkola_id', profil.szkola_id).range(od, od + 999);
-        if (error) { if (/^(dokupione|wyklady|wyklady_obecnosc|rezerwacje|stawki_instr|rez_lista|instr_dni_dod|pojazdy)$/.test(t) && new RegExp(t).test(error.message)) break; throw error; }
+        if (error) { if (/^(dokupione|wyklady|wyklady_obecnosc|rezerwacje|stawki_instr|rez_lista|instr_dni_dod|pojazdy|notatki)$/.test(t) && new RegExp(t).test(error.message)) break; throw error; }
         wiersze.push(...data); if (data.length < 1000) break;
       }
       dane[t] = wiersze;
