@@ -139,6 +139,7 @@
   .modal{position:fixed;inset:0;background:rgba(20,25,30,.45);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:16px;z-index:10}
   #modal-pin{z-index:30}
   #modal-zdal,#modal-stawki,#modal-umow{z-index:20}
+  #modal-umj{z-index:22}
   .sheet{background:#fff;border-radius:12px;padding:20px;width:100%;max-width:560px;margin:auto 0}
   .sheet h2{font-size:19px}
   .usun{width:100%;margin-top:10px;color:var(--r)}
@@ -317,6 +318,9 @@
   .um-ok.wyb{background:#16a34a;color:#fff;border-color:#16a34a}
   .um-st{flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;padding:6px;border-radius:8px;background:#f0fdf4}
   .um-st button{padding:6px 10px;font-size:13.5px;margin:0}
+  .um-x{position:absolute;top:10px;right:10px;width:36px;height:36px;margin:0;padding:0;border-radius:50%;border:1px solid #d1d5db;background:#fff;color:#374151;font-size:17px;line-height:1;cursor:pointer}
+  .um-x:hover{background:#f3f4f6}
+  .um-st .um-reczne{background:none;border-style:dashed;color:var(--m)}
   .um-nic{color:var(--m);font-size:13.5px}
   .um-dod{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 10px;border-radius:9px;background:#ecfdf5;border:1px solid #86efac;margin-top:6px;font-size:14px}
   .um-dod button{padding:4px 10px;font-size:13px;margin:0}
@@ -813,6 +817,9 @@
   html[data-motyw="ciemny"] .um-ok.krotkie{border-color:var(--b);background:#192128;color:var(--m)}
   html[data-motyw="ciemny"] .um-ok.wyb{background:#16a34a;color:#fff;border-color:#16a34a}
   html[data-motyw="ciemny"] .um-st{background:#15331e}
+  html[data-motyw="ciemny"] .um-x{border:1px solid #4c5056;background:#1b2128;color:#c6cdd8}
+  html[data-motyw="ciemny"] .um-x:hover{background:#232528}
+  html[data-motyw="ciemny"] .um-st .um-reczne{background:none;color:var(--m)}
   html[data-motyw="ciemny"] .um-nic{color:var(--m)}
   html[data-motyw="ciemny"] .um-dod{background:#153626;border:1px solid #3c8657}
   html[data-motyw="ciemny"] .um-wysl{border:1px solid var(--b);color:inherit;background:#1b2128}
@@ -1798,8 +1805,9 @@
 
 <!-- Okno: umów jazdy kursantowi -->
 <div id="modal-umow" class="modal hidden" role="dialog" aria-modal="true">
-  <div class="sheet" style="max-width:720px">
-    <h2 style="margin-top:0" id="um-tytul">📅 Umów jazdy</h2>
+  <div class="sheet" style="max-width:720px;position:relative">
+    <button type="button" id="um-x" class="um-x" aria-label="Zamknij" title="Zamknij (Esc)">✕</button>
+    <h2 style="margin-top:0;padding-right:40px" id="um-tytul">📅 Umów jazdy</h2>
     <p class="hint" id="um-postep" style="margin-top:-4px"></p>
     <div class="um-opcje">
       <div><label for="um-instr">Instruktor</label><select id="um-instr"></select></div>
@@ -1811,7 +1819,7 @@
       <div id="um-egz-box" class="hidden"><label for="um-egz">Godzina egzaminu w WORD (opcjonalnie)</label><input id="um-egz" type="time" step="300" style="max-width:160px"></div>
     </div>
     <div id="um-dodane"></div>
-    <p class="hint" style="margin:8px 0 4px">Kliknij wolne okienko instruktora, a potem godzinę rozpoczęcia – jazda od razu trafi do grafiku.</p>
+    <p class="hint" style="margin:8px 0 4px">Kliknij wolne okienko, potem godzinę (albo „wpisz godziny ręcznie”). Przed dodaniem do grafiku możesz poprawić godziny i wpisać uwagi dla instruktora.</p>
     <div id="um-dni" class="um-dni"></div>
     <button id="um-wiecej" type="button" class="btn2">Pokaż kolejne 2 tygodnie</button>
     <div class="akcje" style="margin-top:12px">
@@ -1819,8 +1827,30 @@
       <a id="um-sms" class="um-wysl hidden" href="#">📱 Wyślij terminy SMS</a>
       <a id="um-wa" class="um-wysl hidden" href="#" target="_blank" rel="noopener">💬 Wyślij przez WhatsApp</a>
     </div>
-    <button id="um-zamknij" class="btn" type="button">Gotowe</button>
+    <button id="um-zamknij" class="btn" type="button">Zamknij</button>
     <div id="m-umow" class="msg"></div>
+  </div>
+</div>
+
+<!-- Okno: potwierdzenie nowej jazdy z „Umów jazdy” -->
+<div id="modal-umj" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="sheet" style="max-width:440px">
+    <h2 style="margin-top:0">Nowa jazda</h2>
+    <p id="umj-opis" style="margin:-4px 0 6px;font-weight:600"></p>
+    <div class="siatka">
+      <div><label for="umj-od">Od</label><input id="umj-od" type="time" step="300" required></div>
+      <div><label for="umj-do">Do</label><input id="umj-do" type="time" step="300" required></div>
+    </div>
+    <p class="hint" id="umj-okno" style="margin-top:4px"></p>
+    <label>Rodzaj</label>
+    <div class="um-ch" id="umj-rodzaj"><button type="button" data-r="jazda">Jazda</button><button type="button" data-r="egzamin">Egzamin</button><button type="button" data-r="plac">Plac</button></div>
+    <div id="umj-egz-box" class="hidden"><label for="umj-egz">Godzina egzaminu w WORD (opcjonalnie)</label><input id="umj-egz" type="time" step="300" style="max-width:160px"></div>
+    <label for="umj-uwagi">Uwagi dla instruktora</label>
+    <input id="umj-uwagi" maxlength="200" placeholder="np. odbiór spod szkoły nr 2, czeka przy Biedronce" autocomplete="off">
+    <p class="hint" id="umj-uw-podp" style="margin-top:4px"></p>
+    <button id="umj-dodaj" class="btn" type="button">Dodaj do grafiku</button>
+    <button id="umj-anuluj" class="btn2" type="button">Anuluj</button>
+    <div id="m-umj" class="msg"></div>
   </div>
 </div>
 
@@ -2123,7 +2153,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.78';
+  const WERSJA = '1.79';
   const UMOWA_WERSJA = '1.0';            // wersja Regulaminu + Umowy powierzenia (umowa.html) – zmiana wymusza ponowną akceptację
   const UMOWA_URL = 'umowa.html';
   // ----- informacje o programie -----
@@ -2137,8 +2167,8 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
-    { v: '1.78', d: '24.11.2026', p: [
-      '📅 „Umów jazdy” przy kursancie – wolne okienka jego instruktora na najbliższe tygodnie (do 2 miesięcy), wybór długości i rodzaju (jazda, egzamin, plac), dodawanie jednym kliknięciem z możliwością cofnięcia. Terminy można wysłać kursantowi SMS-em lub WhatsAppem.',
+    { v: '1.79', d: '24.11.2026', p: [
+      '📅 „Umów jazdy” przy kursancie – wolne okienka jego instruktora na najbliższe tygodnie (do 2 miesięcy), wybór długości i rodzaju (jazda, egzamin, plac), godziny do poprawienia ręcznie i uwagi dla instruktora (np. skąd odebrać kursanta), możliwość cofnięcia. Terminy można wysłać kursantowi SMS-em lub WhatsAppem.',
       '🖨 Wydruk wszystkich jazd kursanta – odbytych i zaplanowanych, z numeracją godzin kursu.'] },
     { v: '1.75', d: '24.11.2026', p: ['📝 Notatki dnia w grafiku – wspólne dla biura, z odhaczaniem „zrobione”. Można je przypisać jednemu lub kilku instruktorom – wtedy widzą je w swojej aplikacji. Niezrobione sprawy z wcześniejszych dni przypominają się na dzisiejszym grafiku.'] },
     { v: '1.74', d: '23.11.2026', p: [
@@ -4695,7 +4725,7 @@
   }
   function widacGrafik() {
     return profil && !$('s-panel').classList.contains('hidden') && !$('tab-grafik').classList.contains('hidden') &&
-      ['modal-jazda', 'modal-kursant', 'modal-wolne', 'modal-wa', 'modal-druk', 'modal-pin', 'modal-konto', 'modal-tekst', 'modal-wyklad', 'modal-obecnosc', 'modal-godziny', 'modal-stawki', 'modal-zdal', 'modal-umow'].every(id => $(id).classList.contains('hidden'));
+      ['modal-jazda', 'modal-kursant', 'modal-wolne', 'modal-wa', 'modal-druk', 'modal-pin', 'modal-konto', 'modal-tekst', 'modal-wyklad', 'modal-obecnosc', 'modal-godziny', 'modal-stawki', 'modal-zdal', 'modal-umow', 'modal-umj'].every(id => $(id).classList.contains('hidden'));
   }
   document.addEventListener('visibilitychange', () => { if (!document.hidden && widacGrafik()) ladujDzien(true); });
 
@@ -5071,6 +5101,7 @@
   }
   const mnaG = m => pad(Math.floor(m / 60)) + ':' + pad(m % 60);
   function rysujUmow() {
+    $('um-zamknij').textContent = umDodane.length ? 'Gotowe' : 'Zamknij';
     const idI = $('um-instr').value, k = umK;
     // postęp kursanta
     const wym = wymaganeH(k), teraz = Date.now();
@@ -5092,7 +5123,8 @@
         return `<button type="button" class="um-ok${kr ? ' krotkie' : ''}${umOtw === id ? ' wyb' : ''}" data-uo="${id}"${kr ? ` title="Za krótkie na ${fmtH(umDl)} h"` : ''}>${mnaG(a)}–${mnaG(b)} <small>(${fmtH(b - a)} h)</small></button>`; }).join('')}
         ${(() => { const w = ok.find(([a]) => umOtw === dz + '_' + a); if (!w) return '';
           const st = []; for (let m = w[0]; m + umDl <= w[1]; m += 30) st.push(m);
-          return `<div class="um-st">${st.length ? st.map(m => `<button type="button" data-us="${dz}_${m}">${mnaG(m)}–${mnaG(m + umDl)}</button>`).join('') : `<span class="um-nic">To okienko jest krótsze niż ${fmtH(umDl)} h – wybierz krótszą jazdę albo inne okienko.</span>`}</div>`; })()}</div></div>`);
+          return `<div class="um-st">${st.map(m => `<button type="button" data-us="${dz}_${m}_${m + umDl}">${mnaG(m)}–${mnaG(m + umDl)}</button>`).join('')}
+            <button type="button" class="um-reczne" data-us="${dz}_${w[0]}_${Math.min(w[1], w[0] + umDl)}_${w[0]}_${w[1]}">✏️ wpisz godziny ręcznie</button></div>`; })()}</div></div>`);
     }
     $('um-dni').innerHTML = html.join('');
     $('um-wiecej').classList.toggle('hidden', umDni >= UM_MAX_DNI);
@@ -5108,26 +5140,66 @@
     }
     // zdarzenia
     $('um-dni').querySelectorAll('[data-uo]').forEach(b => b.onclick = () => { umOtw = umOtw === b.dataset.uo ? null : b.dataset.uo; rysujUmow(); });
-    $('um-dni').querySelectorAll('[data-us]').forEach(b => b.onclick = () => zajety(b, () => dodajUm(b.dataset.us)));
+    $('um-dni').querySelectorAll('[data-us]').forEach(b => b.onclick = () => otworzUmj(b.dataset.us));
     $('um-dodane').querySelectorAll('[data-umc]').forEach(b => b.onclick = () => zajety(b, async () => {
       const { error } = await sb.from('jazdy').delete().eq('id', b.dataset.umc);
       if (error) { msg('m-umow', tlumacz(error)); return; }
       umDodane = umDodane.filter(x => x.id !== b.dataset.umc); await ladujUmow(); msg('m-umow', 'Cofnięto – jazda usunięta z grafiku.', 'ok');
     }));
   }
-  async function dodajUm(klucz) {
-    const [dz, m] = klucz.split('_'), a = +m, b = a + umDl;
+  // okienko potwierdzenia: godziny do poprawienia ręcznie + uwagi dla instruktora
+  let umj = null, umjRodzaj = 'jazda';
+  function ostatniaUwaga() {
+    const z = umJazdyK.filter(x => x.uwagi && !/^\s*plac\s*$/i.test(x.uwagi)).sort((a, b) => new Date(b.poczatek) - new Date(a.poczatek))[0];
+    return z ? z.uwagi : '';
+  }
+  function otworzUmj(klucz) {
+    const [dz, a, b, wa, wb] = klucz.split('_');
+    const okno = ok => (okienkaUm($('um-instr').value, dz) || []).find(([x, y]) => x <= +a && +a < y) || (wa ? [+wa, +wb] : [+a, +b]);
+    const w = okno();
+    umj = { dz, okno: w };
+    umjRodzaj = umRodzaj;
+    const ins = (instruktorzy.find(i => i.id === $('um-instr').value) || {}).imie_nazwisko || '';
+    $('umj-opis').textContent = `${DNI[parseD(dz).getDay()]} ${fmtData(dz)} · ${ins}`;
+    $('umj-od').value = mnaG(+a); $('umj-do').value = mnaG(+b);
+    $('umj-okno').textContent = `Wolne okienko: ${mnaG(w[0])}–${mnaG(w[1])}. Godziny możesz zmienić.`;
+    $('umj-egz').value = $('um-egz').value || '';
+    const uw = ostatniaUwaga();
+    $('umj-uwagi').value = uw;
+    $('umj-uw-podp').textContent = uw ? 'Podpowiedziano uwagę z ostatniej jazdy kursanta – możesz ją zmienić albo wyczyścić.' : '';
+    rysujUmjRodzaj(); msg('m-umj', '');
+    $('modal-umj').classList.remove('hidden');
+    setTimeout(() => $('umj-uwagi').focus(), 50);
+  }
+  function rysujUmjRodzaj() {
+    document.querySelectorAll('#umj-rodzaj [data-r]').forEach(b => b.classList.toggle('on', b.dataset.r === umjRodzaj));
+    $('umj-egz-box').classList.toggle('hidden', umjRodzaj !== 'egzamin');
+  }
+  document.querySelectorAll('#umj-rodzaj [data-r]').forEach(b => b.onclick = () => { umjRodzaj = b.dataset.r; rysujUmjRodzaj(); });
+  $('umj-anuluj').onclick = () => $('modal-umj').classList.add('hidden');
+  $('umj-uwagi').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); $('umj-dodaj').click(); } };
+  $('umj-dodaj').onclick = () => zajety($('umj-dodaj'), async () => {
+    const dz = umj.dz, od = $('umj-od').value, doo = $('umj-do').value;
+    if (!od || !doo || naMin(doo) <= naMin(od)) { msg('m-umj', 'Godzina „do” musi być późniejsza niż „od”.'); return; }
+    let uw = $('umj-uwagi').value.trim();
+    if (umjRodzaj === 'plac') uw = uw ? (/plac/i.test(uw) ? uw : 'plac – ' + uw) : 'plac';
     const dane = { szkola_id: profil.szkola_id, instruktor_id: $('um-instr').value, kursant_id: umK.id,
-      poczatek: isoZ(dz, mnaG(a)), koniec: isoZ(dz, mnaG(b)), rodzaj: umRodzaj === 'plac' ? 'inne' : umRodzaj, uwagi: umRodzaj === 'plac' ? 'plac' : null };
-    if (umRodzaj === 'egzamin' && $('um-egz').value) dane.godz_egzaminu = $('um-egz').value;
+      poczatek: isoZ(dz, od), koniec: isoZ(dz, doo), rodzaj: umjRodzaj === 'plac' ? 'inne' : umjRodzaj, uwagi: uw || null };
+    if (umjRodzaj === 'egzamin' && $('umj-egz').value) dane.godz_egzaminu = $('umj-egz').value;
+    const poza = naMin(od) < umj.okno[0] || naMin(doo) > umj.okno[1];
     const k = await kolizje(dane, null);
     if (k.length && !await pytaj('Uwaga – nakładają się jazdy:\n' + k.join('\n') + '\n\nZapisać mimo to?')) return;
+    if (!k.length && poza) {
+      const pz = pozaPraca(dane.instruktor_id, dane.poczatek, dane.koniec);
+      if (!await pytaj(`Godziny wychodzą poza wolne okienko ${mnaG(umj.okno[0])}–${mnaG(umj.okno[1])}${pz ? ' (' + pz + ')' : ''}.\n\nWpisać mimo to?`, { tak: 'Wpisz mimo to' })) return;
+    }
     const { data, error } = await sb.from('jazdy').insert(dane).select().single();
-    if (error) { msg('m-umow', tlumacz(error)); return; }
+    if (error) { msg('m-umj', tlumacz(error)); return; }
+    $('modal-umj').classList.add('hidden');
     umDodane.push(data); umOtw = null;
-    msg('m-umow', `Dodano: ${DNI[parseD(dz).getDay()]} ${fmtData(dz)}, ${mnaG(a)}–${mnaG(b)}.`, 'ok');
+    msg('m-umow', `Dodano: ${DNI[parseD(dz).getDay()]} ${fmtData(dz)}, ${od}–${doo}${uw ? ' · ' + uw : ''}.`, 'ok');
     await ladujUmow();
-  }
+  });
   document.querySelectorAll('#um-rodzaj [data-r]').forEach(b => b.onclick = () => { umRodzaj = b.dataset.r; ustawUmOpcje(); });
   document.querySelectorAll('#um-dl [data-dl]').forEach(b => b.onclick = () => { umDl = +b.dataset.dl; $('um-dl-inne').value = ''; umOtw = null; ustawUmOpcje(); rysujUmow(); });
   $('um-dl-inne').oninput = () => {
@@ -5137,7 +5209,14 @@
   $('um-instr').onchange = () => { umOtw = null; ladujUmow(); };
   $('um-wiecej').onclick = () => { umDni = Math.min(UM_MAX_DNI, umDni + 14); rysujUmow(); };
   $('um-druk').onclick = () => drukujJazdyK(umK, umJazdyK);
-  $('um-zamknij').onclick = () => { $('modal-umow').classList.add('hidden'); if (umDodane.length) { ladujKursantow(); ladujDzien(true); } };
+  function zamknijUmow() { $('modal-umj').classList.add('hidden'); $('modal-umow').classList.add('hidden'); if (umDodane.length) { ladujKursantow(); ladujDzien(true); } }
+  $('um-zamknij').onclick = zamknijUmow;
+  $('um-x').onclick = zamknijUmow;
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape' || !$('modal-pytaj').classList.contains('hidden')) return;
+    if (!$('modal-umj').classList.contains('hidden')) { e.preventDefault(); $('modal-umj').classList.add('hidden'); }
+    else if (!$('modal-umow').classList.contains('hidden')) { e.preventDefault(); zamknijUmow(); }
+  });
   $('k-umow').onclick = () => { const k = edytowany; $('modal-kursant').classList.add('hidden'); otworzUmow(k); };
   $('k-druk-jazd').onclick = () => zajety($('k-druk-jazd'), async () => {
     const { data, error } = await sb.from('jazdy').select('*').eq('kursant_id', edytowany.id).order('poczatek');
