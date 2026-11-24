@@ -431,8 +431,10 @@
   .kolejka button{padding:5px 9px;font-size:13px}
   .wysl.ok{color:var(--ok)}
   .wysl.zm{color:#c2410c}
+  @media (min-width:1400px){#tab-grafik{--gsz:min(1560px,calc(100vw - 72px));width:var(--gsz);margin-left:calc((100% - var(--gsz)) / 2)}}
   @media (min-width:900px){
     .wrap{max-width:1240px;padding:24px 28px 48px}
+    /* tylko grafik szerszy (do 1560 px), wyśrodkowany względem reszty strony */
     #p-instr-extra .card,#g-ustawienia{max-width:900px}
     #tab-osoby .card{max-width:none}   /* Ustawienia na całą szerokość okna */
     .akcje{grid-template-columns:repeat(4,1fr)}
@@ -2058,7 +2060,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.75';
+  const WERSJA = '1.77';
   const UMOWA_WERSJA = '1.0';            // wersja Regulaminu + Umowy powierzenia (umowa.html) – zmiana wymusza ponowną akceptację
   const UMOWA_URL = 'umowa.html';
   // ----- informacje o programie -----
