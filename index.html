@@ -2153,7 +2153,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.79';
+  const WERSJA = '1.80';
   const UMOWA_WERSJA = '1.0';            // wersja Regulaminu + Umowy powierzenia (umowa.html) – zmiana wymusza ponowną akceptację
   const UMOWA_URL = 'umowa.html';
   // ----- informacje o programie -----
@@ -2167,7 +2167,7 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
-    { v: '1.79', d: '24.11.2026', p: [
+    { v: '1.80', d: '24.11.2026', p: [
       '📅 „Umów jazdy” przy kursancie – wolne okienka jego instruktora na najbliższe tygodnie (do 2 miesięcy), wybór długości i rodzaju (jazda, egzamin, plac), godziny do poprawienia ręcznie i uwagi dla instruktora (np. skąd odebrać kursanta), możliwość cofnięcia. Terminy można wysłać kursantowi SMS-em lub WhatsAppem.',
       '🖨 Wydruk wszystkich jazd kursanta – odbytych i zaplanowanych, z numeracją godzin kursu.'] },
     { v: '1.75', d: '24.11.2026', p: ['📝 Notatki dnia w grafiku – wspólne dla biura, z odhaczaniem „zrobione”. Można je przypisać jednemu lub kilku instruktorom – wtedy widzą je w swojej aplikacji. Niezrobione sprawy z wcześniejszych dni przypominają się na dzisiejszym grafiku.'] },
@@ -5079,8 +5079,9 @@
       sb.from('wolne').select('*').eq('instruktor_id', idI).gte('dzien', od).lte('dzien', doo),
       sb.from('jazdy').select('*').eq('kursant_id', umK.id).order('poczatek')]);
     if (j.error || w.error || jk.error) { $('um-dni').innerHTML = `<p class="hint">${esc(tlumacz(j.error || w.error || jk.error))}</p>`; return; }
-    umJazdyI = j.data; umWolneI = (w.data || []).filter(wolneOk); umJazdyK = jk.data;
-    rysujUmow();
+    umJazdyI = j.data || []; umWolneI = wolneOk(w.data); umJazdyK = jk.data || [];
+    try { rysujUmow(); }
+    catch (e) { console.error(e); $('um-dni').innerHTML = `<p class="hint">Nie udało się pokazać wolnych okienek (${esc(e.message || String(e))}). Zamknij okno i spróbuj ponownie.</p>`; }
   }
   // wolne okienka (min. 30 min) instruktora w dniu dz, z uwzględnieniem jazd kursanta u innych instruktorów
   function okienkaUm(idI, dz) {
