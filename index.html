@@ -194,6 +194,12 @@
   .znak-kol{display:inline-block;font-size:12px;font-weight:700;background:#fdecea;color:var(--r);border-radius:6px;padding:1px 7px;margin:3px 6px 0 0}
   .kol-info{background:#fdecea;color:var(--r);font-weight:700;font-size:13px;border-radius:8px;padding:6px 10px;margin:0 0 8px}
   .jazda.wstepna{border:2px dashed #d97706!important;background:#fffbeb!important}
+  .znak-zm{display:inline-block;font-size:12px;font-weight:700;background:#dbeafe;color:#1e40af;border-radius:6px;padding:1px 7px;margin-left:6px}
+  .j-ied-info{margin:-4px 0 6px;padding:8px 10px;border-radius:8px;background:#eef6ff;border:1px solid #bfdbfe;font-size:14px;color:#1e3a5f}
+  .jazda.edyt-i{cursor:pointer}
+  .ied-i{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--b)}
+  .ied-i select{width:auto;max-width:100%;margin:0}
+  #zm-baner .wr{flex-wrap:wrap}
   .znak-wst{display:inline-block;font-size:12px;font-weight:700;background:#fde68a;color:#92400e;border-radius:6px;padding:1px 7px;margin-left:6px}
   .znak-nl{display:inline-block;font-size:12px;font-weight:600;background:#e5e7eb;color:#374151;border-radius:6px;padding:1px 7px;margin-left:6px}
   .pk-karta{background:#fff;border:1px solid var(--b);border-left:4px solid var(--ga);border-radius:12px;padding:12px 16px;margin:0 0 12px}
@@ -745,6 +751,9 @@
   html[data-motyw="ciemny"] .znak-kol{background:#381915;color:var(--r)}
   html[data-motyw="ciemny"] .kol-info{background:#381915;color:var(--r)}
   html[data-motyw="ciemny"] .jazda.wstepna{border:2px dashed #d97706!important;background:#393111!important}
+  html[data-motyw="ciemny"] .znak-zm{background:#152944;color:#859cea}
+  html[data-motyw="ciemny"] .j-ied-info{background:#102337;border:1px solid #274870;color:#bcd0ea}
+  html[data-motyw="ciemny"] .ied-i{border-top:1px solid var(--b)}
   html[data-motyw="ciemny"] .znak-wst{background:#7d6c26;color:#f5bc99}
   html[data-motyw="ciemny"] .znak-nl{background:#2d3034;color:#c6cdd8}
   html[data-motyw="ciemny"] .pk-karta{background:#1b2128;border:1px solid var(--b);border-left:4px solid var(--ga)}
@@ -1303,6 +1312,7 @@
       <details id="pk-karta" class="pk-karta hidden" open></details>
       <div id="kopia-baner" class="zmiany hidden"></div>
       <details id="wz-baner" class="wst-baner wz hidden" open></details>
+      <details id="zm-baner" class="wst-baner wz hidden" open></details>
       <details id="rz-baner" class="wst-baner rz hidden" open></details>
       <details id="lr-baner" class="wst-baner rz hidden" open></details>
       <details id="poj-baner" class="wst-baner hidden" open></details>
@@ -1538,6 +1548,13 @@
             <button id="poj-dodaj" class="btn2" type="button" style="margin-top:8px">➕ Dodaj pojazd</button>
           </div>
           <div id="m-poj" class="msg"></div>
+        </div>
+        <div class="card" data-zw="iedyt">
+          <h2>✏️ Instruktorzy zmieniają grafik</h2>
+          <label class="przel" style="margin-top:4px"><input id="u-ied" type="checkbox"><span class="suw"></span> Instruktorzy mogą zmieniać swoje jazdy w grafiku</label>
+          <p class="hint">Instruktor dodaje, przesuwa i usuwa tylko <b>swoje</b> jazdy, od dzisiaj w przód. Przy każdym instruktorze wybierz, czy jego zmiany najpierw zatwierdza biuro, czy zapisują się od razu. Każda zmiana zostaje w historii jazdy.</p>
+          <div id="u-ied-lista"></div>
+          <div id="m-ied" class="msg"></div>
         </div>
         <div class="card" data-zw="rez">
           <h2>📅 Rezerwacje kursantów</h2>
@@ -2025,6 +2042,7 @@
   <div class="sheet">
     <h2 id="mj-tytul">Nowa jazda</h2>
     <form id="f-jazda">
+      <p id="j-ied-info" class="j-ied-info hidden"></p>
       <label for="j-instr">Instruktor</label><select id="j-instr" required></select>
       <label for="j-data">Data</label><input type="date" id="j-data" required>
       <div class="siatka">
@@ -2153,7 +2171,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.80';
+  const WERSJA = '1.81';
   const UMOWA_WERSJA = '1.0';            // wersja Regulaminu + Umowy powierzenia (umowa.html) – zmiana wymusza ponowną akceptację
   const UMOWA_URL = 'umowa.html';
   // ----- informacje o programie -----
@@ -2167,6 +2185,8 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.81', d: '27.11.2026', p: [
+      '✏️ Instruktorzy mogą zmieniać swoje jazdy w grafiku (Ustawienia → „Instruktorzy zmieniają grafik”). Przy każdym instruktorze biuro wybiera: zmiany zatwierdza biuro albo zmienia sam.'] },
     { v: '1.80', d: '24.11.2026', p: [
       '📅 „Umów jazdy” przy kursancie – wolne okienka jego instruktora na najbliższe tygodnie (do 2 miesięcy), wybór długości i rodzaju (jazda, egzamin, plac), godziny do poprawienia ręcznie i uwagi dla instruktora (np. skąd odebrać kursanta), możliwość cofnięcia. Terminy można wysłać kursantowi SMS-em lub WhatsAppem.',
       '🖨 Wydruk wszystkich jazd kursanta – odbytych i zaplanowanych, z numeracją godzin kursu.'] },
@@ -2268,6 +2288,13 @@
     el.className = 'msg ' + (tekst ? typ : '');
   }
   const BLEDY_PL = [
+    [/instr_zapisz_jazde|instr_usun_jazde|zmiany_grafiku|zatwierdz_zmiane|instr_edycja_wl/, 'Najpierw uruchom w Supabase plik krok34_instruktor_grafik.sql.'],
+    [/INSTR_BRAK/, 'Nie możesz zmienić tej jazdy – biuro mogło wyłączyć Ci zmiany w grafiku. Odśwież stronę.'],
+    [/INSTR_PRZESZLA/, 'Można zmieniać tylko jazdy od dzisiaj w przód. Starsze jazdy poprawia biuro.'],
+    [/INSTR_KURSANT/, 'Tego kursanta nie ma na Twojej liście – poproś biuro o wpisanie jazdy.'],
+    [/INSTR_DANE/, 'Sprawdź datę i godziny jazdy.'],
+    [/ZMIANA_NIE_CZEKA/, 'Ta prośba została już rozpatrzona albo wycofana.'],
+    [/ZMIANA_BRAK_JAZDY/, 'Tej jazdy nie ma już w grafiku – odrzuć prośbę.'],
     [/LIMIT_INSTRUKTOROW/, `Limit aktywnych instruktorów w pakiecie Twojej szkoły jest już wykorzystany. Ukryj instruktora, który już nie pracuje, albo zmień pakiet – kontakt: ${PROGRAM.email}, tel. ${PROGRAM.telefon}.`],
     [/REZ_LISTA_LIMIT/, 'Możesz czekać na liście rezerwowej najwyżej na 5 dni naraz.'],
     [/REZ_ZAJETE/, 'Ten termin został właśnie zajęty – wybierz inną godzinę.'],
@@ -2840,7 +2867,7 @@
   }
   $('t-grafik').onclick = () => { ustawZakladke('grafik'); ladujDzien(); pierwszeKroki(); };
   $('t-kursanci').onclick = () => { ustawZakladke('kursanci'); ladujKursantow(); };
-  $('t-osoby').onclick = () => { ustawZakladke('osoby'); ladujOsoby(); ladujInstruktorowLista(); ladujPin(); ladujKosz(); ladujHistorie(); pokazKopie(); pokazLogoUst(); pokazUstawienia(); pokazUstWyklady(); pokazUstRez(); pokazUstPoj(); pokazUstRozl(); pokazUstOpinii(); };
+  $('t-osoby').onclick = () => { ustawZakladke('osoby'); ladujOsoby(); ladujInstruktorowLista(); ladujPin(); ladujKosz(); ladujHistorie(); pokazKopie(); pokazLogoUst(); pokazUstawienia(); pokazUstWyklady(); pokazUstIed(); pokazUstRez(); pokazUstPoj(); pokazUstRozl(); pokazUstOpinii(); };
   $('t-miesiac').onclick = () => { ustawZakladke('miesiac'); ladujMiesiac(); };
   $('t-wyklady').onclick = () => { ustawZakladke('wyklady'); ladujWyklady(); };
 
@@ -4815,7 +4842,7 @@
       if (!cicho) msg('m-grafik', '');
       await ladujWysylki();
       rysujDzien();
-      ladujWstepne(); ladujZgloszenia(); ladujRezerwacje(); ladujListeRez(); ladujPojBaner();
+      ladujWstepne(); ladujZgloszenia(); ladujRezerwacje(); ladujListeRez(); ladujPojBaner(); ladujZmianyGrafiku();
       return;
     }
     const od = new Date(gDzien + 'T00:00:00'), doo = new Date(dodajDni(gDzien, 1) + 'T00:00:00');
@@ -4835,7 +4862,7 @@
     }
     await ladujWysylki();
     rysujDzien();
-    ladujWstepne(); ladujZgloszenia(); ladujRezerwacje(); ladujListeRez(); ladujPojBaner();
+    ladujWstepne(); ladujZgloszenia(); ladujRezerwacje(); ladujListeRez(); ladujPojBaner(); ladujZmianyGrafiku();
   }
 
   async function ladujWstepne() {
@@ -5035,7 +5062,8 @@
       $('g-lista').innerHTML = listaDnia(gInstr, gJazdy, gWolne, edyt);
     }
     podepnijWyniki();
-    if (!edyt) { oznaczWidziane(gInstr, gDzien, gJazdy, gWolne); return; }
+    oznaczZmiany();
+    if (!edyt) { oznaczWidziane(gInstr, gDzien, gJazdy, gWolne); podepnijEdycjeInstr(); return; }
     $('g-lista').querySelectorAll('a[data-dokup]').forEach(a => a.onclick = e => {
       e.preventDefault(); e.stopPropagation(); dokupGodziny(a.dataset.dokup, Number(a.dataset.ile));
     });
@@ -5048,6 +5076,125 @@
     $('g-lista').querySelectorAll('.wolny-inst.edyt').forEach(el => el.onclick = () =>
       otworzWolne(wszW.find(w => w.id === el.dataset.wid)));
   }
+
+  // ===== INSTRUKTOR ZMIENIA SWÓJ GRAFIK (sam albo po zatwierdzeniu przez biuro) =====
+  let zmCzeka = [];
+  function iedTryb() {
+    if (!profil || profil.rola === 'biuro') return null;
+    const sz = profil.szkoly || {}, m = instruktorzy.find(i => i.user_id === ja.id);
+    if (!sz.instr_edycja_wl || !m || !m.aktywny) return 'nie';
+    return m.edycja || 'biuro';
+  }
+  function podepnijEdycjeInstr() {
+    const tr = iedTryb(), moze = tr === 'biuro' || tr === 'sam';
+    $('g-dodaj').classList.toggle('hidden', !moze);
+    if (!moze) return;
+    const dzis0 = new Date(dzisStr() + 'T00:00:00');
+    $('g-lista').querySelectorAll('.jazda[data-id]').forEach(el => {
+      const j = gJazdy.find(x => x.id === el.dataset.id);
+      if (!j || j.instruktor_id !== gInstr || new Date(j.poczatek) < dzis0) return;
+      el.classList.add('edyt-i'); el.title = tr === 'biuro' ? 'Kliknij, żeby poprosić biuro o zmianę' : 'Kliknij, żeby zmienić';
+      el.onclick = e => { if (e.target.closest('a, button')) return; otworzJazde(j); };
+    });
+  }
+  // znaczek „czeka na biuro” na kafelkach jazd
+  function oznaczZmiany() {
+    zmCzeka.filter(z => z.jazda_id && z.status === 'czeka').forEach(z => {
+      const el = $('g-lista').querySelector(`.jazda[data-id="${z.jazda_id}"] .kto`);
+      if (el && !el.querySelector('.znak-zm')) el.querySelector('b').insertAdjacentHTML('afterend', `<span class="znak-zm">⏳ ${z.typ === 'usun' ? 'usunięcie' : 'zmiana'} czeka na biuro</span>`);
+    });
+  }
+  function terminZm(d) {
+    if (!d) return '';
+    const t = new Date(d.poczatek), k = d.kursant_id ? gKursanci.get(d.kursant_id) : null;
+    return `${DNI_KR[t.getDay()]} ${fmtData(d.poczatek).slice(0, 5)}, ${godzina(d.poczatek)}–${godzina(d.koniec)}` +
+      (k ? ' · ' + esc(nazwaK(k)) : '') + (d.rodzaj === 'egzamin' ? ' · egzamin' + (d.godz_egzaminu ? ' (WORD ' + hm(d.godz_egzaminu) + ')' : '') : d.rodzaj === 'inne' ? ' · inne' : '') +
+      (d.uwagi ? ' · ' + esc(d.uwagi) : '');
+  }
+  function opisZm(z) {
+    if (z.typ === 'dodaj') return '➕ <b>nowa jazda:</b> ' + terminZm(z.dane);
+    if (z.typ === 'usun') return '🗑 <b>usunięcie:</b> ' + terminZm(z.stare);
+    return '✏️ <b>zmiana:</b> ' + terminZm(z.stare) + '<br>&nbsp;&nbsp;➜ ' + terminZm(z.dane);
+  }
+  async function ladujZmianyGrafiku() {
+    const el = $('zm-baner'), biuroZ = profil && profil.rola === 'biuro', sz = (profil && profil.szkoly) || {};
+    const ukryj = () => { el.classList.add('hidden'); el.innerHTML = ''; zmCzeka = []; };
+    if (!profil || !('instr_edycja_wl' in sz)) return ukryj();
+    if (!biuroZ && iedTryb() !== 'biuro' && !zmCzeka.length && !sz.instr_edycja_wl) return ukryj();
+    let q = sb.from('zmiany_grafiku').select('*').eq('szkola_id', profil.szkola_id);
+    q = biuroZ ? q.eq('status', 'czeka') : q.in('status', ['czeka', 'odrzucona']).gte('utworzono', new Date(Date.now() - 7 * 864e5).toISOString());
+    const { data, error } = await q.order('utworzono');
+    if (error) return ukryj();
+    let ukr = []; try { ukr = JSON.parse(localStorage.getItem('zm_ukryte') || '[]'); } catch (_) {}
+    const lista = data.filter(z => z.status === 'czeka' || !ukr.includes(z.id));
+    zmCzeka = data.filter(z => z.status === 'czeka');
+    oznaczZmiany();
+    if (!lista.length) { el.classList.add('hidden'); el.innerHTML = ''; return; }
+    const otw = el.classList.contains('hidden') ? true : el.open;
+    const nazwaI = id => (instruktorzy.find(i => i.id === id) || {}).imie_nazwisko || '—';
+    const n = zmCzeka.length, odrz = lista.filter(z => z.status === 'odrzucona').length;
+    el.classList.remove('hidden');
+    el.innerHTML = `<summary>${biuroZ ? `✏️ ${n} ${n === 1 ? 'zmiana' : n < 5 ? 'zmiany' : 'zmian'} instruktorów do zatwierdzenia`
+        : [n ? `⏳ ${n} ${n === 1 ? 'zmiana czeka' : n < 5 ? 'zmiany czekają' : 'zmian czeka'} na biuro` : '', odrz ? `✖ biuro odrzuciło ${odrz === 1 ? 'zmianę' : odrz + ' zmiany'}` : ''].filter(Boolean).join(' · ')}</summary>` +
+      lista.map(z => `<div class="wr"><span>${biuroZ ? `<b>${esc(nazwaI(z.instruktor_id))}</b> · ` : ''}${opisZm(z)}
+          ${z.status === 'odrzucona' ? `<br><b style="color:var(--r)">✖ odrzucone przez biuro</b>${z.powod ? ' – ' + esc(z.powod) : ''}` : ''}</span>
+          <span class="bt">${biuroZ ? `<button type="button" data-zm="ok" data-id="${z.id}">✓ Zatwierdź</button><button type="button" data-zm="nie" data-id="${z.id}">✖ Odrzuć</button>`
+            : z.status === 'czeka' ? `<button type="button" data-zm="wyc" data-id="${z.id}">Wycofaj</button>` : `<button type="button" data-zm="ukryj" data-id="${z.id}">OK</button>`}</span></div>`).join('');
+    el.open = otw;
+    el.querySelectorAll('button[data-zm]').forEach(b => b.onclick = () => zajety(b, async () => {
+      const z = lista.find(x => x.id === b.dataset.id), a = b.dataset.zm;
+      if (a === 'ukryj') { ukr.push(z.id); try { localStorage.setItem('zm_ukryte', JSON.stringify(ukr.slice(-50))); } catch (_) {} ladujZmianyGrafiku(); return; }
+      if (a === 'wyc') {
+        if (!await pytaj('Wycofać tę prośbę? Biuro już jej nie zobaczy.', { tak: 'Wycofaj' })) return;
+        const { error } = await sb.rpc('instr_wycofaj_zmiane', { p_id: z.id });
+        if (error) { msg('m-grafik', tlumacz(error)); return; }
+      } else if (a === 'ok') {
+        let { error } = await sb.rpc('zatwierdz_zmiane', { p_id: z.id, p_mimo: false });
+        if (error && /INSTR_KOLIZJA/.test(error.message || '')) {
+          const t = (error.message.split('INSTR_KOLIZJA:')[1] || '').trim();
+          if (!await pytaj('Uwaga – po tej zmianie nałożą się jazdy:\n' + t + '\n\nZatwierdzić mimo to?', { tak: 'Zatwierdź mimo to' })) return;
+          ({ error } = await sb.rpc('zatwierdz_zmiane', { p_id: z.id, p_mimo: true }));
+        }
+        if (error) { msg('m-grafik', tlumacz(error)); return; }
+        msg('m-grafik', 'Zmiana zatwierdzona – jest już w grafiku.', 'ok');
+      } else {
+        const pow = await zapytajTekst('Odrzucić zmianę?', 'Możesz wpisać krótki powód – instruktor go zobaczy. Można zostawić puste.', '');
+        if (pow === null) return;
+        const { error } = await sb.rpc('odrzuc_zmiane', { p_id: z.id, p_powod: pow });
+        if (error) { msg('m-grafik', tlumacz(error)); return; }
+      }
+      ladujDzien(true);
+    }));
+  }
+  // --- biuro: ustawienia ---
+  function pokazUstIed() {
+    const sz = profil.szkoly || {};
+    if (!('instr_edycja_wl' in sz)) { $('u-ied').disabled = true; $('u-ied-lista').innerHTML = ''; msg('m-ied', 'Najpierw uruchom w Supabase plik krok34_instruktor_grafik.sql.'); zwInfo('iedyt', ''); return; }
+    $('u-ied').disabled = false; $('u-ied').checked = !!sz.instr_edycja_wl;
+    zwInfo('iedyt', sz.instr_edycja_wl ? 'włączone' : 'wyłączone');
+    if (!sz.instr_edycja_wl) { $('u-ied-lista').innerHTML = ''; return; }
+    const akt = instruktorzy.filter(i => i.aktywny);
+    $('u-ied-lista').innerHTML = akt.map(i => `<div class="ied-i"><span><b>${esc(i.imie_nazwisko)}</b>${i.user_id ? '' : '<br><small class="hint">nie ma jeszcze konta w programie</small>'}</span>
+      <select data-ied="${i.id}" aria-label="Zmiany w grafiku – ${esc(i.imie_nazwisko)}"><option value="nie">nie może zmieniać</option><option value="biuro">zmiany zatwierdza biuro</option><option value="sam">zmienia sam</option></select></div>`).join('')
+      || '<p class="hint">Brak instruktorów.</p>';
+    $('u-ied-lista').querySelectorAll('select[data-ied]').forEach(sel => {
+      const i = instruktorzy.find(x => x.id === sel.dataset.ied);
+      sel.value = i.edycja || 'biuro';
+      sel.onchange = async () => {
+        const { error } = await sb.from('instruktorzy').update({ edycja: sel.value }).eq('id', i.id);
+        if (error) { sel.value = i.edycja || 'biuro'; msg('m-ied', tlumacz(error)); return; }
+        i.edycja = sel.value;
+        msg('m-ied', `${i.imie_nazwisko}: ${({ nie: 'nie może zmieniać grafiku', biuro: 'zmiany zatwierdza biuro', sam: 'zmienia grafik sam' })[sel.value]}.`, 'ok');
+      };
+    });
+  }
+  $('u-ied').onchange = async () => {
+    const v = $('u-ied').checked;
+    const { error } = await sb.from('szkoly').update({ instr_edycja_wl: v }).eq('id', profil.szkola_id);
+    if (error) { $('u-ied').checked = !v; msg('m-ied', tlumacz(error)); return; }
+    profil.szkoly.instr_edycja_wl = v; pokazUstIed();
+    msg('m-ied', v ? 'Włączone. Domyślnie zmiany każdego instruktora zatwierdza biuro – możesz to zmienić poniżej.' : 'Wyłączone – instruktorzy nie mogą zmieniać grafiku.', 'ok');
+  };
 
   // ===== UMÓW JAZDY KURSANTOWI (wolne okienka instruktora na ~2 miesiące) =====
   let umK = null, umDni = 14, umRodzaj = 'jazda', umDl = 120, umJazdyI = [], umWolneI = [], umJazdyK = [], umDodane = [], umOtw = null;
@@ -5387,6 +5534,7 @@
     resizeT = setTimeout(() => { if (szeroko() !== szerOstatnio) { szerOstatnio = szeroko(); if (profil) ladujDzien(); } }, 200);
   });
   $('g-dodaj').onclick = () => {
+    if (profil.rola !== 'biuro' && gDzien < dzisStr()) { msg('m-grafik', 'Jazdy możesz dodawać od dzisiaj w przód – przejdź na dzisiejszy albo późniejszy dzień.'); return; }
     if (!gInstr) { msg('m-grafik', 'Najpierw dodaj instruktora w zakładce „Ustawienia”.'); return; }
     const u = ustI(gInstr), p0 = new Date(gDzien + 'T00:00:00');
     let t = gJazdy.length ? Math.max(...gJazdy.map(j => Math.round((new Date(j.koniec) - p0) / 60000))) : naMin(u.od);
@@ -5469,6 +5617,17 @@
     $('j-usun').classList.toggle('hidden', !j);
     $('j-kursant-info').textContent = '';
     stopkaJazdy(j);
+    const inst = profil.rola !== 'biuro', tr = iedTryb();
+    document.querySelector('label[for="j-instr"]').classList.toggle('hidden', inst);
+    $('j-instr').classList.toggle('hidden', inst);
+    $('j-wstepna').parentElement.classList.toggle('hidden', inst);
+    $('j-nieliczy').parentElement.classList.toggle('hidden', inst);
+    if (inst) $('j-potwierdz').classList.add('hidden');
+    $('j-data').min = inst ? dzisStr() : '';
+    $('j-ied-info').classList.toggle('hidden', !inst);
+    $('j-ied-info').textContent = tr === 'biuro' ? '📨 Zmiana trafi do biura – pojawi się w grafiku po zatwierdzeniu.' : '✏️ Zmiana zapisze się od razu (biuro widzi ją w historii jazdy).';
+    $('j-usun').textContent = inst && tr === 'biuro' ? 'Poproś o usunięcie jazdy' : 'Usuń jazdę';
+    $('j-zapisz').textContent = inst && tr === 'biuro' ? 'Wyślij do biura' : 'Zapisz';
     msg('m-jazda', '');
     $('modal-jazda').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
@@ -5517,8 +5676,40 @@
     });
   }
 
+  async function zapiszJazdeInstr() {
+    const dzien = $('j-data').value, od = $('j-od').value, doo = $('j-do').value;
+    if (!dzien || !od || !doo) { msg('m-jazda', 'Uzupełnij datę i godziny.'); return; }
+    if (naMin(doo) <= naMin(od)) { msg('m-jazda', 'Godzina „do” musi być późniejsza niż „od”.'); return; }
+    if (dzien < dzisStr()) { msg('m-jazda', 'Jazdy możesz wpisywać od dzisiaj w przód.'); return; }
+    const txt = $('j-kursant').value.trim(), rodzaj = $('j-rodzaj').value;
+    let kid = null;
+    if (txt) {
+      const z = znajdzK(txt);
+      if (z.wielu) { msg('m-jazda', 'Jest kilku kursantów o tym imieniu i nazwisku – wybierz właściwego z listy podpowiedzi.'); return; }
+      if (!z.id) { msg('m-jazda', `Nie ma „${txt}” na Twojej liście kursantów. Wybierz kursanta z podpowiedzi albo poproś biuro, żeby go dodało.`); return; }
+      kid = z.id;
+    } else if (rodzaj !== 'inne' && !await pytaj('Zapisać jazdę bez kursanta?')) return;
+    const dane = { poczatek: isoZ(dzien, od), koniec: isoZ(dzien, doo), kursant_id: kid, rodzaj,
+      uwagi: $('j-uwagi').value.trim() || null, godz_egzaminu: rodzaj === 'egzamin' && $('j-egz').value ? $('j-egz').value : null };
+    const pz = pozaPraca(gInstr, dane.poczatek, dane.koniec);
+    const bylo = edytJazda && pozaPraca(gInstr, edytJazda.poczatek, edytJazda.koniec);
+    if (pz && !bylo && !await pytaj(`Uwaga – ${pz}.\n\nWpisać jazdę mimo to?`, { tak: 'Wpisz mimo to' })) return;
+    const arg = { p_jazda: edytJazda ? edytJazda.id : null, p_dane: dane, p_mimo: false };
+    let r = await sb.rpc('instr_zapisz_jazde', arg);
+    if (r.error && /INSTR_KOLIZJA/.test(r.error.message || '')) {
+      const t = (r.error.message.split('INSTR_KOLIZJA:')[1] || '').trim();
+      if (!await pytaj('Uwaga – nakładają się jazdy:\n' + t + '\n\nZapisać mimo to?')) return;
+      r = await sb.rpc('instr_zapisz_jazde', { ...arg, p_mimo: true });
+    }
+    if (r.error) { msg('m-jazda', tlumacz(r.error)); return; }
+    zamknijJazde();
+    gDzien = dzien;
+    await ladujDzien();
+    msg('m-grafik', r.data && r.data.wynik === 'prosba' ? '📨 Wysłano do biura – zmiana pojawi się w grafiku po zatwierdzeniu.' : 'Zapisano w grafiku.', 'ok');
+  }
   $('f-jazda').onsubmit = e => {
     e.preventDefault();
+    if (profil.rola !== 'biuro') { zajety($('j-zapisz'), () => { msg('m-jazda', ''); return zapiszJazdeInstr(); }); return; }
     zajety($('j-zapisz'), async () => {
       msg('m-jazda', '');
       const dzien = $('j-data').value, od = $('j-od').value, doo = $('j-do').value;
@@ -5572,6 +5763,16 @@
   $('j-usun').onclick = () => zajety($('j-usun'), async () => {
     if (!edytJazda) return;
     const k = gKursanci.get(edytJazda.kursant_id);
+    if (profil.rola !== 'biuro') {
+      const opis = `${godzina(edytJazda.poczatek)}–${godzina(edytJazda.koniec)}${k ? ' (' + nazwaK(k) + ')' : ''}`;
+      const prosba = iedTryb() === 'biuro';
+      if (!await pytaj(prosba ? `Poprosić biuro o usunięcie jazdy ${opis}?` : `Usunąć jazdę ${opis}?`, { tak: prosba ? 'Wyślij prośbę' : 'Usuń', niebezp: !prosba })) return;
+      const { data, error } = await sb.rpc('instr_usun_jazde', { p_jazda: edytJazda.id });
+      if (error) { msg('m-jazda', tlumacz(error)); return; }
+      zamknijJazde(); await ladujDzien();
+      msg('m-grafik', data && data.wynik === 'prosba' ? `📨 Wysłano do biura prośbę o usunięcie jazdy ${opis}.` : `Usunięto jazdę ${opis}.`, 'ok');
+      return;
+    }
     if (pytajUsun() && !await pytaj(`Usunąć jazdę ${godzina(edytJazda.poczatek)}–${godzina(edytJazda.koniec)}${k ? ' (' + nazwaK(k) + ')' : ''}?\n\nW razie pomyłki przywrócisz ją z kosza (Ustawienia → Kosz).`)) return;
     const opisUs = `${godzina(edytJazda.poczatek)}–${godzina(edytJazda.koniec)}${k ? ' (' + nazwaK(k) + ')' : ''}`;
     const { error } = await sb.from('jazdy').delete().eq('id', edytJazda.id);
