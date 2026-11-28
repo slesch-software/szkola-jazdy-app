@@ -1054,8 +1054,8 @@
     <section>
       <h2 class="ls-h2">Jak zacząć – 4 proste kroki</h2>
       <div class="ls-kroki">
-        <div class="ls-krok"><b>Poproś o dostęp</b><p>Napisz albo zadzwoń – dostaniesz kod aktywacyjny. Pierwsze 30 dni są bezpłatne.</p></div>
-        <div class="ls-krok"><b>Załóż konto szkoły</b><p>Podajesz e-mail, hasło, kod i nazwę szkoły – i już jesteś w programie.</p></div>
+        <div class="ls-krok"><b>Załóż konto i zgłoś szkołę</b><p>Podajesz e-mail, hasło, nazwę szkoły i telefon. Masz kod aktywacyjny? Wpisz go – wejdziesz od razu.</p></div>
+        <div class="ls-krok"><b>Aktywacja</b><p>Aktywujemy szkołę zwykle tego samego dnia. Pierwsze 30 dni są bezpłatne.</p></div>
         <div class="ls-krok"><b>Dodaj instruktorów i kursantów</b><p>Instruktorów zapraszasz SMS-em lub WhatsAppem, kursantów dodajesz najszybciej skanem PKK.</p></div>
         <div class="ls-krok"><b>Prowadź grafik</b><p>Wpisujesz jazdy, instruktorzy widzą je w telefonie, a kursanci dostają osobisty link.</p></div>
       </div>
@@ -1176,9 +1176,11 @@
         <div id="kod-nowa" class="hidden">
           <label for="i-szkola-nazwa">Nazwa szkoły jazdy</label>
           <input id="i-szkola-nazwa" autocomplete="organization" placeholder="np. OSK Kowalski">
-          <label for="i-kod-akt">Kod aktywacyjny</label>
+          <label for="i-szkola-tel">Telefon kontaktowy</label>
+          <input id="i-szkola-tel" type="tel" autocomplete="tel" placeholder="np. 600 100 200">
+          <label for="i-kod-akt">Kod aktywacyjny <span style="font-weight:400;color:var(--m)">(jeśli masz)</span></label>
           <input id="i-kod-akt" autocapitalize="characters" autocomplete="off" placeholder="SZK-…">
-          <p class="hint">Kod aktywacyjny otrzymasz od dostawcy programu. Po założeniu szkoły zostaniesz jej biurem.</p>
+          <p class="hint" id="kod-akt-podp">Nie masz kodu? Zostaw puste – wyślesz zgłoszenie, a my aktywujemy szkołę (zwykle tego samego dnia). Pierwsze 30 dni są bezpłatne. Po aktywacji zostaniesz biurem szkoły.</p>
           <label for="i-szkola-adres">Adres szkoły (siedziba firmy)</label>
           <input id="i-szkola-adres" autocomplete="street-address" placeholder="ulica, nr, kod, miejscowość">
           <label for="i-szkola-nip">NIP</label>
@@ -1244,8 +1246,13 @@
       </div>
     </div>
     <div class="card">
+      <h2>📨 Zgłoszenia nowych szkół</h2>
+      <div id="a-zgl"><p class="hint">Ładowanie…</p></div>
+      <p class="hint" style="margin-bottom:0">E-mail o nowym zgłoszeniu przychodzi na <b id="a-zgl-mail"></b>. <button type="button" class="lnk" id="a-zgl-test">Wyślij testowy e-mail</button></p>
+    </div>
+    <div class="card">
       <h2>➕ Nowa szkoła – kod aktywacyjny</h2>
-      <p class="hint">Wygeneruj kod i przekaż go szkole. Kod działa jeden raz – po założeniu szkoły traci ważność.</p>
+      <p class="hint">Wygeneruj kod i wyślij szkole gotowy link – po kliknięciu kod wpisze się sam. Kod działa jeden raz – po założeniu szkoły traci ważność.</p>
       <label for="a-uwagi">Dla kogo (notatka, widzisz ją tylko Ty)</label>
       <input id="a-uwagi" placeholder="np. OSK Kowalski, Zamość – tel. 600…" autocomplete="off">
       <button id="a-generuj" class="btn" type="button">Wygeneruj kod</button>
@@ -2171,7 +2178,7 @@
   // ===== USTAWIENIA =====
   const SUPABASE_URL = 'https://scvajsnahrydtxgqrhas.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sbZz3s5OJujSJ75VQqc5UQ_nfwqToxx';
-  const WERSJA = '1.81';
+  const WERSJA = '1.82';
   const UMOWA_WERSJA = '1.0';            // wersja Regulaminu + Umowy powierzenia (umowa.html) – zmiana wymusza ponowną akceptację
   const UMOWA_URL = 'umowa.html';
   // ----- informacje o programie -----
@@ -2185,6 +2192,8 @@
   };
   // ----- historia zmian (najnowsze na górze; pokazujemy tylko to, co widać dla użytkownika) -----
   const ZMIANY = [
+    { v: '1.82', d: '28.11.2026', p: [
+      '🏫 Nowa szkoła może założyć konto bez kodu aktywacyjnego – wysyła zgłoszenie, a po aktywacji od razu wchodzi do programu.'] },
     { v: '1.81', d: '27.11.2026', p: [
       '✏️ Instruktorzy mogą zmieniać swoje jazdy w grafiku (Ustawienia → „Instruktorzy zmieniają grafik”). Przy każdym instruktorze biuro wybiera: zmiany zatwierdza biuro albo zmienia sam.'] },
     { v: '1.80', d: '24.11.2026', p: [
@@ -2210,7 +2219,13 @@
   const EKRANY = ['s-start', 's-ladowanie', 's-login', 's-haslo', 's-kod', 's-umowa', 's-czeka', 's-panel', 's-admin', 's-kursant'];
   const KURSANT_TOKEN = new URLSearchParams(location.search).get('k');   // osobisty link kursanta
 
-  let tryb = 'login';
+  // link z kodem aktywacyjnym: grafikosk.pl/?kod=SZK-XXXXXX → zakładanie konta szkoły z wpisanym kodem
+  const KOD_Z_LINKU = (() => { const k = (new URLSearchParams(location.search).get('kod') || '').trim().toUpperCase(); return /^SZK-[A-Z0-9]{4,10}$/.test(k) ? k : null; })();
+  if (KOD_Z_LINKU) {
+    try { localStorage.setItem('kod_akt', KOD_Z_LINKU); localStorage.setItem('chce_nowa', '1'); localStorage.setItem('kto_log', 'biuro'); } catch (_) {}
+    history.replaceState(null, '', ADRES);
+  }
+  let tryb = KOD_Z_LINKU ? 'rej' : 'login';
   let ja = null;
   let profil = null;
   let odzyskiwanieHasla = /type=recovery/.test(location.hash);
@@ -2288,6 +2303,9 @@
     el.className = 'msg ' + (tekst ? typ : '');
   }
   const BLEDY_PL = [
+    [/ZGL_TELEFON/, 'Wpisz poprawny numer telefonu (co najmniej 9 cyfr).'],
+    [/ZGL_LIMIT/, `Za dużo zgłoszeń z tego konta – spróbuj jutro albo zadzwoń: ${PROGRAM.telefon}.`],
+    [/ZGL_NIE_CZEKA/, 'To zgłoszenie zostało już rozpatrzone.'],
     [/instr_zapisz_jazde|instr_usun_jazde|zmiany_grafiku|zatwierdz_zmiane|instr_edycja_wl/, 'Najpierw uruchom w Supabase plik krok34_instruktor_grafik.sql.'],
     [/INSTR_BRAK/, 'Nie możesz zmienić tej jazdy – biuro mogło wyłączyć Ci zmiany w grafiku. Odśwież stronę.'],
     [/INSTR_PRZESZLA/, 'Można zmieniać tylko jazdy od dzisiaj w przód. Starsze jazdy poprawia biuro.'],
@@ -2363,7 +2381,7 @@
   }
 
   // ----- Strona startowa: dla nowych odwiedzających; kto już się logował (albo ma aplikację na ekranie) – od razu logowanie -----
-  let wybranoLogowanie = false;
+  let wybranoLogowanie = !!KOD_Z_LINKU;
   function pokazStart() {
     if (wybranoLogowanie) return false;
     try { if (localStorage.getItem('konto_bylo') === '1') return false; } catch (_) {}
@@ -2378,6 +2396,8 @@
     const tresc = 'Dzień dobry,\n\nchcielibyśmy wypróbować Grafik OSK.\n\nNazwa szkoły:\nMiejscowość:\nLiczba instruktorów:\nTelefon kontaktowy:\n';
     const mail = `mailto:${PROGRAM.email}?subject=${encodeURIComponent(temat)}&body=${encodeURIComponent(tresc)}`;
     $('ls-proba').href = mail; $('ls-proba2').href = mail;
+    const doNowejSzkoly = e => { e.preventDefault(); try { localStorage.setItem('chce_nowa', '1'); } catch (_) {} ustawKto('biuro'); doLogowania('rej'); };
+    $('ls-proba').onclick = doNowejSzkoly; $('ls-proba2').onclick = doNowejSzkoly;
     $('ls-mail').href = 'mailto:' + PROGRAM.email; $('ls-mail').textContent = PROGRAM.email;
     if (PROGRAM.facebookUrl) $('ls-fb').innerHTML = `<a href="${esc(PROGRAM.facebookUrl)}" target="_blank" rel="noopener">${IKONA_FB} ${esc(PROGRAM.facebook)} na Facebooku</a>`;
     if (PROGRAM.telefon) $('ls-tel').innerHTML = ` · tel. <a href="tel:${PROGRAM.telefon.replace(/\s/g, '')}">${PROGRAM.telefon}</a>`;
@@ -2403,7 +2423,7 @@
     $('l-tytul').textContent = k === 'biuro' ? '🏢 Logowanie – biuro OSK' : '🚗 Logowanie – instruktor';
     $('i-email').placeholder = k === 'biuro' ? 'biuro@twojaszkola.pl' : 'twój e-mail';
     $('l-podp').innerHTML = k === 'biuro'
-      ? 'Zakładasz nową szkołę? <button type="button" id="l-kod">Mam kod aktywacyjny →</button>'
+      ? 'Zakładasz nową szkołę? <button type="button" id="l-kod">Załóż konto szkoły →</button>'
       : 'Nie masz konta? Poproś biuro o zaproszenie albo <button type="button" id="l-kod">załóż konto z kodem szkoły →</button>';
     $('l-kod').onclick = () => { try { localStorage.setItem('chce_nowa', k === 'biuro' ? '1' : '0'); } catch (_) {} ustawTryb('rej'); $('i-imie').focus(); };
   }
@@ -2472,8 +2492,18 @@
     $('kt-nowa').classList.toggle('on', t === 'nowa');
     $('kod-dolacz').classList.toggle('hidden', t !== 'dolacz');
     $('kod-nowa').classList.toggle('hidden', t !== 'nowa');
-    $('kod-przycisk').textContent = t === 'dolacz' ? 'Dołącz' : 'Załóż szkołę';
+    przyciskKodu();
     msg('m-kod', '');
+  }
+  function przyciskKodu() { $('kod-przycisk').textContent = kodTryb === 'dolacz' ? 'Dołącz' : $('i-kod-akt').value.trim() ? 'Załóż szkołę' : 'Wyślij zgłoszenie szkoły'; }
+  $('i-kod-akt').oninput = przyciskKodu;
+  // e-mail do właściciela programu (FormSubmit – bez serwera; pierwszy e-mail trzeba raz potwierdzić)
+  async function mailDoWlasciciela(temat, pola) {
+    try {
+      await fetch('https://formsubmit.co/ajax/' + PROGRAM.email, { method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ _subject: temat, _template: 'table', _captcha: 'false', ...pola }) });
+    } catch (_) {}
   }
   $('kt-dolacz').onclick = () => ustawKodTryb('dolacz');
   $('kt-nowa').onclick = () => ustawKodTryb('nowa');
@@ -2488,15 +2518,25 @@
         if (!$('i-kod').value.trim()) { msg('m-kod', 'Wpisz kod szkoły.'); return; }
         ({ error } = await sb.rpc('dolacz_do_szkoly', { p_kod: $('i-kod').value, p_imie_nazwisko: imie }));
       } else {
-        const nazwa = $('i-szkola-nazwa').value.trim(), kod = $('i-kod-akt').value.trim();
+        const nazwa = $('i-szkola-nazwa').value.trim(), kod = $('i-kod-akt').value.trim(), tel = $('i-szkola-tel').value.trim();
         if (!nazwa) { msg('m-kod', 'Wpisz nazwę szkoły.'); return; }
-        if (!kod) { msg('m-kod', 'Wpisz kod aktywacyjny.'); return; }
         const adres = $('i-szkola-adres').value.trim(), nip = $('i-szkola-nip').value.replace(/\D/g, '');
+        if (!kod && tel.replace(/\D/g, '').length < 9) { msg('m-kod', 'Wpisz telefon kontaktowy – zadzwonimy przy aktywacji.'); return; }
         if (!adres) { msg('m-kod', 'Wpisz adres szkoły.'); return; }
         if (nip.length !== 10) { msg('m-kod', 'NIP musi mieć 10 cyfr.'); return; }
         if (!$('i-umowa-ok').checked) { msg('m-kod', 'Zaznacz akceptację Regulaminu i Umowy powierzenia.'); return; }
+        if (!kod) {   // bez kodu: zgłoszenie do aktywacji
+          if (!await pytaj(`Wysłać zgłoszenie szkoły „${nazwa}”?\n\nAktywujemy ją zwykle tego samego dnia – potem wejdziesz do programu jako biuro szkoły.`, { tak: 'Wyślij zgłoszenie' })) return;
+          ({ error } = await sb.rpc('zglos_szkole', { p_nazwa: nazwa, p_imie_nazwisko: imie, p_telefon: tel, p_adres: adres, p_nip: nip }));
+          if (error) { msg('m-kod', /zglos_szkole/.test(error.message || '') ? `Zgłoszenia bez kodu nie są jeszcze włączone – poproś o kod aktywacyjny: ${PROGRAM.email}${PROGRAM.telefon ? ', tel. ' + PROGRAM.telefon : ''}.` : tlumacz(error)); return; }
+          try { localStorage.setItem('zgl_umowa', JSON.stringify({ nazwa, adres, nip, imie })); } catch (_) {}
+          await mailDoWlasciciela(`Grafik OSK – nowe zgłoszenie: ${nazwa}`, { 'Szkoła': nazwa, 'Osoba': imie, 'Telefon': tel, email: (ja && ja.email) || '', 'Adres': adres, 'NIP': nip, 'Aktywacja': ADRES + ' → 👑 Panel właściciela → Zgłoszenia nowych szkół' });
+          odswiez();
+          return;
+        }
         if (!await pytaj(`Założyć szkołę „${nazwa}”?\n\nZostaniesz jej biurem. Nazwę możesz później zmienić.`, { tak: 'Załóż szkołę' })) return;
         ({ error } = await sb.rpc('zaloz_szkole', { p_kod: kod, p_nazwa: nazwa, p_imie_nazwisko: imie }));
+        if (!error) { try { localStorage.removeItem('kod_akt'); } catch (_) {} }
         if (!error) {   // szkoła założona – od razu zapis akceptacji umowy (gdyby się nie udało, program poprosi o nią po zalogowaniu)
           await sb.rpc('akceptuj_umowe', { p_wersja: UMOWA_WERSJA, p_nazwa: nazwa, p_adres: adres, p_nip: nip, p_osoba: imie, p_urzadzenie: navigator.userAgent });
         }
@@ -2621,6 +2661,14 @@
     const { data, error } = await sb.rpc('czy_wlasciciel');
     jestWlascicielem = !error && data === true;
     document.querySelectorAll('.do-admin').forEach(b => b.classList.toggle('hidden', !jestWlascicielem));
+    if (!jestWlascicielem) return;
+    const zg = await sb.rpc('lista_zgloszen');
+    const n = zg.error ? 0 : (zg.data || []).filter(z => z.status === 'czeka').length;
+    document.querySelectorAll('.do-admin').forEach(b => {
+      if (!b.dataset.txt) b.dataset.txt = b.textContent;
+      b.textContent = b.dataset.txt + (n ? ` · 📨 ${n}` : '');
+      b.title = n ? `Nowe zgłoszenia szkół: ${n}` : 'Panel właściciela programu';
+    });
   }
   document.querySelectorAll('.do-admin').forEach(b => b.onclick = () => { pokaz('s-admin'); ladujAdmin(); });
   $('a-wroc').onclick = () => odswiez();
@@ -2646,8 +2694,42 @@
   }
   const dodajMiesiace = (dz, n) => { const d = parseD(dz); const dzien = d.getDate(); d.setDate(1); d.setMonth(d.getMonth() + n);
     d.setDate(Math.min(dzien, new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate())); return dzisStr(d); };
+  async function ladujZgloszeniaAdmin() {
+    $('a-zgl-mail').textContent = PROGRAM.email;
+    const { data, error } = await sb.rpc('lista_zgloszen');
+    if (error) { $('a-zgl').innerHTML = `<p class="hint">${/lista_zgloszen/.test(error.message || '') ? 'Uruchom w Supabase plik krok35_zgloszenia_szkol.sql.' : esc(tlumacz(error))}</p>`; return 0; }
+    const czeka = data.filter(z => z.status === 'czeka'), reszta = data.filter(z => z.status !== 'czeka');
+    const tel = t => t ? `<a href="tel:${esc(t.replace(/[^\d+]/g, ''))}">${esc(t)}</a>` : '—';
+    $('a-zgl').innerHTML = (czeka.length ? czeka.map(z => `<div class="a-szk"><h3><span>${esc(z.nazwa)} <span class="pill" style="background:#f59e0b;color:#fff">nowe</span></span>
+        <span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button type="button" data-zgl-ok="${z.id}" data-nazwa="${esc(z.nazwa)}">✅ Aktywuj</button><button type="button" data-zgl-nie="${z.id}" data-nazwa="${esc(z.nazwa)}" style="color:var(--r)">❌ Odrzuć</button></span></h3>
+        <p class="hint" style="margin:4px 0 0">👤 ${esc(z.imie_nazwisko || '—')} · 📞 ${tel(z.telefon)} · ✉️ <a href="mailto:${esc(z.email || '')}">${esc(z.email || '—')}</a><br>
+        📍 ${esc(z.adres || '—')} · NIP ${esc(z.nip || '—')} · zgłoszono ${fmtDT(z.utworzono)}</p></div>`).join('')
+      : '<p class="hint">Brak nowych zgłoszeń.</p>') +
+      (reszta.length ? `<details style="margin-top:8px"><summary class="hint">Rozpatrzone w ostatnich 30 dniach (${reszta.length})</summary>${reszta.map(z =>
+        `<p class="hint" style="margin:6px 0">${z.status === 'ok' ? '✅ aktywowana' : '❌ odrzucona'} · <b>${esc(z.nazwa)}</b> · ${esc(z.email || '')} · ${fmtDT(z.decyzja_kiedy)}${z.powod ? ' · ' + esc(z.powod) : ''}</p>`).join('')}</details>` : '');
+    $('a-zgl').querySelectorAll('[data-zgl-ok]').forEach(b => b.onclick = () => zajety(b, async () => {
+      if (!await pytaj(`Aktywować szkołę „${b.dataset.nazwa}”?\n\nPowstanie nowa szkoła z 30 dniami próbnymi, a zgłaszający zostanie jej biurem.`, { tak: 'Aktywuj' })) return;
+      const { error } = await sb.rpc('aktywuj_zgloszenie', { p_id: b.dataset.zglOk });
+      if (error) { msg('m-admin', tlumacz(error)); return; }
+      await ladujAdmin(); sprawdzWlasciciela();
+      msg('m-admin', `Szkoła „${b.dataset.nazwa}” aktywowana (30 dni próbnych). Zgłaszający wejdzie do programu po kliknięciu „Sprawdź ponownie” albo przy następnym logowaniu.`, 'ok');
+    }));
+    $('a-zgl').querySelectorAll('[data-zgl-nie]').forEach(b => b.onclick = () => zajety(b, async () => {
+      const pow = await zapytajTekst(`Odrzucić zgłoszenie „${b.dataset.nazwa}”?`, 'Możesz wpisać powód – zgłaszający go zobaczy. Można zostawić puste.', '');
+      if (pow === null) return;
+      const { error } = await sb.rpc('odrzuc_zgloszenie', { p_id: b.dataset.zglNie, p_powod: pow });
+      if (error) { msg('m-admin', tlumacz(error)); return; }
+      ladujAdmin(); sprawdzWlasciciela();
+    }));
+    return czeka.length;
+  }
+  $('a-zgl-test').onclick = () => zajety($('a-zgl-test'), async () => {
+    await mailDoWlasciciela('Grafik OSK – testowe powiadomienie', { 'Wiadomość': 'Test powiadomień o nowych zgłoszeniach szkół. Jeśli to pierwszy e-mail z FormSubmit, kliknij w nim „Activate Form”.' });
+    msg('m-admin', `Wysłano testowy e-mail na ${PROGRAM.email}. Za pierwszym razem przyjdzie wiadomość od FormSubmit – kliknij w niej „Activate Form”, wtedy powiadomienia zaczną działać (sprawdź też folder Spam).`, 'ok');
+  });
   async function ladujAdmin() {
     msg('m-admin', '');
+    ladujZgloszeniaAdmin();
     $('a-wroc').classList.toggle('hidden', !profil);
     const [sz, kd, pn, um, bl] = await Promise.all([sb.rpc('lista_szkol'), sb.rpc('lista_kodow'), sb.rpc('szkoly_z_pinem'), sb.rpc('umowy_szkol'), sb.rpc('szkoly_blokady')]);
     const blokady = new Map(bl.error ? [] : (bl.data || []).map(b => [String(b.szkola_id), b.zablokowana_od]));
@@ -2755,7 +2837,7 @@
     if (error) { msg('m-admin', tlumacz(error)); return; }
     $('a-nowy').classList.remove('hidden');
     $('a-nowy-kod').textContent = data;
-    $('a-nowy-tekst').value = `Dzień dobry,\n\nprzesyłam dostęp do programu dla szkół jazdy.\n\n1. Wejdź na: ${ADRES}\n2. Kliknij „Nowe konto” i załóż konto (e-mail biura szkoły).\n3. Wybierz „Zakładam nową szkołę”, wpisz nazwę szkoły i kod aktywacyjny: ${data}\n\nKod działa jeden raz. Instruktorów dodasz później kodem szkoły z zakładki Ustawienia.\n\nPozdrawiam\nSlesch`;
+    $('a-nowy-tekst').value = `Dzień dobry,\n\nprzesyłam dostęp do programu Grafik OSK.\n\n1. Kliknij link: ${ADRES}?kod=${encodeURIComponent(data)}\n2. Załóż konto (imię, e-mail biura szkoły, hasło).\n3. Wpisz nazwę i dane szkoły – kod aktywacyjny ${data} wpisze się sam.\n\nKod działa jeden raz. Instruktorów dodasz później z zakładki Ustawienia.\n\nPozdrawiam\nSlesch`;
     $('a-uwagi').value = '';
     ladujAdmin();
   });
@@ -2775,7 +2857,11 @@
     if (KURSANT_TOKEN) { pokazKursanta(); return; }
     if (odzyskiwanieHasla) { pokaz('s-haslo'); return; }
     if (session === undefined) session = (await sb.auth.getSession()).data.session;
-    if (!session) { ja = null; profil = null; ustawTryb(tryb); pokaz(pokazStart() ? 's-start' : 's-login'); return; }
+    if (!session) {
+      ja = null; profil = null; ustawTryb(tryb);
+      if (KOD_Z_LINKU && tryb === 'rej') msg('m-login', `Kod aktywacyjny ${KOD_Z_LINKU} jest już zapamiętany. Załóż konto szkoły (imię, e-mail biura, hasło) – kod wpisze się sam. Masz już konto? Wybierz „Logowanie”.`, 'ok');
+      pokaz(pokazStart() ? 's-start' : 's-login'); return;
+    }
     try { localStorage.setItem('konto_bylo', '1'); } catch (_) {}
     if (location.hash.includes('access_token')) history.replaceState(null, '', ADRES);
 
@@ -2794,9 +2880,25 @@
     await sprawdzWlasciciela();
 
     if (!profil) {
-      $('i-kod-imie').value = (ja.user_metadata && ja.user_metadata.imie_nazwisko) || '';
+      $('i-kod-imie').value = $('i-kod-imie').value || (ja.user_metadata && ja.user_metadata.imie_nazwisko) || '';
+      const zg = await sb.rpc('moje_zgloszenie');
+      const z = !zg.error && zg.data && zg.data[0];
+      if (z && z.status === 'czeka') {
+        $('czeka-tytul').textContent = 'Zgłoszenie wysłane ✅';
+        $('czeka-tekst').innerHTML = `Dziękujemy! Zgłoszenie szkoły <b>„${esc(z.nazwa)}”</b> czeka na aktywację – zwykle tego samego dnia. ` +
+          `Po aktywacji wejdziesz tu do programu (kliknij „Sprawdź ponownie” albo zaloguj się później).<br><br>Pytania: ${esc(PROGRAM.email)}${PROGRAM.telefon ? ', tel. ' + esc(PROGRAM.telefon) : ''}.`;
+        pokaz('s-czeka');
+        return;
+      }
       pokaz('s-kod');
-      try { if (localStorage.getItem('chce_nowa') === '1' && $('kt-nowa')) $('kt-nowa').click(); } catch (_) {}
+      try {
+        const k = localStorage.getItem('kod_akt'); if (k && !$('i-kod-akt').value) $('i-kod-akt').value = k;
+        if ((localStorage.getItem('chce_nowa') === '1' || k || z) && $('kt-nowa')) $('kt-nowa').click();
+      } catch (_) {}
+      if (z && z.status === 'odrzucona') {
+        $('i-szkola-nazwa').value = $('i-szkola-nazwa').value || z.nazwa || '';
+        msg('m-kod', `Zgłoszenie szkoły „${z.nazwa}” nie zostało przyjęte${z.powod ? ': ' + z.powod : ''}. W razie pytań: ${PROGRAM.email}${PROGRAM.telefon ? ', tel. ' + PROGRAM.telefon : ''}.`);
+      }
       return;
     }
     if (profil.szkoly && profil.szkoly.aktywna === false) {
@@ -2823,6 +2925,13 @@
       return;
     }
 
+    if (profil.rola === 'biuro') {
+      let zu = null; try { zu = JSON.parse(localStorage.getItem('zgl_umowa') || 'null'); } catch (_) {}
+      if (zu) {
+        await sb.rpc('akceptuj_umowe', { p_wersja: UMOWA_WERSJA, p_nazwa: zu.nazwa, p_adres: zu.adres, p_nip: zu.nip, p_osoba: zu.imie, p_urzadzenie: navigator.userAgent });
+        try { localStorage.removeItem('zgl_umowa'); } catch (_) {}
+      }
+    }
     if (!await sprawdzUmowe()) return;
 
     $('p-szkola').textContent = (profil.szkoly && profil.szkoly.nazwa) || '';
